@@ -37,15 +37,27 @@ export default function HeroSection() {
       </FadeIn>
 
       {/* Главный заголовок */}
-      <div className="relative z-0 overflow-hidden">
+      <div className="relative z-0 flex flex-col items-center mt-6 sm:mt-4 md:mt-2">
         <FadeIn
-          as="h1"
-          delay={0.15}
-          y={40}
-          className="hero-heading font-bold uppercase tracking-tight leading-none whitespace-nowrap w-full text-center text-[13vw] sm:text-[14vw] md:text-[15vw] lg:text-[16vw] mt-6 sm:mt-4 md:-mt-5"
+          as="span"
+          delay={0.1}
+          y={20}
+          className="accent-text font-medium uppercase tracking-[0.35em] text-xs sm:text-sm md:text-lg mb-1 sm:mb-2 md:mb-3"
         >
-          Привет, я Максим
+          Привет, я
         </FadeIn>
+        <div className="overflow-hidden w-full">
+          <FadeIn
+            as="h1"
+            delay={0.15}
+            y={40}
+            className="hero-heading font-bold uppercase tracking-tighter leading-[0.82] text-center whitespace-nowrap w-full text-[15vw] sm:text-[14vw] md:text-[13vw] lg:text-[12vw]"
+          >
+            Максим
+            <br />
+            Новиков
+          </FadeIn>
+        </div>
       </div>
 
       {/* Портрет */}
