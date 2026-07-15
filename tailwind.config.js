@@ -4,7 +4,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        kanit: ['Kanit', 'sans-serif'],
+        mts: ['MTS Wide', 'system-ui', 'Arial', 'sans-serif'],
       },
     },
   },

@@ -5,7 +5,7 @@ type LiveProjectButtonProps = {
 
 export default function LiveProjectButton({
   className = '',
-  label = 'Live Project',
+  label = 'Смотреть проект',
 }: LiveProjectButtonProps) {
   return (
     <button

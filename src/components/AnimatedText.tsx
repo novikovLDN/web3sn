@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, type CSSProperties } from 'react'
 import {
   motion,
   useScroll,
@@ -9,7 +9,7 @@ import {
 type AnimatedTextProps = {
   text: string
   className?: string
-  style?: React.CSSProperties
+  style?: CSSProperties
 }
 
 /**

@@ -6,7 +6,7 @@ const BASE =
   'https://shrug-person-78902957.figma.site/_components/v2/ebb2b8f25d8e24d5f0a5ca8af4c950de81aa2fd7'
 
 const ABOUT_TEXT =
-  "With more than five years of experience in design, i focus on branding, web design, and user experience, i truly enjoy working with businesses that aim to stand out and present their best image. Let's build something incredible together!"
+  'Более пяти лет я работаю в дизайне и специализируюсь на брендинге, веб-дизайне и пользовательском опыте. Мне по-настоящему нравится работать с компаниями, которые хотят выделяться и показывать себя с лучшей стороны. Давайте создадим что-то невероятное вместе!'
 
 export default function AboutSection() {
   return (
@@ -14,7 +14,7 @@ export default function AboutSection() {
       id="about"
       className="relative min-h-screen flex flex-col items-center justify-center px-5 sm:px-8 md:px-10 py-20 overflow-hidden"
     >
-      {/* Decorative corner objects */}
+      {/* Декоративные 3D-объекты по углам */}
       <FadeIn
         delay={0.1}
         x={-80}
@@ -55,22 +55,22 @@ export default function AboutSection() {
         <img src={`${BASE}/Group_134-1.2e04f3ce.png`} alt="" className="w-full h-auto" />
       </FadeIn>
 
-      {/* Content */}
+      {/* Контент */}
       <div className="relative z-10 flex flex-col items-center gap-16 sm:gap-20 md:gap-24">
         <div className="flex flex-col items-center gap-10 sm:gap-14 md:gap-16">
           <FadeIn
             as="h2"
             delay={0}
             y={40}
-            className="hero-heading font-black uppercase leading-none tracking-tight text-center"
+            className="hero-heading font-bold uppercase leading-none tracking-tight text-center"
             style={{ fontSize: 'clamp(3rem, 12vw, 160px)' }}
           >
-            About me
+            Обо мне
           </FadeIn>
 
           <AnimatedText
             text={ABOUT_TEXT}
-            className="text-[#D7E2EA] font-medium text-center leading-relaxed max-w-[560px]"
+            className="text-[#D7E2EA] font-medium text-center leading-relaxed max-w-[620px]"
             style={{ fontSize: 'clamp(1rem, 2vw, 1.35rem)' }}
           />
         </div>

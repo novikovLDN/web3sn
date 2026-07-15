@@ -1,10 +1,4 @@
-import {
-  useRef,
-  useState,
-  useCallback,
-  useEffect,
-  type ReactNode,
-} from 'react'
+import { useRef, useEffect, type CSSProperties, type ReactNode } from 'react'
 
 type MagnetProps = {
   children: ReactNode
@@ -13,12 +7,13 @@ type MagnetProps = {
   activeTransition?: string
   inactiveTransition?: string
   className?: string
-  style?: React.CSSProperties
+  style?: CSSProperties
 }
 
 /**
- * Magnetic hover: while the cursor is within `padding` of the element,
- * the element follows it, translated by (distance / strength).
+ * Магнитный ховер. Позиция считается в rAF и пишется прямо в transform через ref —
+ * без setState на каждое движение мыши, поэтому анимация идёт на композиторе
+ * максимально плавно (упирается только в частоту дисплея).
  */
 export default function Magnet({
   children,
@@ -30,50 +25,57 @@ export default function Magnet({
   style,
 }: MagnetProps) {
   const ref = useRef<HTMLDivElement>(null)
-  const [active, setActive] = useState(false)
-  const [offset, setOffset] = useState({ x: 0, y: 0 })
-
-  const handleMouseMove = useCallback(
-    (e: MouseEvent) => {
-      const el = ref.current
-      if (!el) return
-
-      const rect = el.getBoundingClientRect()
-      const centerX = rect.left + rect.width / 2
-      const centerY = rect.top + rect.height / 2
-
-      const distX = e.clientX - centerX
-      const distY = e.clientY - centerY
-
-      const withinX = Math.abs(distX) < rect.width / 2 + padding
-      const withinY = Math.abs(distY) < rect.height / 2 + padding
-
-      if (withinX && withinY) {
-        setActive(true)
-        setOffset({ x: distX / strength, y: distY / strength })
-      } else if (active) {
-        setActive(false)
-        setOffset({ x: 0, y: 0 })
-      }
-    },
-    [padding, strength, active]
-  )
+  const target = useRef({ x: 0, y: 0, active: false })
+  const rafId = useRef<number | null>(null)
 
   useEffect(() => {
-    window.addEventListener('mousemove', handleMouseMove, { passive: true })
-    return () => window.removeEventListener('mousemove', handleMouseMove)
-  }, [handleMouseMove])
+    const el = ref.current
+    if (!el) return
+
+    const apply = () => {
+      const { x, y, active } = target.current
+      el.style.transition = active ? activeTransition : inactiveTransition
+      el.style.transform = `translate3d(${x}px, ${y}px, 0)`
+      rafId.current = null
+    }
+
+    const schedule = () => {
+      if (rafId.current == null) rafId.current = requestAnimationFrame(apply)
+    }
+
+    const onMove = (e: MouseEvent) => {
+      const rect = el.getBoundingClientRect()
+      const cx = rect.left + rect.width / 2
+      const cy = rect.top + rect.height / 2
+      const dx = e.clientX - cx
+      const dy = e.clientY - cy
+
+      const within =
+        Math.abs(dx) < rect.width / 2 + padding &&
+        Math.abs(dy) < rect.height / 2 + padding
+
+      if (within) {
+        target.current = { x: dx / strength, y: dy / strength, active: true }
+      } else if (target.current.active) {
+        target.current = { x: 0, y: 0, active: false }
+      } else {
+        return
+      }
+      schedule()
+    }
+
+    window.addEventListener('mousemove', onMove, { passive: true })
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      if (rafId.current != null) cancelAnimationFrame(rafId.current)
+    }
+  }, [padding, strength, activeTransition, inactiveTransition])
 
   return (
     <div
       ref={ref}
       className={className}
-      style={{
-        ...style,
-        transform: `translate3d(${offset.x}px, ${offset.y}px, 0)`,
-        transition: active ? activeTransition : inactiveTransition,
-        willChange: 'transform',
-      }}
+      style={{ ...style, willChange: 'transform', transform: 'translate3d(0,0,0)' }}
     >
       {children}
     </div>

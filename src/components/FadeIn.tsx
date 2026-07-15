@@ -1,4 +1,9 @@
-import { useMemo, type ElementType, type ReactNode } from 'react'
+import {
+  useMemo,
+  type CSSProperties,
+  type ElementType,
+  type ReactNode,
+} from 'react'
 import { motion } from 'framer-motion'
 
 type FadeInProps = {
@@ -9,7 +14,7 @@ type FadeInProps = {
   x?: number
   y?: number
   className?: string
-  style?: React.CSSProperties
+  style?: CSSProperties
 }
 
 /**

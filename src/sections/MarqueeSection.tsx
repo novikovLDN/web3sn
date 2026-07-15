@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 
 const IMAGES = [
   'https://motionsites.ai/assets/hero-space-voyage-preview-eECLH3Yc.gif',
@@ -33,7 +33,8 @@ function Tile({ src }: { src: string }) {
       src={src}
       alt=""
       loading="lazy"
-      className="rounded-2xl object-cover shrink-0"
+      draggable={false}
+      className="rounded-2xl object-cover shrink-0 select-none"
       style={{ width: 420, height: 270 }}
     />
   )
@@ -41,24 +42,52 @@ function Tile({ src }: { src: string }) {
 
 export default function MarqueeSection() {
   const sectionRef = useRef<HTMLElement>(null)
-  const [offset, setOffset] = useState(0)
+  const row1Ref = useRef<HTMLDivElement>(null)
+  const row2Ref = useRef<HTMLDivElement>(null)
+
+  const targetOffset = useRef(0)
+  const currentOffset = useRef(0)
+  const rafId = useRef<number | null>(null)
 
   useEffect(() => {
-    const handleScroll = () => {
+    const computeTarget = () => {
       const section = sectionRef.current
       if (!section) return
-      const sectionTop = section.offsetTop
-      const raw =
-        (window.scrollY - sectionTop + window.innerHeight) * 0.3
-      setOffset(raw)
+      targetOffset.current =
+        (window.scrollY - section.offsetTop + window.innerHeight) * 0.3
+      startLoop()
     }
 
-    handleScroll()
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    window.addEventListener('resize', handleScroll, { passive: true })
+    const render = () => {
+      // Плавное догоняющее сглаживание — движение остаётся мягким на любой частоте кадров.
+      const diff = targetOffset.current - currentOffset.current
+      currentOffset.current += diff * 0.12
+
+      const off = currentOffset.current - 200
+      if (row1Ref.current)
+        row1Ref.current.style.transform = `translate3d(${off}px,0,0)`
+      if (row2Ref.current)
+        row2Ref.current.style.transform = `translate3d(${-off}px,0,0)`
+
+      // Останавливаем цикл, когда движение практически завершено — бережём батарею.
+      if (Math.abs(diff) > 0.3) {
+        rafId.current = requestAnimationFrame(render)
+      } else {
+        rafId.current = null
+      }
+    }
+
+    const startLoop = () => {
+      if (rafId.current == null) rafId.current = requestAnimationFrame(render)
+    }
+
+    computeTarget()
+    window.addEventListener('scroll', computeTarget, { passive: true })
+    window.addEventListener('resize', computeTarget, { passive: true })
     return () => {
-      window.removeEventListener('scroll', handleScroll)
-      window.removeEventListener('resize', handleScroll)
+      window.removeEventListener('scroll', computeTarget)
+      window.removeEventListener('resize', computeTarget)
+      if (rafId.current != null) cancelAnimationFrame(rafId.current)
     }
   }, [])
 
@@ -68,26 +97,20 @@ export default function MarqueeSection() {
       className="bg-[#0C0C0C] pt-24 sm:pt-32 md:pt-40 pb-10 overflow-hidden"
     >
       <div className="flex flex-col gap-3">
-        {/* Row 1 -> moves right */}
         <div
+          ref={row1Ref}
           className="flex gap-3"
-          style={{
-            transform: `translateX(${offset - 200}px)`,
-            willChange: 'transform',
-          }}
+          style={{ willChange: 'transform', transform: 'translate3d(-200px,0,0)' }}
         >
           {ROW_ONE.map((src, i) => (
             <Tile key={`r1-${i}`} src={src} />
           ))}
         </div>
 
-        {/* Row 2 -> moves left */}
         <div
+          ref={row2Ref}
           className="flex gap-3"
-          style={{
-            transform: `translateX(${-(offset - 200)}px)`,
-            willChange: 'transform',
-          }}
+          style={{ willChange: 'transform', transform: 'translate3d(200px,0,0)' }}
         >
           {ROW_TWO.map((src, i) => (
             <Tile key={`r2-${i}`} src={src} />

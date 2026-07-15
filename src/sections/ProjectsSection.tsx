@@ -13,7 +13,7 @@ type Project = {
 const PROJECTS: Project[] = [
   {
     number: '01',
-    category: 'Client',
+    category: 'Клиент',
     name: 'Nextlevel Studio',
     images: [
       'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260412_055344_5eff02e0-87a5-41ce-b64f-eb08da8f33db.png&w=1280&q=85',
@@ -23,7 +23,7 @@ const PROJECTS: Project[] = [
   },
   {
     number: '02',
-    category: 'Personal',
+    category: 'Личный проект',
     name: 'Aura Brand Identity',
     images: [
       'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260412_055654_911201c5-36d9-4bc6-bac7-331adfce159f.png&w=1280&q=85',
@@ -33,7 +33,7 @@ const PROJECTS: Project[] = [
   },
   {
     number: '03',
-    category: 'Client',
+    category: 'Клиент',
     name: 'Solaris Digital',
     images: [
       'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260412_055759_963cfb0b-4bd1-4b0f-9d0a-09bd6cf95b2f.png&w=1280&q=85',
@@ -77,7 +77,7 @@ function ProjectCard({
         <div className="flex flex-wrap items-center justify-between gap-4 mb-4 sm:mb-6 md:mb-8">
           <div className="flex items-center gap-4 sm:gap-6 md:gap-8">
             <span
-              className="text-[#D7E2EA] font-black leading-none"
+              className="text-[#D7E2EA] font-bold leading-none"
               style={{ fontSize: 'clamp(3rem, 10vw, 140px)' }}
             >
               {project.number}
@@ -139,10 +139,10 @@ export default function ProjectsSection() {
         as="h2"
         delay={0}
         y={40}
-        className="hero-heading font-black uppercase leading-none tracking-tight text-center mb-8 sm:mb-12"
+        className="hero-heading font-bold uppercase leading-none tracking-tight text-center mb-8 sm:mb-12"
         style={{ fontSize: 'clamp(3rem, 12vw, 160px)' }}
       >
-        Project
+        Проекты
       </FadeIn>
 
       <div className="max-w-6xl mx-auto">

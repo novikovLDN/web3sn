@@ -3,12 +3,13 @@ type ContactButtonProps = {
   label?: string
 }
 
-// Contact target is configurable via env (VITE_CONTACT_EMAIL), baked at build time.
-const CONTACT_EMAIL = import.meta.env.VITE_CONTACT_EMAIL ?? 'hello@jack3d.dev'
+// Контактный адрес настраивается через env (VITE_CONTACT_EMAIL), запекается при сборке.
+const CONTACT_EMAIL =
+  import.meta.env.VITE_CONTACT_EMAIL ?? 'founder@atlassecure.uk'
 
 export default function ContactButton({
   className = '',
-  label = 'Contact Me',
+  label = 'Связаться',
 }: ContactButtonProps) {
   return (
     <a
@@ -26,6 +27,7 @@ export default function ContactButton({
           '0px 4px 4px rgba(181, 1, 167, 0.25), 4px 4px 12px #7721B1 inset',
         outline: '2px solid #FFFFFF',
         outlineOffset: '-3px',
+        willChange: 'transform',
       }}
     >
       {label}
