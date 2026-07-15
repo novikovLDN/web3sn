@@ -6,7 +6,7 @@ const NAV_LINKS: { label: string; href: string }[] = [
   { label: 'О себе', href: '#about' },
   { label: 'Услуги', href: '#price' },
   { label: 'Проекты', href: '#projects' },
-  { label: 'Контакты', href: 'mailto:founder@atlassecure.uk' },
+  { label: 'Контакты', href: '#contact' },
 ]
 
 const PORTRAIT_URL =
