@@ -5,6 +5,9 @@ import {
   HALF,
   SEA_Z,
   PITS,
+  POND,
+  POND_CX,
+  POND_CZ,
   pitAt,
   inSea,
   inPond,
@@ -28,7 +31,6 @@ function VoxelFloor() {
   const data = useMemo(() => {
     const items: { x: number; z: number; y: number; color: THREE.Color }[] = []
     const sand = new THREE.Color('#c2b27a')
-    const seabed = new THREE.Color('#8a7f52')
     const path = new THREE.Color('#8a8577')
     const tmp = new THREE.Color()
     const STEP = 0.75 // мелкие блоки — детальнее текстуры, но не слишком тяжело
@@ -38,10 +40,9 @@ function VoxelFloor() {
         const cz = z + STEP / 2
         if (pitAt(cx, cz)) continue // дно ям строится отдельно
         if (inSea(cx, cz)) continue // глубокое море — дно отдельным слоем
+        if (inPond(cx, cz)) continue // озеро с углублением — дно отдельно
         let c: THREE.Color
-        if (inPond(cx, cz)) {
-          c = seabed // мелкий пруд-брод (дно у поверхности)
-        } else if (isBeach(cx, cz)) {
+        if (isBeach(cx, cz)) {
           c = sand
         } else {
           const b = BIOMES[biomeAt(cx, cz)]
@@ -105,6 +106,7 @@ function GroundColliders() {
         const cz = z + S / 2
         if (pitAt(cx, cz)) continue // прорезь под яму
         if (inSea(cx, cz)) continue // море — дно ниже (отдельный коллайдер)
+        if (inPond(cx, cz)) continue // озеро — дно ниже
         arr.push([cx, cz, S])
       }
     }
@@ -113,6 +115,8 @@ function GroundColliders() {
 
   const seaMidZ = (SEA_Z + HALF) / 2
   const seaHalfZ = (HALF - SEA_Z) / 2
+  const pondHW = (POND.x1 - POND.x0) / 2
+  const pondHD = (POND.z1 - POND.z0) / 2
 
   return (
     <RigidBody type="fixed" colliders={false} friction={1}>
@@ -122,6 +126,11 @@ function GroundColliders() {
       ))}
       {/* дно моря (верх на -3) — глубина для плавания */}
       <CuboidCollider args={[HALF, 2, seaHalfZ + 0.1]} position={[0, -5, seaMidZ]} />
+      {/* дно озера (верх на -depth) */}
+      <CuboidCollider
+        args={[pondHW + 0.1, 2, pondHD + 0.1]}
+        position={[POND_CX, -POND.depth - 2, POND_CZ]}
+      />
       {/* границы мира */}
       <CuboidCollider args={[HALF, 6, 0.5]} position={[0, 6, -HALF]} />
       <CuboidCollider args={[HALF, 6, 0.5]} position={[0, 6, HALF]} />

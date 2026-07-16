@@ -165,18 +165,19 @@ export default function Player({
     const submerged = region && pos.y < WATER_LEVEL
     playerState.inWater = inWater
 
-    if (grounded && keys.current['Space'] && vy < 3) vy = 9
-
     if (inWater) {
+      // всплеск при входе
       if (!wasInWater.current && cur.y < -1.2) {
         splash.current?.burst(pos.x, pos.z, Math.min(2, Math.abs(cur.y) / 5))
       }
-      const depth = THREE.MathUtils.clamp(WATER_LEVEL - feetY, 0, 1.4)
-      vy += depth * 34 * dt
-      vy *= 0.9
+      // сопротивление воды + медленное погружение (можно утонуть)
       vx *= 0.55
       vz *= 0.55
-      if (keys.current['Space']) vy = 5.5
+      vy = cur.y * 0.82 - 5 * dt
+      // всплыть / держаться на плаву — Пробел
+      if (keys.current['Space']) vy = 4.8
+    } else if (grounded && keys.current['Space'] && vy < 3) {
+      vy = 9
     }
     if (submerged && moving && Math.random() < 0.25) {
       splash.current?.burst(pos.x, pos.z, 0.5)

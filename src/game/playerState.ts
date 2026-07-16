@@ -14,8 +14,10 @@ export const playerState = {
 export const HALF = 100 // мир 200×200
 export const WATER_LEVEL = 0.4
 
-// Пруд (озеро) в глубине суши
-export const POND = { cx: 16, cz: -16, rx: 9, rz: 8 }
+// Озеро — сетко-выровненный прямоугольник с углублением (дно на -POND.depth)
+export const POND = { x0: 10, x1: 30, z0: -30, z1: -10, depth: 2 }
+export const POND_CX = (POND.x0 + POND.x1) / 2
+export const POND_CZ = (POND.z0 + POND.z1) / 2
 
 // Море — вся северная кромка карты
 export const SEA_Z = 62 // берег: вода при z > SEA_Z
@@ -40,9 +42,7 @@ export const PITS: Pit[] = [
 ]
 
 export function inPond(x: number, z: number) {
-  const dx = (x - POND.cx) / POND.rx
-  const dz = (z - POND.cz) / POND.rz
-  return dx * dx + dz * dz < 1
+  return x > POND.x0 && x < POND.x1 && z > POND.z0 && z < POND.z1
 }
 
 export function inSea(_x: number, z: number) {

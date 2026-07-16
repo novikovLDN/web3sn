@@ -1,7 +1,40 @@
-import { useRef } from 'react'
+import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { RigidBody, CuboidCollider } from '@react-three/rapier'
 import * as THREE from 'three'
+
+/* Дым из трубы — поднимающиеся тающие клубы */
+function Smoke() {
+  const ref = useRef<THREE.Group>(null)
+  const puffs = useMemo(
+    () => Array.from({ length: 5 }, (_, i) => ({ off: i / 5 })),
+    []
+  )
+  useFrame(({ clock }) => {
+    if (!ref.current) return
+    const t = clock.getElapsedTime() * 0.4
+    ref.current.children.forEach((c, i) => {
+      const p = (t + puffs[i].off) % 1
+      c.position.y = p * 3
+      c.position.x = Math.sin(p * 6 + i) * 0.3
+      const s = 0.2 + p * 0.6
+      c.scale.setScalar(s)
+      ;(c as THREE.Mesh).material &&
+        (((c as THREE.Mesh).material as THREE.MeshStandardMaterial).opacity =
+          (1 - p) * 0.5)
+    })
+  })
+  return (
+    <group ref={ref}>
+      {puffs.map((_, i) => (
+        <mesh key={i}>
+          <icosahedronGeometry args={[0.4, 0]} />
+          <meshStandardMaterial color="#c8ccd2" transparent opacity={0.4} roughness={1} />
+        </mesh>
+      ))}
+    </group>
+  )
+}
 
 /* ── Дом (стены с дверным проёмом, крыша-пирамида, окно) ───────── */
 function House({
@@ -62,16 +95,79 @@ function House({
           <meshStandardMaterial color="#bfe4ff" emissive="#6ab0e0" emissiveIntensity={0.3} roughness={0.2} />
         </mesh>
       ))}
+      {/* дверь в проёме */}
+      <mesh position={[0, 1.1, W / 2 + 0.02]}>
+        <boxGeometry args={[1.3, 2.2, 0.08]} />
+        <meshStandardMaterial color="#5b3b23" roughness={0.85} />
+      </mesh>
+      <mesh position={[0.4, 1.1, W / 2 + 0.08]}>
+        <boxGeometry args={[0.1, 0.1, 0.06]} />
+        <meshStandardMaterial color="#e8c840" metalness={0.6} roughness={0.3} />
+      </mesh>
+      {/* крыльцо-ступенька */}
+      <mesh castShadow receiveShadow position={[0, 0.12, W / 2 + 0.5]}>
+        <boxGeometry args={[2.2, 0.24, 1]} />
+        <meshStandardMaterial color="#8a6a48" roughness={0.9} />
+      </mesh>
       {/* крыша-пирамида */}
       <mesh castShadow position={[0, H + 1.1, 0]} rotation={[0, Math.PI / 4, 0]}>
         <coneGeometry args={[W * 0.82, 2.4, 4]} />
         <meshStandardMaterial color={roof} roughness={0.8} flatShading />
       </mesh>
+      {/* труба + дым */}
+      <mesh castShadow position={[1.4, H + 1.4, -1.2]}>
+        <boxGeometry args={[0.6, 1.2, 0.6]} />
+        <meshStandardMaterial color="#7a5347" roughness={0.9} />
+      </mesh>
+      <group position={[1.4, H + 2.1, -1.2]}>
+        <Smoke />
+      </group>
       {/* пол */}
       <mesh receiveShadow position={[0, 0.06, 0]}>
         <boxGeometry args={[W - T, 0.12, W - T]} />
         <meshStandardMaterial color="#7a5a3a" roughness={0.9} />
       </mesh>
+    </group>
+  )
+}
+
+/* Забор — столбики с перекладинами по периметру */
+function Fence({
+  from,
+  to,
+}: {
+  from: [number, number]
+  to: [number, number]
+}) {
+  const dx = to[0] - from[0]
+  const dz = to[1] - from[1]
+  const len = Math.hypot(dx, dz)
+  const posts = Math.max(2, Math.round(len / 2))
+  const ang = Math.atan2(dx, dz)
+  const items = []
+  for (let i = 0; i <= posts; i++) {
+    const t = i / posts
+    items.push([from[0] + dx * t, from[1] + dz * t] as [number, number])
+  }
+  return (
+    <group>
+      {items.map((p, i) => (
+        <mesh key={i} castShadow position={[p[0], 0.6, p[1]]}>
+          <boxGeometry args={[0.14, 1.2, 0.14]} />
+          <meshStandardMaterial color="#6a4a2e" roughness={0.9} />
+        </mesh>
+      ))}
+      {/* перекладины */}
+      {[0.45, 0.9].map((h, k) => (
+        <mesh
+          key={k}
+          position={[(from[0] + to[0]) / 2, h, (from[1] + to[1]) / 2]}
+          rotation={[0, ang, 0]}
+        >
+          <boxGeometry args={[0.08, 0.1, len]} />
+          <meshStandardMaterial color="#6a4a2e" roughness={0.9} />
+        </mesh>
+      ))}
     </group>
   )
 }
@@ -175,6 +271,14 @@ export default function Structures() {
       <Lamp position={[-34, 0, 24]} />
       <Lamp position={[-44, 0, 28]} />
       <Lamp position={[-40, 0, 36]} />
+
+      {/* забор по периметру деревни (с проходами) */}
+      <Fence from={[-58, 16]} to={[-58, 46]} />
+      <Fence from={[-58, 46]} to={[-40, 46]} />
+      <Fence from={[-28, 46]} to={[-22, 46]} />
+      <Fence from={[-22, 46]} to={[-22, 16]} />
+      <Fence from={[-22, 16]} to={[-40, 16]} />
+      <Fence from={[-52, 16]} to={[-58, 16]} />
     </group>
   )
 }

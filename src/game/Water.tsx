@@ -1,7 +1,7 @@
 import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { WATER_LEVEL, POND, SEA_Z, HALF } from './playerState'
+import { WATER_LEVEL, POND, POND_CX, POND_CZ, SEA_Z, HALF } from './playerState'
 
 /* Параметризуемая волновая поверхность */
 function WaterPatch({
@@ -215,12 +215,27 @@ export default function Water({
   const seaDepth = HALF - SEA_Z
   return (
     <group>
-      {/* Пруд */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[POND.cx, -0.9, POND.cz]} receiveShadow>
-        <planeGeometry args={[POND.rx * 2, POND.rz * 2]} />
-        <meshStandardMaterial color="#18465a" roughness={1} />
-      </mesh>
-      <WaterPatch center={[POND.cx, WATER_LEVEL, POND.cz]} size={[POND.rx * 2, POND.rz * 2]} radial />
+      {/* Озеро с углублением */}
+      {(() => {
+        const pw = POND.x1 - POND.x0
+        const pd = POND.z1 - POND.z0
+        return (
+          <>
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[POND_CX, -POND.depth, POND_CZ]} receiveShadow>
+              <planeGeometry args={[pw, pd]} />
+              <meshStandardMaterial color="#2a5a48" roughness={1} />
+            </mesh>
+            <WaterPatch
+              center={[POND_CX, WATER_LEVEL, POND_CZ]}
+              size={[pw, pd]}
+              amp={0.08}
+              deep="#134a5e"
+              shallow="#3ba7c4"
+              radial
+            />
+          </>
+        )
+      })()}
 
       {/* Дно моря (песок на -3, видно сквозь воду) */}
       <mesh

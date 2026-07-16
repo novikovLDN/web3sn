@@ -1,6 +1,6 @@
 import { useLayoutEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
-import { HALF, inAnyWater, isBeach, pitAt, inPond, inSea, SEA_Z } from './playerState'
+import { HALF, inAnyWater, isBeach, pitAt, inPond, inSea, SEA_Z, POND_CX, POND_CZ } from './playerState'
 
 function rng(seed: number) {
   let s = seed
@@ -112,8 +112,8 @@ export default function Vegetation() {
     } else {
       // берег озера
       const a = r() * Math.PI * 2
-      x = 16 + Math.cos(a) * (9 + r() * 1.5)
-      z = -16 + Math.sin(a) * (8 + r() * 1.5)
+      x = POND_CX + Math.cos(a) * (11 + r() * 2)
+      z = POND_CZ + Math.sin(a) * (11 + r() * 2)
     }
     if (inSea(x, z) || inPond(x, z) || pitAt(x, z)) return null
     return [x, 0.5, z]

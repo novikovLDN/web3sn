@@ -23,6 +23,7 @@ import Boat from './Boat'
 import Clouds from './Clouds'
 import Structures from './Structures'
 import Animals from './Animals'
+import Atmosphere from './Atmosphere'
 import { SEA_Z, HALF, playerState } from './playerState'
 import { SKINS } from './skins'
 
@@ -191,6 +192,7 @@ export default function MiniGame() {
         <Water apiRef={splash} />
         <Dust apiRef={dust} />
         <Clouds />
+        <Atmosphere />
 
         {debug && <DebugCam />}
         <LookControls yaw={yaw} pitch={pitch} onLockChange={onLockChange} />
