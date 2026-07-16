@@ -14,8 +14,8 @@ export const playerState = {
 export const HALF = 100 // мир 200×200
 export const WATER_LEVEL = 0.4
 
-// Озеро — сетко-выровненный прямоугольник с неглубоким углублением
-export const POND = { x0: 10, x1: 30, z0: -30, z1: -10, depth: 1.3 }
+// Озеро — неглубокий брод (мягкий вход, без обрыва)
+export const POND = { x0: 10, x1: 30, z0: -30, z1: -10, depth: 0.9 }
 export const POND_CX = (POND.x0 + POND.x1) / 2
 export const POND_CZ = (POND.z0 + POND.z1) / 2
 
@@ -31,15 +31,8 @@ export type Pit = {
   z1: number
   depth: number
 }
-// Выровнены по сетке коллайдеров (кратно 10) — чтобы не было дыр на краях
-export const PITS: Pit[] = [
-  { x0: -30, x1: -20, z0: 0, z1: 10, depth: 4 },
-  { x0: 20, x1: 30, z0: -10, z1: 0, depth: 5 },
-  { x0: -10, x1: 0, z0: -30, z1: -20, depth: 6 },
-  { x0: 50, x1: 60, z0: 20, z1: 30, depth: 5 },
-  { x0: -60, x1: -50, z0: -40, z1: -30, depth: 6 },
-  { x0: 30, x1: 40, z0: -60, z1: -50, depth: 4 },
-]
+// Ям больше нет — руда вынесена на поверхность валунами (без резких обрывов)
+export const PITS: Pit[] = []
 
 export function inPond(x: number, z: number) {
   return x > POND.x0 && x < POND.x1 && z > POND.z0 && z < POND.z1

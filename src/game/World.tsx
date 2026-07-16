@@ -4,7 +4,6 @@ import { RigidBody, CuboidCollider } from '@react-three/rapier'
 import {
   HALF,
   SEA_Z,
-  PITS,
   POND,
   POND_CX,
   POND_CZ,
@@ -13,7 +12,6 @@ import {
   inPond,
   inAnyWater,
   isBeach,
-  type Pit,
 } from './playerState'
 import { makeBlockNoise, makeBlockNormal } from './textures'
 import { biomeAt, BIOMES } from './biomes'
@@ -147,123 +145,72 @@ function GroundColliders() {
   )
 }
 
-/* ── Яма-карьер с рудой и лестницей ───────────────────────────── */
+/* ── Рудный валун на поверхности (вместо ям) ──────────────────── */
 const ORE = [
-  { color: '#ffcf3a', emissive: '#ffb000', name: 'gold' },
-  { color: '#b9a58a', emissive: '#6a5a44', name: 'iron' },
-  { color: '#6fe0ff', emissive: '#2aa8d0', name: 'crystal' },
-  { color: '#c07fe6', emissive: '#7a2ad0', name: 'amethyst' },
+  { color: '#ffcf3a', emissive: '#ffb000' },
+  { color: '#b9a58a', emissive: '#6a5a44' },
+  { color: '#6fe0ff', emissive: '#2aa8d0' },
+  { color: '#c07fe6', emissive: '#7a2ad0' },
 ]
 
-type QBox = {
-  x: number
-  y: number
-  z: number
-  sx: number
-  sy: number
-  sz: number
-  color: string
-  floor?: boolean
-}
-
-function Quarry({ pit }: { pit: Pit }) {
-  const { x0, x1, z0, z1 } = pit
-  const w = x1 - x0
-  const d = z1 - z0
-  const cx = (x0 + x1) / 2
-  const cz = (z0 + z1) / 2
-  const RINGS = Math.max(2, Math.min(3, Math.floor(Math.min(w, d) / 2) - 1))
+function OreRock({ position, seed }: { position: [number, number, number]; seed: number }) {
   const stoneTex = useMemo(() => makeBlockNoise(16, 0.22), [])
   const stoneNrm = useMemo(() => makeBlockNormal(16, 1.6), [])
-
-  // Террасная чаша: концентрические ступени по 1 блоку (спуск/подъём пешком)
-  const boxes = useMemo(() => {
-    const list: QBox[] = []
-    const stoneA = '#6f727b'
-    const stoneB = '#5c5f68'
-    for (let r = 1; r <= RINGS; r++) {
-      const cy = -r - 0.5 // центр блока, верх на -r
-      const o = r - 1
-      const ax0 = x0 + o
-      const ax1 = x1 - o
-      const az0 = z0 + o
-      const az1 = z1 - o
-      const lenX = ax1 - ax0
-      const col = r % 2 ? stoneA : stoneB
-      // южный и северный «протекторы» (по всей ширине)
-      list.push({ x: (ax0 + ax1) / 2, y: cy, z: az0 + 0.5, sx: lenX, sy: 1, sz: 1, color: col })
-      list.push({ x: (ax0 + ax1) / 2, y: cy, z: az1 - 0.5, sx: lenX, sy: 1, sz: 1, color: col })
-      // западный и восточный (без углов)
-      const lenZ = az1 - az0 - 2
-      if (lenZ > 0) {
-        list.push({ x: ax0 + 0.5, y: cy, z: (az0 + az1) / 2, sx: 1, sy: 1, sz: lenZ, color: col })
-        list.push({ x: ax1 - 0.5, y: cy, z: (az0 + az1) / 2, sx: 1, sy: 1, sz: lenZ, color: col })
-      }
-    }
-    // дно
-    const fo = RINGS
-    const fx0 = x0 + fo
-    const fx1 = x1 - fo
-    const fz0 = z0 + fo
-    const fz1 = z1 - fo
-    list.push({
-      x: (fx0 + fx1) / 2,
-      y: -RINGS - 1,
-      z: (fz0 + fz1) / 2,
-      sx: fx1 - fx0,
-      sy: 2,
-      sz: fz1 - fz0,
-      color: '#4d4f57',
-      floor: true,
-    })
-    return list
-  }, [pit, RINGS, cx, cz, w, d])
-
-  // руда — кубики на ступенях и дне
-  const ores = useMemo(() => {
-    const arr: { pos: [number, number, number]; ore: (typeof ORE)[number] }[] = []
-    for (let i = 0; i < 12; i++) {
-      const r = 1 + Math.floor(hash(i, pit.x0) * (RINGS + 1))
-      const o = r - 1
-      const px = x0 + o + 0.5 + hash(i * 1.7, pit.z0) * (w - 2 * o - 1)
-      const pz = z0 + o + 0.5 + hash(i * 2.3, pit.z0) * (d - 2 * o - 1)
-      const py = -Math.min(r, RINGS + 1) + 0.35
-      arr.push({ pos: [px, py, pz], ore: ORE[Math.floor(hash(i, 7) * ORE.length)] })
+  const chunks = useMemo(() => {
+    const arr: { p: [number, number, number]; s: number }[] = []
+    for (let i = 0; i < 5; i++) {
+      arr.push({
+        p: [
+          (hash(seed + i, 1) - 0.5) * 2.4,
+          0.4 + hash(seed, i) * 1.2,
+          (hash(1, seed + i) - 0.5) * 2.4,
+        ],
+        s: 0.9 + hash(seed + i, seed) * 1.1,
+      })
     }
     return arr
-  }, [pit, RINGS, w, d])
+  }, [seed])
+  const veins = useMemo(() => {
+    const arr: { p: [number, number, number]; ore: (typeof ORE)[number] }[] = []
+    for (let i = 0; i < 4; i++) {
+      arr.push({
+        p: [
+          (hash(seed * 2 + i, 3) - 0.5) * 2.2,
+          0.5 + hash(seed, i * 2) * 1.4,
+          (hash(3, seed * 2 + i) - 0.5) * 2.2,
+        ],
+        ore: ORE[Math.floor(hash(i, seed) * ORE.length)],
+      })
+    }
+    return arr
+  }, [seed])
 
   return (
-    <group>
-      <RigidBody type="fixed" colliders={false} friction={1}>
-        {boxes.map((b, i) => (
-          <CuboidCollider
-            key={i}
-            args={[b.sx / 2 + 0.02, b.sy / 2, b.sz / 2 + 0.02]}
-            position={[b.x, b.y, b.z]}
-          />
-        ))}
-      </RigidBody>
-
-      {boxes.map((b, i) => (
-        <mesh key={i} position={[b.x, b.y, b.z]} receiveShadow castShadow>
-          <boxGeometry args={[b.sx, b.sy, b.sz]} />
+    <group position={position}>
+      <RigidBody type="fixed" colliders="cuboid">
+        <mesh castShadow receiveShadow position={[0, 0.7, 0]}>
+          <boxGeometry args={[2.6, 1.4, 2.6]} />
           <meshStandardMaterial
-            color={b.color}
+            color="#6a6d75"
             map={stoneTex}
             normalMap={stoneNrm}
             normalScale={new THREE.Vector2(0.6, 0.6)}
             roughness={1}
           />
         </mesh>
+      </RigidBody>
+      {chunks.map((c, i) => (
+        <mesh key={i} castShadow position={c.p}>
+          <boxGeometry args={[c.s, c.s, c.s]} />
+          <meshStandardMaterial color="#5c5f68" map={stoneTex} roughness={1} />
+        </mesh>
       ))}
-
-      {ores.map((o, i) => (
-        <mesh key={i} position={o.pos} castShadow>
-          <boxGeometry args={[0.55, 0.55, 0.55]} />
+      {veins.map((v, i) => (
+        <mesh key={i} castShadow position={v.p}>
+          <boxGeometry args={[0.5, 0.5, 0.5]} />
           <meshStandardMaterial
-            color={o.ore.color}
-            emissive={o.ore.emissive}
+            color={v.ore.color}
+            emissive={v.ore.emissive}
             emissiveIntensity={0.9}
             roughness={0.3}
             metalness={0.6}
@@ -356,8 +303,21 @@ export default function World() {
     for (let i = 0; i < 18; i++) {
       const x = Math.round((hash(i * 5.5, 2.2) - 0.5) * (HALF * 1.8))
       const z = Math.round((hash(3.3, i * 4.1) - 0.5) * (HALF * 1.8))
-      if (inAnyWater(x, z) || pitAt(x, z)) continue
+      if (inAnyWater(x, z)) continue
       arr.push([x, 0.6, z])
+    }
+    return arr
+  }, [])
+
+  // рудные валуны на поверхности (замена ям)
+  const oreRocks = useMemo<[number, number, number][]>(() => {
+    const arr: [number, number, number][] = []
+    for (let i = 0; i < 10; i++) {
+      const x = Math.round((hash(i * 7.7, 9.1) - 0.5) * (HALF * 1.7))
+      const z = Math.round((hash(6.2, i * 8.3) - 0.5) * (HALF * 1.7))
+      if (inAnyWater(x, z)) continue
+      if (Math.abs(x) < 5 && Math.abs(z) < 8) continue // не на старте
+      arr.push([x, 0, z])
     }
     return arr
   }, [])
@@ -366,14 +326,14 @@ export default function World() {
     <group>
       <VoxelFloor />
       <GroundColliders />
-      {PITS.map((p, i) => (
-        <Quarry key={i} pit={p} />
-      ))}
       {trees.map((t, i) => (
         <Tree key={`t${i}`} position={t.pos} trunk={t.trunk} leaves={t.leaves} />
       ))}
       {rocks.map((p, i) => (
         <Rock key={`r${i}`} position={p} />
+      ))}
+      {oreRocks.map((p, i) => (
+        <OreRock key={`o${i}`} position={p} seed={i * 13 + 3} />
       ))}
     </group>
   )
