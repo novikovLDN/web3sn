@@ -2,7 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { Physics } from '@react-three/rapier'
 import { Sky } from '@react-three/drei'
-import { EffectComposer, Bloom, Vignette, SMAA } from '@react-three/postprocessing'
+import {
+  EffectComposer,
+  Bloom,
+  Vignette,
+  SMAA,
+  HueSaturation,
+  BrightnessContrast,
+} from '@react-three/postprocessing'
 import * as THREE from 'three'
 import World from './World'
 import Player from './Player'
@@ -144,25 +151,30 @@ export default function MiniGame() {
         camera={{ position: [0, 5, 13], fov: 60, near: 0.1, far: 300 }}
         onCreated={({ gl }) => {
           gl.toneMapping = THREE.ACESFilmicToneMapping
-          gl.toneMappingExposure = 1.05
+          gl.toneMappingExposure = 1.12
           gl.shadowMap.type = THREE.PCFSoftShadowMap
           canvasEl.current = gl.domElement
         }}
       >
-        <Sky sunPosition={[60, 40, 30]} turbidity={4} rayleigh={1.0} mieCoefficient={0.004} />
-        <fog attach="fog" args={['#c4d8e8', 130, 300]} />
+        <Sky sunPosition={[60, 55, 35]} turbidity={3} rayleigh={0.7} mieCoefficient={0.003} mieDirectionalG={0.8} />
+        <fog attach="fog" args={['#d6e4ee', 150, 320]} />
 
-        <ambientLight intensity={0.55} />
-        <hemisphereLight args={['#cfe6ff', '#4a5a3a', 0.6]} />
+        {/* тёплое солнце + прохладная подсветка неба/земли (мягкая гармония) */}
+        <ambientLight intensity={0.32} color="#cdd9e6" />
+        <hemisphereLight args={['#dcecff', '#5a6a4a', 0.75]} />
         <directionalLight
-          position={[30, 40, 20]}
-          intensity={2.4}
+          position={[45, 55, 35]}
+          intensity={2.7}
+          color="#fff2d6"
           castShadow
           shadow-mapSize={[2048, 2048]}
           shadow-bias={-0.0004}
+          shadow-normalBias={0.03}
         >
-          <orthographicCamera attach="shadow-camera" args={[-90, 90, 90, -90, 0.1, 220]} />
+          <orthographicCamera attach="shadow-camera" args={[-90, 90, 90, -90, 0.1, 240]} />
         </directionalLight>
+        {/* холодный контровой свет для объёма в тенях */}
+        <directionalLight position={[-40, 25, -30]} intensity={0.4} color="#8fb4d8" />
 
         <Physics gravity={[0, -22, 0]}>
           <World />
@@ -184,8 +196,10 @@ export default function MiniGame() {
         <LookControls yaw={yaw} pitch={pitch} onLockChange={onLockChange} />
 
         <EffectComposer multisampling={0} enableNormalPass={false}>
-          <Bloom mipmapBlur intensity={0.55} luminanceThreshold={0.78} luminanceSmoothing={0.28} radius={0.6} />
-          <Vignette eskil={false} offset={0.26} darkness={0.72} />
+          <Bloom mipmapBlur intensity={0.5} luminanceThreshold={0.8} luminanceSmoothing={0.3} radius={0.62} />
+          <HueSaturation saturation={0.12} />
+          <BrightnessContrast brightness={0.01} contrast={0.09} />
+          <Vignette eskil={false} offset={0.35} darkness={0.5} />
           <SMAA />
         </EffectComposer>
       </Canvas>
