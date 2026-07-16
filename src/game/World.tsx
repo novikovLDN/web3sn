@@ -1,6 +1,7 @@
 import { useLayoutEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { RigidBody, CuboidCollider } from '@react-three/rapier'
+import { inPond } from './playerState'
 
 const HALF = 25 // мир 50×50
 
@@ -23,15 +24,18 @@ function VoxelFloor() {
     const path = new THREE.Color('#8a8577')
     for (let x = -HALF; x < HALF; x++) {
       for (let z = -HALF; z < HALF; z++) {
+        // не мостим дно пруда (там вода)
+        if (inPond(x + 0.5, z + 0.5)) continue
         const n = hash(x, z)
         let c = n > 0.5 ? grass : grass2
         // тропа по центру
         if (Math.abs(x) < 2 && z > -HALF + 2) c = path
+        // песчаный берег у пруда
+        if (inPond(x + 0.5, z + 0.5 + 1.5) || inPond(x + 0.5, z + 0.5 - 1.5)) c = sand
         // пятна земли/камня/песка для детализации
         const patch = hash(Math.floor(x / 4), Math.floor(z / 4))
         if (patch > 0.86) c = stone
         else if (patch < 0.08) c = dirt
-        else if (patch > 0.8) c = sand
         items.push({ x, z, color: c.clone() })
       }
     }
@@ -119,6 +123,7 @@ export default function World() {
       const x = Math.round((a - 0.5) * 44)
       const z = Math.round((b - 0.5) * 44)
       if (Math.abs(x) < 3 && Math.abs(z) < 8) continue // не на старте
+      if (inPond(x, z)) continue // не в пруду
       arr.push([x, 0, z])
     }
     return arr
@@ -129,6 +134,7 @@ export default function World() {
     for (let i = 0; i < 8; i++) {
       const x = Math.round((hash(i * 5.5, 2.2) - 0.5) * 42)
       const z = Math.round((hash(3.3, i * 4.1) - 0.5) * 42)
+      if (inPond(x, z)) continue
       arr.push([x, 0.6, z])
     }
     return arr

@@ -7,6 +7,8 @@ import {
   type RapierRigidBody,
 } from '@react-three/rapier'
 import * as THREE from 'three'
+import { playerState, WATER, inPond } from './playerState'
+import type { SplashHandle } from './Water'
 
 type Keys = MutableRefObject<Record<string, boolean>>
 
@@ -130,10 +132,12 @@ export default function Player({
   keys,
   yaw,
   pitch,
+  splash,
 }: {
   keys: Keys
   yaw: MutableRefObject<number>
   pitch: MutableRefObject<number>
+  splash: MutableRefObject<SplashHandle | null>
 }) {
   const body = useRef<RapierRigidBody>(null)
   const model = useRef<THREE.Group>(null)
@@ -147,6 +151,7 @@ export default function Player({
   const walkPhase = useRef(0)
   const camPos = useRef(new THREE.Vector3(0, 5, 10))
   const tmp = useRef(new THREE.Vector3())
+  const wasInWater = useRef(false)
 
   useFrame((_, dt) => {
     const b = body.current
@@ -186,8 +191,37 @@ export default function Player({
 
     const cur = b.linvel()
     let vy = cur.y
+
+    // ── Вода: плавучесть, брызги, замедление ──────────────────
+    const feetY = pos.y - 1.0
+    const inWater = inPond(pos.x, pos.z) && feetY < WATER.level
+    const submerged = inPond(pos.x, pos.z) && pos.y < WATER.level
+    playerState.inWater = inWater
+
     if (grounded && keys.current['Space'] && vy < 3) vy = 8.2
+
+    if (inWater) {
+      // всплеск при входе (по вертикальной скорости)
+      if (!wasInWater.current && cur.y < -1.5) {
+        splash.current?.burst(pos.x, pos.z, Math.min(2, Math.abs(cur.y) / 5))
+      }
+      // выталкивание + сопротивление воды
+      const depth = THREE.MathUtils.clamp(WATER.level - feetY, 0, 1)
+      vy += depth * 30 * dt // архимедова сила
+      vy *= 0.9 // демпфирование
+      vx *= 0.55
+      vz *= 0.55
+      // «выпрыгнуть» из воды пробелом
+      if (keys.current['Space']) vy = 5.5
+    }
+    wasInWater.current = inWater
+
     b.setLinvel({ x: vx, y: vy, z: vz }, true)
+
+    // мелкие брызги при плавании
+    if (submerged && Math.random() < 0.2) {
+      splash.current?.burst(pos.x, pos.z, 0.4)
+    }
 
     // Поворот модели по направлению движения
     if (model.current && moving) {
@@ -214,6 +248,10 @@ export default function Player({
     camPos.current.lerp(tmp.current, 1 - Math.pow(0.001, dt))
     camera.position.copy(camPos.current)
     camera.lookAt(pos.x, pos.y + 1.4, pos.z)
+
+    // Разделяемая позиция для травы/воды
+    playerState.position.set(pos.x, pos.y, pos.z)
+    playerState.velocityY = cur.y
 
     // Респавн, если вдруг провалился
     if (pos.y < -10) {

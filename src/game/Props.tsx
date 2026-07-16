@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { RigidBody, CuboidCollider } from '@react-three/rapier'
+import { inPond } from './playerState'
 
 function hash(x: number, z: number) {
   const s = Math.sin(x * 91.3 + z * 47.1) * 21813.1
@@ -107,6 +108,7 @@ export default function Props() {
       const x = Math.round((hash(i * 2.3, 5.1) - 0.5) * 30)
       const z = Math.round((hash(4.7, i * 3.9) - 0.5) * 30)
       if (Math.abs(x) < 2 && Math.abs(z) < 4) continue
+      if (inPond(x, z)) continue
       const stack = hash(i, i) > 0.7 ? 1.5 : 0.5
       arr.push({ pos: [x, stack, z], color: palette[i % palette.length] })
     }

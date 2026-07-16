@@ -6,6 +6,8 @@ import * as THREE from 'three'
 import World from './World'
 import Player from './Player'
 import Props from './Props'
+import Grass from './Grass'
+import Water, { type SplashHandle } from './Water'
 
 /* ── Клавиатура (через ref, без ре-рендеров) ──────────────────── */
 function useKeyboard() {
@@ -77,6 +79,7 @@ export default function MiniGame() {
   const keys = useKeyboard()
   const yaw = useRef(0)
   const pitch = useRef(0.4)
+  const splash = useRef<SplashHandle | null>(null)
   const [playing, setPlaying] = useState(false)
 
   return (
@@ -112,8 +115,12 @@ export default function MiniGame() {
         <Physics gravity={[0, -22, 0]}>
           <World />
           <Props />
-          <Player keys={keys} yaw={yaw} pitch={pitch} />
+          <Player keys={keys} yaw={yaw} pitch={pitch} splash={splash} />
         </Physics>
+
+        {/* Трава и вода — вне физики (визуальные шейдеры) */}
+        <Grass />
+        <Water apiRef={splash} />
 
         <LookControls yaw={yaw} pitch={pitch} onLockChange={setPlaying} />
       </Canvas>
