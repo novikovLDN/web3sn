@@ -113,8 +113,6 @@ function GroundColliders() {
     return arr
   }, [])
 
-  const seaMidZ = (SEA_Z + HALF) / 2
-  const seaHalfZ = (HALF - SEA_Z) / 2
   const pondHW = (POND.x1 - POND.x0) / 2
   const pondHD = (POND.z1 - POND.z0) / 2
 
@@ -124,8 +122,17 @@ function GroundColliders() {
         // толстая плита (верх на y=0) + небольшое перекрытие швов, чтобы не проваливаться
         <CuboidCollider key={i} args={[s / 2 + 0.05, 1.5, s / 2 + 0.05]} position={[cx, -1.5, cz]} />
       ))}
-      {/* дно моря (верх на -3) — глубина для плавания */}
-      <CuboidCollider args={[HALF, 2, seaHalfZ + 0.1]} position={[0, -5, seaMidZ]} />
+      {/* Пляжный склон — плавный вход в море (без резкого обрыва) */}
+      <CuboidCollider
+        args={[HALF, 0.4, 6.2]}
+        position={[0, -1.5, SEA_Z + 6]}
+        rotation={[0.245, 0, 0]}
+      />
+      {/* глубокое дно моря (верх на -3) */}
+      <CuboidCollider
+        args={[HALF, 3, (HALF - SEA_Z - 12) / 2 + 0.2]}
+        position={[0, -6, (SEA_Z + 12 + HALF) / 2]}
+      />
       {/* дно озера (верх на -depth) */}
       <CuboidCollider
         args={[pondHW + 0.1, 2, pondHD + 0.1]}

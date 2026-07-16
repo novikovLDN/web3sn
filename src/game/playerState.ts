@@ -14,8 +14,8 @@ export const playerState = {
 export const HALF = 100 // мир 200×200
 export const WATER_LEVEL = 0.4
 
-// Озеро — сетко-выровненный прямоугольник с углублением (дно на -POND.depth)
-export const POND = { x0: 10, x1: 30, z0: -30, z1: -10, depth: 2 }
+// Озеро — сетко-выровненный прямоугольник с неглубоким углублением
+export const POND = { x0: 10, x1: 30, z0: -30, z1: -10, depth: 1.3 }
 export const POND_CX = (POND.x0 + POND.x1) / 2
 export const POND_CZ = (POND.z0 + POND.z1) / 2
 
