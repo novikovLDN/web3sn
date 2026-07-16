@@ -29,10 +29,11 @@ export type Pit = {
   z1: number
   depth: number
 }
+// Выровнены по сетке коллайдеров (кратно 10) — чтобы не было дыр на краях
 export const PITS: Pit[] = [
-  { x0: -30, x1: -20, z0: 2, z1: 12, depth: 4 },
+  { x0: -30, x1: -20, z0: 0, z1: 10, depth: 4 },
   { x0: 20, x1: 30, z0: -10, z1: 0, depth: 5 },
-  { x0: -8, x1: 2, z0: -34, z1: -24, depth: 6 },
+  { x0: -10, x1: 0, z0: -30, z1: -20, depth: 6 },
 ]
 
 export function inPond(x: number, z: number) {

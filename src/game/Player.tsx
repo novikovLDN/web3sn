@@ -270,6 +270,7 @@ export default function Player({
       friction={0.6}
       linearDamping={0.6}
       canSleep={false}
+      ccd
     >
       <CapsuleCollider args={[0.6, 0.4]} />
       <group ref={model}>

@@ -108,7 +108,8 @@ function GroundColliders() {
   return (
     <RigidBody type="fixed" colliders={false} friction={1}>
       {cells.map(([cx, cz, s], i) => (
-        <CuboidCollider key={i} args={[s / 2, 0.5, s / 2]} position={[cx, -0.5, cz]} />
+        // толстая плита (верх на y=0) + небольшое перекрытие швов, чтобы не проваливаться
+        <CuboidCollider key={i} args={[s / 2 + 0.05, 1.5, s / 2 + 0.05]} position={[cx, -1.5, cz]} />
       ))}
       {/* границы мира */}
       <CuboidCollider args={[HALF, 6, 0.5]} position={[0, 6, -HALF]} />
@@ -175,7 +176,7 @@ function Quarry({ pit }: { pit: Pit }) {
     <group>
       {/* дно + стены ямы */}
       <RigidBody type="fixed" colliders={false} friction={1}>
-        <CuboidCollider args={[w / 2, 0.5, d / 2]} position={[cx, -depth - 0.5, cz]} />
+        <CuboidCollider args={[w / 2 + 0.05, 1, d / 2 + 0.05]} position={[cx, -depth - 1, cz]} />
         <CuboidCollider args={[0.4, depth / 2, d / 2]} position={[x0, -depth / 2, cz]} />
         <CuboidCollider args={[0.4, depth / 2, d / 2]} position={[x1, -depth / 2, cz]} />
         <CuboidCollider args={[w / 2, depth / 2, 0.4]} position={[cx, -depth / 2, z0]} />
