@@ -7,7 +7,7 @@ import {
   type RapierRigidBody,
 } from '@react-three/rapier'
 import * as THREE from 'three'
-import { playerState, WATER, inPond } from './playerState'
+import { playerState, WATER_LEVEL, inAnyWater } from './playerState'
 import type { SplashHandle } from './Water'
 
 type Keys = MutableRefObject<Record<string, boolean>>
@@ -178,12 +178,12 @@ export default function Player({
 
     const sin = Math.sin(yaw.current)
     const cos = Math.cos(yaw.current)
-    // Вперёд камеры = (sin, cos); вправо = (cos, -sin)
+    // Вперёд камеры F = (sin, cos); вправо R = (-cos, sin)
     let vx = 0
     let vz = 0
     if (moving) {
-      vx = sin * fwd + cos * str
-      vz = cos * fwd - sin * str
+      vx = sin * fwd - cos * str
+      vz = cos * fwd + sin * str
       const len = Math.hypot(vx, vz) || 1
       vx = (vx / len) * speed
       vz = (vz / len) * speed
@@ -194,34 +194,35 @@ export default function Player({
 
     // ── Вода: плавучесть, брызги, замедление ──────────────────
     const feetY = pos.y - 1.0
-    const inWater = inPond(pos.x, pos.z) && feetY < WATER.level
-    const submerged = inPond(pos.x, pos.z) && pos.y < WATER.level
+    const region = inAnyWater(pos.x, pos.z)
+    const inWater = region && feetY < WATER_LEVEL
+    const submerged = region && pos.y < WATER_LEVEL
     playerState.inWater = inWater
 
-    if (grounded && keys.current['Space'] && vy < 3) vy = 8.2
+    if (grounded && keys.current['Space'] && vy < 3) vy = 8.6
 
     if (inWater) {
       // всплеск при входе (по вертикальной скорости)
-      if (!wasInWater.current && cur.y < -1.5) {
+      if (!wasInWater.current && cur.y < -1.2) {
         splash.current?.burst(pos.x, pos.z, Math.min(2, Math.abs(cur.y) / 5))
       }
       // выталкивание + сопротивление воды
-      const depth = THREE.MathUtils.clamp(WATER.level - feetY, 0, 1)
-      vy += depth * 30 * dt // архимедова сила
+      const depth = THREE.MathUtils.clamp(WATER_LEVEL - feetY, 0, 1.4)
+      vy += depth * 34 * dt // архимедова сила
       vy *= 0.9 // демпфирование
       vx *= 0.55
       vz *= 0.55
-      // «выпрыгнуть» из воды пробелом
+      // «выпрыгнуть»/плыть вверх пробелом
       if (keys.current['Space']) vy = 5.5
+    }
+
+    // мелкие брызги при движении по воде
+    if (submerged && moving && Math.random() < 0.25) {
+      splash.current?.burst(pos.x, pos.z, 0.5)
     }
     wasInWater.current = inWater
 
     b.setLinvel({ x: vx, y: vy, z: vz }, true)
-
-    // мелкие брызги при плавании
-    if (submerged && Math.random() < 0.2) {
-      splash.current?.burst(pos.x, pos.z, 0.4)
-    }
 
     // Поворот модели по направлению движения
     if (model.current && moving) {

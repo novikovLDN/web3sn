@@ -7,7 +7,10 @@ import World from './World'
 import Player from './Player'
 import Props from './Props'
 import Grass from './Grass'
+import Vegetation from './Vegetation'
 import Water, { type SplashHandle } from './Water'
+import Boat from './Boat'
+import { SEA_Z, HALF } from './playerState'
 
 /* ── Клавиатура (через ref, без ре-рендеров) ──────────────────── */
 function useKeyboard() {
@@ -80,7 +83,10 @@ export default function MiniGame() {
   const yaw = useRef(0)
   const pitch = useRef(0.4)
   const splash = useRef<SplashHandle | null>(null)
+  const canvasEl = useRef<HTMLCanvasElement | null>(null)
   const [playing, setPlaying] = useState(false)
+
+  const enterGame = () => canvasEl.current?.requestPointerLock()
 
   return (
     <div className="relative w-full h-full">
@@ -92,10 +98,11 @@ export default function MiniGame() {
         onCreated={({ gl }) => {
           gl.toneMapping = THREE.ACESFilmicToneMapping
           gl.toneMappingExposure = 1.0
+          canvasEl.current = gl.domElement
         }}
       >
-        <Sky sunPosition={[40, 30, 20]} turbidity={6} rayleigh={1.2} mieCoefficient={0.006} />
-        <fog attach="fog" args={['#bcd4e6', 45, 95]} />
+        <Sky sunPosition={[60, 40, 30]} turbidity={5} rayleigh={1.1} mieCoefficient={0.005} />
+        <fog attach="fog" args={['#bcd4e6', 70, 150]} />
 
         <ambientLight intensity={0.55} />
         <hemisphereLight args={['#cfe6ff', '#4a5a3a', 0.6]} />
@@ -108,18 +115,20 @@ export default function MiniGame() {
         >
           <orthographicCamera
             attach="shadow-camera"
-            args={[-35, 35, 35, -35, 0.1, 120]}
+            args={[-60, 60, 60, -60, 0.1, 180]}
           />
         </directionalLight>
 
         <Physics gravity={[0, -22, 0]}>
           <World />
           <Props />
+          <Boat position={[-14, 0, SEA_Z + (HALF - SEA_Z) / 2]} />
           <Player keys={keys} yaw={yaw} pitch={pitch} splash={splash} />
         </Physics>
 
-        {/* Трава и вода — вне физики (визуальные шейдеры) */}
+        {/* Трава, растительность и вода — визуальные слои */}
         <Grass />
+        <Vegetation />
         <Water apiRef={splash} />
 
         <LookControls yaw={yaw} pitch={pitch} onLockChange={setPlaying} />
@@ -132,9 +141,12 @@ export default function MiniGame() {
         </div>
       )}
 
-      {/* Оверлей-подсказка */}
+      {/* Оверлей-подсказка (клик = вход в игру / захват мыши) */}
       {!playing && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/35 backdrop-blur-[2px]">
+        <button
+          onClick={enterGame}
+          className="absolute inset-0 flex items-center justify-center bg-black/35 backdrop-blur-[2px] cursor-pointer"
+        >
           <div className="text-center px-6">
             <p className="accent-text font-bold uppercase tracking-tight text-3xl sm:text-4xl mb-4">
               ▶ Кликните, чтобы играть
@@ -143,18 +155,19 @@ export default function MiniGame() {
               <p>
                 <b className="font-medium">WASD</b> — движение ·{' '}
                 <b className="font-medium">Shift</b> — бег ·{' '}
-                <b className="font-medium">Пробел</b> — прыжок
+                <b className="font-medium">Пробел</b> — прыжок / плыть
               </p>
               <p>
                 <b className="font-medium">Мышь</b> — камера ·{' '}
-                <b className="font-medium">Esc</b> — выход из игры
+                <b className="font-medium">Esc</b> — выход (мышь освобождается)
               </p>
               <p className="text-[#9aa3af] mt-2">
-                Толкайте ящики и машинки, гуляйте по миру 50×50
+                Мир 100×100 · море и кораблик · озеро · карьеры с рудой ·
+                толкайте ящики и машинки
               </p>
             </div>
           </div>
-        </div>
+        </button>
       )}
 
       {/* HUD при игре */}

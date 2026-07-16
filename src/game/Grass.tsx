@@ -1,10 +1,10 @@
 import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { playerState, inPond } from './playerState'
+import { playerState, inAnyWater, isBeach, pitAt, HALF } from './playerState'
 
-const COUNT = 9000
-const AREA = 46 // травинки на площади 46×46
+const COUNT = 16000
+const AREA = HALF * 1.9 // травинки по всей суше
 
 /**
  * Поле травы: инстансированные лопасти, колышутся ветром и прогибаются
@@ -25,7 +25,7 @@ export default function Grass() {
     for (let i = 0; i < COUNT; i++) {
       const x = (rnd() - 0.5) * AREA
       const z = (rnd() - 0.5) * AREA
-      if (inPond(x, z)) continue
+      if (inAnyWater(x, z) || isBeach(x, z) || pitAt(x, z)) continue
       const h = 0.35 + rnd() * 0.4
       arr.push(x, z, h)
     }
