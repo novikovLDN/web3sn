@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Canvas, useThree } from '@react-three/fiber'
+import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { Physics } from '@react-three/rapier'
 import { Sky } from '@react-three/drei'
 import { EffectComposer, Bloom, Vignette, SMAA } from '@react-three/postprocessing'
@@ -43,6 +43,23 @@ function useKeyboard() {
   return keys
 }
 
+/* ── Debug-камера (для скриншотов разработки, ?debuggame=1) ────── */
+function DebugCam() {
+  const { camera } = useThree()
+  useFrame(() => {
+    const q = new URLSearchParams(location.search)
+    const tx = +(q.get('cx') ?? 0)
+    const tz = +(q.get('cz') ?? 0)
+    const ty = +(q.get('cy') ?? 1)
+    const r = +(q.get('r') ?? 46)
+    const h = +(q.get('h') ?? 30)
+    const ang = +(q.get('ang') ?? 0.7)
+    camera.position.set(tx + Math.sin(ang) * r, h, tz + Math.cos(ang) * r)
+    camera.lookAt(tx, ty, tz)
+  })
+  return null
+}
+
 /* ── Мышь → камера + отслеживание захвата ─────────────────────── */
 function LookControls({
   yaw,
@@ -83,7 +100,10 @@ export default function MiniGame() {
   const dust = useRef<DustHandle | null>(null)
   const canvasEl = useRef<HTMLCanvasElement | null>(null)
 
-  const [phase, setPhase] = useState<Phase>('select')
+  const debug =
+    typeof location !== 'undefined' &&
+    new URLSearchParams(location.search).has('debuggame')
+  const [phase, setPhase] = useState<Phase>(debug ? 'playing' : 'select')
   const [skinIndex, setSkinIndex] = useState(0)
   const phaseRef = useRef<Phase>('select')
   phaseRef.current = phase
@@ -146,7 +166,7 @@ export default function MiniGame() {
           <Props />
           <Cars keys={keys} skin={SKINS[skinIndex]} yaw={yaw} />
           <Boat position={[-14, 0, SEA_Z + (HALF - SEA_Z) / 2]} />
-          <Player keys={keys} yaw={yaw} pitch={pitch} splash={splash} dust={dust} skin={SKINS[skinIndex]} />
+          <Player keys={keys} yaw={yaw} pitch={pitch} splash={splash} dust={dust} skin={SKINS[skinIndex]} debug={debug} />
         </Physics>
 
         <Grass />
@@ -154,6 +174,7 @@ export default function MiniGame() {
         <Water apiRef={splash} />
         <Dust apiRef={dust} />
 
+        {debug && <DebugCam />}
         <LookControls yaw={yaw} pitch={pitch} onLockChange={onLockChange} />
 
         <EffectComposer multisampling={0} enableNormalPass={false}>

@@ -30,6 +30,7 @@ export default function Player({
   splash,
   dust,
   skin,
+  debug = false,
 }: {
   keys: Keys
   yaw: MutableRefObject<number>
@@ -37,6 +38,7 @@ export default function Player({
   splash: MutableRefObject<SplashHandle | null>
   dust: MutableRefObject<DustHandle | null>
   skin: Skin
+  debug?: boolean
 }) {
   const body = useRef<RapierRigidBody>(null)
   const model = useRef<THREE.Group>(null)
@@ -59,6 +61,7 @@ export default function Player({
   const bodyRef = useRef<THREE.Group | null>(null)
 
   const updateCamera = (dt: number) => {
+    if (debug) return // в debug-режиме камерой управляет DebugCam
     const p = playerState.position
     const sin = Math.sin(yaw.current)
     const cos = Math.cos(yaw.current)

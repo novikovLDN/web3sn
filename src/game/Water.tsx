@@ -49,37 +49,50 @@ function WaterPatch({
           uniform float uTime;
           uniform float uAmp;
           varying vec2 vUv;
-          varying float vWave;
+          varying vec3 vNormal;
+          float wave(float x, float z, float t) {
+            return sin(x * 0.6 + t * 1.4) * 0.45
+                 + sin(z * 0.8 + t * 1.1) * 0.30
+                 + sin((x + z) * 0.9 - t * 1.7) * 0.18
+                 + sin(x * 1.9 - t * 2.4) * 0.10;
+          }
           void main() {
             vUv = uv;
             vec3 p = position;
-            float w =
-              sin(p.x * 0.5 + uTime * 1.5) * uAmp +
-              sin(p.y * 0.7 + uTime * 1.1) * uAmp * 0.8 +
-              sin((p.x + p.y) * 0.35 + uTime * 2.0) * uAmp * 0.6;
-            p.z += w;
-            vWave = w / uAmp;
+            float t = uTime;
+            float h = wave(p.x, p.y, t);
+            p.z += h * uAmp;
+            // нормаль из производных волны (мелкая рябь ловит свет)
+            float e = 0.25;
+            float hx = wave(p.x + e, p.y, t) - wave(p.x - e, p.y, t);
+            float hz = wave(p.x, p.y + e, t) - wave(p.x, p.y - e, t);
+            vNormal = normalize(vec3(-hx * uAmp, 2.0 * e, -hz * uAmp));
             gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
           }
         `}
         fragmentShader={`
           uniform vec3 uDeep;
           uniform vec3 uShallow;
-          uniform vec3 uFoam;
           uniform float uRadial;
           varying vec2 vUv;
-          varying float vWave;
+          varying vec3 vNormal;
           void main() {
             float edge = 1.0;
             if (uRadial > 0.5) {
               vec2 c = vUv - 0.5;
-              edge = smoothstep(0.5, 0.34, length(c));
+              edge = smoothstep(0.5, 0.36, length(c));
             }
-            float depth = smoothstep(-1.0, 1.2, vWave);
-            vec3 col = mix(uDeep, uShallow, depth);
-            float foam = smoothstep(1.0, 1.4, vWave);
-            col = mix(col, uFoam, foam * 0.6);
-            gl_FragColor = vec4(col, edge * 0.85);
+            vec3 N = normalize(vNormal);
+            vec3 L = normalize(vec3(0.5, 0.9, 0.35));
+            vec3 V = vec3(0.0, 1.0, 0.0);
+            float diff = clamp(dot(N, L), 0.0, 1.0);
+            float fres = pow(1.0 - clamp(N.y, 0.0, 1.0), 3.0);
+            vec3 col = mix(uDeep, uShallow, diff * 0.55 + 0.2);
+            col = mix(col, uShallow * 1.25, fres * 0.5);
+            // блик солнца
+            float spec = pow(clamp(dot(reflect(-L, N), V), 0.0, 1.0), 48.0);
+            col += vec3(spec) * 0.7;
+            gl_FragColor = vec4(col, edge * 0.9);
           }
         `}
       />

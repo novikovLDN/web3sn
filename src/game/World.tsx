@@ -128,102 +128,113 @@ const ORE = [
   { color: '#c07fe6', emissive: '#7a2ad0', name: 'amethyst' },
 ]
 
+type QBox = {
+  x: number
+  y: number
+  z: number
+  sx: number
+  sy: number
+  sz: number
+  color: string
+  floor?: boolean
+}
+
 function Quarry({ pit }: { pit: Pit }) {
-  const { x0, x1, z0, z1, depth } = pit
+  const { x0, x1, z0, z1 } = pit
   const w = x1 - x0
   const d = z1 - z0
   const cx = (x0 + x1) / 2
   const cz = (z0 + z1) / 2
+  const RINGS = Math.max(2, Math.min(3, Math.floor(Math.min(w, d) / 2) - 1))
 
-  // рудные жилы на стенах
+  // Террасная чаша: концентрические ступени по 1 блоку (спуск/подъём пешком)
+  const boxes = useMemo(() => {
+    const list: QBox[] = []
+    const stoneA = '#6f727b'
+    const stoneB = '#5c5f68'
+    for (let r = 1; r <= RINGS; r++) {
+      const cy = -r - 0.5 // центр блока, верх на -r
+      const o = r - 1
+      const ax0 = x0 + o
+      const ax1 = x1 - o
+      const az0 = z0 + o
+      const az1 = z1 - o
+      const lenX = ax1 - ax0
+      const col = r % 2 ? stoneA : stoneB
+      // южный и северный «протекторы» (по всей ширине)
+      list.push({ x: (ax0 + ax1) / 2, y: cy, z: az0 + 0.5, sx: lenX, sy: 1, sz: 1, color: col })
+      list.push({ x: (ax0 + ax1) / 2, y: cy, z: az1 - 0.5, sx: lenX, sy: 1, sz: 1, color: col })
+      // западный и восточный (без углов)
+      const lenZ = az1 - az0 - 2
+      if (lenZ > 0) {
+        list.push({ x: ax0 + 0.5, y: cy, z: (az0 + az1) / 2, sx: 1, sy: 1, sz: lenZ, color: col })
+        list.push({ x: ax1 - 0.5, y: cy, z: (az0 + az1) / 2, sx: 1, sy: 1, sz: lenZ, color: col })
+      }
+    }
+    // дно
+    const fo = RINGS
+    const fx0 = x0 + fo
+    const fx1 = x1 - fo
+    const fz0 = z0 + fo
+    const fz1 = z1 - fo
+    list.push({
+      x: (fx0 + fx1) / 2,
+      y: -RINGS - 1,
+      z: (fz0 + fz1) / 2,
+      sx: fx1 - fx0,
+      sy: 2,
+      sz: fz1 - fz0,
+      color: '#4d4f57',
+      floor: true,
+    })
+    return list
+  }, [pit, RINGS, cx, cz, w, d])
+
+  // руда — кубики на ступенях и дне
   const ores = useMemo(() => {
     const arr: { pos: [number, number, number]; ore: (typeof ORE)[number] }[] = []
-    for (let i = 0; i < 22; i++) {
-      const side = Math.floor(hash(i, pit.x0) * 4)
-      const t = hash(i * 2.1, pit.z0)
-      const yy = -0.6 - hash(i, i) * (depth - 1)
-      let px = cx
-      let pz = cz
-      if (side === 0) {
-        px = x0 + 0.5
-        pz = z0 + t * d
-      } else if (side === 1) {
-        px = x1 - 0.5
-        pz = z0 + t * d
-      } else if (side === 2) {
-        px = x0 + t * w
-        pz = z0 + 0.5
-      } else {
-        px = x0 + t * w
-        pz = z1 - 0.5
-      }
-      arr.push({ pos: [px, yy, pz], ore: ORE[Math.floor(hash(i, 7) * ORE.length)] })
+    for (let i = 0; i < 12; i++) {
+      const r = 1 + Math.floor(hash(i, pit.x0) * (RINGS + 1))
+      const o = r - 1
+      const px = x0 + o + 0.5 + hash(i * 1.7, pit.z0) * (w - 2 * o - 1)
+      const pz = z0 + o + 0.5 + hash(i * 2.3, pit.z0) * (d - 2 * o - 1)
+      const py = -Math.min(r, RINGS + 1) + 0.35
+      arr.push({ pos: [px, py, pz], ore: ORE[Math.floor(hash(i, 7) * ORE.length)] })
     }
     return arr
-  }, [pit, cx, cz, w, d, depth])
-
-  // ступени для выхода (в углу)
-  const steps = useMemo(() => {
-    const arr: [number, number, number][] = []
-    const n = depth + 1
-    for (let s = 0; s < n; s++) {
-      arr.push([x0 + 0.6 + s * 0.9, -depth + 0.5 + s, z0 + 0.6])
-    }
-    return arr
-  }, [pit, depth])
+  }, [pit, RINGS, w, d])
 
   return (
     <group>
-      {/* дно + стены ямы */}
       <RigidBody type="fixed" colliders={false} friction={1}>
-        <CuboidCollider args={[w / 2 + 0.05, 1, d / 2 + 0.05]} position={[cx, -depth - 1, cz]} />
-        <CuboidCollider args={[0.4, depth / 2, d / 2]} position={[x0, -depth / 2, cz]} />
-        <CuboidCollider args={[0.4, depth / 2, d / 2]} position={[x1, -depth / 2, cz]} />
-        <CuboidCollider args={[w / 2, depth / 2, 0.4]} position={[cx, -depth / 2, z0]} />
-        <CuboidCollider args={[w / 2, depth / 2, 0.4]} position={[cx, -depth / 2, z1]} />
+        {boxes.map((b, i) => (
+          <CuboidCollider
+            key={i}
+            args={[b.sx / 2 + 0.02, b.sy / 2, b.sz / 2 + 0.02]}
+            position={[b.x, b.y, b.z]}
+          />
+        ))}
       </RigidBody>
 
-      {/* визуал дна */}
-      <mesh position={[cx, -depth, cz]} receiveShadow>
-        <boxGeometry args={[w, 1, d]} />
-        <meshStandardMaterial color="#4d4f57" roughness={1} />
-      </mesh>
-      {/* стены-камень (визуал) */}
-      {[
-        [x0, cz, 0.3, d] as const,
-        [x1, cz, 0.3, d] as const,
-        [cx, z0, w, 0.3] as const,
-        [cx, z1, w, 0.3] as const,
-      ].map(([mx, mz, mw, md], i) => (
-        <mesh key={i} position={[mx, -depth / 2, mz]} receiveShadow>
-          <boxGeometry args={[mw, depth, md]} />
-          <meshStandardMaterial color="#5b5e66" roughness={1} />
+      {boxes.map((b, i) => (
+        <mesh key={i} position={[b.x, b.y, b.z]} receiveShadow castShadow>
+          <boxGeometry args={[b.sx, b.sy, b.sz]} />
+          <meshStandardMaterial color={b.color} roughness={1} />
         </mesh>
       ))}
 
-      {/* руда (светящиеся вкрапления) */}
       {ores.map((o, i) => (
         <mesh key={i} position={o.pos} castShadow>
-          <boxGeometry args={[0.5, 0.5, 0.5]} />
+          <boxGeometry args={[0.55, 0.55, 0.55]} />
           <meshStandardMaterial
             color={o.ore.color}
             emissive={o.ore.emissive}
-            emissiveIntensity={0.8}
+            emissiveIntensity={0.9}
             roughness={0.3}
             metalness={0.6}
           />
         </mesh>
       ))}
-
-      {/* ступени выхода */}
-      <RigidBody type="fixed" colliders="cuboid" friction={1}>
-        {steps.map((s, i) => (
-          <mesh key={i} position={s} castShadow receiveShadow>
-            <boxGeometry args={[0.9, 1, 1.2]} />
-            <meshStandardMaterial color="#6a6d75" roughness={1} />
-          </mesh>
-        ))}
-      </RigidBody>
     </group>
   )
 }

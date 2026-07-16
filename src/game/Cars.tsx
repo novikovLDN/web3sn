@@ -14,102 +14,159 @@ type Variant = 'roadster' | 'jeep' | 'pickup'
 const _q = new THREE.Quaternion()
 const _fwd = new THREE.Vector3()
 
-/* Колесо */
+/* Колесо с диском */
 function Wheel({ position }: { position: [number, number, number] }) {
   return (
-    <mesh castShadow position={position} rotation={[Math.PI / 2, 0, 0]}>
-      <cylinderGeometry args={[0.34, 0.34, 0.26, 20]} />
-      <meshStandardMaterial color="#141519" roughness={0.7} />
-    </mesh>
+    <group position={position} rotation={[Math.PI / 2, 0, 0]}>
+      <mesh castShadow>
+        <cylinderGeometry args={[0.42, 0.42, 0.3, 22]} />
+        <meshStandardMaterial color="#16171c" roughness={0.75} />
+      </mesh>
+      <mesh position={[0, 0.16, 0]}>
+        <cylinderGeometry args={[0.22, 0.22, 0.02, 18]} />
+        <meshStandardMaterial color="#9aa0ab" metalness={0.8} roughness={0.35} />
+      </mesh>
+    </group>
   )
 }
 
-/* Видимая геометрия кузова по типу (все с открытым верхом) */
+const WHEELS: [number, number, number][] = [
+  [0.9, 0.42, 1.25],
+  [-0.9, 0.42, 1.25],
+  [0.9, 0.42, -1.25],
+  [-0.9, 0.42, -1.25],
+]
+
+/* Видимая геометрия кузова по типу (выше, детальнее, открытый верх) */
 function Body({ variant, color }: { variant: Variant; color: string }) {
-  const glass = '#8fd0ff'
+  const dark = '#1c1f26'
   return (
     <group>
+      {/* общая ходовая-платформа */}
+      <mesh castShadow position={[0, 0.5, 0]}>
+        <boxGeometry args={[1.7, 0.4, 3.7]} />
+        <meshStandardMaterial color={dark} roughness={0.6} metalness={0.4} />
+      </mesh>
+
       {variant === 'roadster' && (
         <>
-          <mesh castShadow position={[0, 0.5, 0]}>
-            <boxGeometry args={[1.5, 0.5, 3.6]} />
-            <meshStandardMaterial color={color} roughness={0.35} metalness={0.55} />
+          {/* низкий спортивный корпус */}
+          <mesh castShadow position={[0, 0.85, -0.2]}>
+            <boxGeometry args={[1.7, 0.5, 3.0]} />
+            <meshStandardMaterial color={color} roughness={0.3} metalness={0.6} />
           </mesh>
-          {/* капот скошенный спереди */}
-          <mesh castShadow position={[0, 0.55, 1.7]}>
-            <boxGeometry args={[1.4, 0.34, 0.8]} />
-            <meshStandardMaterial color={color} roughness={0.35} metalness={0.55} />
+          {/* капот */}
+          <mesh castShadow position={[0, 0.82, 1.5]}>
+            <boxGeometry args={[1.6, 0.34, 1.0]} />
+            <meshStandardMaterial color={color} roughness={0.3} metalness={0.6} />
+          </mesh>
+          {/* задний гребень */}
+          <mesh castShadow position={[0, 1.05, -1.4]}>
+            <boxGeometry args={[1.7, 0.34, 0.5]} />
+            <meshStandardMaterial color={color} roughness={0.3} metalness={0.6} />
           </mesh>
           {/* лобовое стекло-рамка */}
-          <mesh position={[0, 0.95, 0.5]} rotation={[-0.5, 0, 0]}>
-            <boxGeometry args={[1.3, 0.5, 0.04]} />
-            <meshStandardMaterial color={glass} transparent opacity={0.4} metalness={0.3} roughness={0.1} />
-          </mesh>
-        </>
-      )}
-      {variant === 'jeep' && (
-        <>
-          <mesh castShadow position={[0, 0.62, 0]}>
-            <boxGeometry args={[1.7, 0.8, 3.4]} />
-            <meshStandardMaterial color={color} roughness={0.5} metalness={0.3} />
-          </mesh>
-          {/* дуги безопасности (открытый верх) */}
-          {[-0.7, 0.5].map((z, i) => (
-            <mesh key={i} position={[0, 1.3, z]}>
-              <torusGeometry args={[0.7, 0.05, 8, 16, Math.PI]} />
-              <meshStandardMaterial color="#20242c" metalness={0.6} roughness={0.3} />
-            </mesh>
-          ))}
-        </>
-      )}
-      {variant === 'pickup' && (
-        <>
-          <mesh castShadow position={[0, 0.55, 0.6]}>
-            <boxGeometry args={[1.6, 0.66, 2.2]} />
-            <meshStandardMaterial color={color} roughness={0.45} metalness={0.35} />
-          </mesh>
-          {/* открытый кузов сзади */}
-          <mesh castShadow position={[0, 0.5, -1.4]}>
-            <boxGeometry args={[1.6, 0.56, 1.6]} />
-            <meshStandardMaterial color={color} roughness={0.6} metalness={0.2} />
-          </mesh>
-          <mesh position={[0, 0.66, -1.4]}>
-            <boxGeometry args={[1.4, 0.3, 1.4]} />
-            <meshStandardMaterial color="#1a1c22" roughness={0.9} />
-          </mesh>
-          <mesh position={[0, 0.95, 1.5]} rotation={[-0.45, 0, 0]}>
-            <boxGeometry args={[1.4, 0.5, 0.04]} />
-            <meshStandardMaterial color={glass} transparent opacity={0.4} metalness={0.3} roughness={0.1} />
+          <mesh position={[0, 1.35, 0.55]} rotation={[-0.5, 0, 0]}>
+            <boxGeometry args={[1.5, 0.5, 0.05]} />
+            <meshStandardMaterial color="#bfe4ff" transparent opacity={0.45} metalness={0.3} roughness={0.1} />
           </mesh>
         </>
       )}
 
+      {variant === 'jeep' && (
+        <>
+          {/* высокий кузов */}
+          <mesh castShadow position={[0, 1.0, 0]}>
+            <boxGeometry args={[1.8, 0.9, 3.3]} />
+            <meshStandardMaterial color={color} roughness={0.5} metalness={0.3} />
+          </mesh>
+          {/* капот-морда */}
+          <mesh castShadow position={[0, 0.95, 1.55]}>
+            <boxGeometry args={[1.8, 0.7, 0.6]} />
+            <meshStandardMaterial color={color} roughness={0.5} metalness={0.3} />
+          </mesh>
+          {/* дуги безопасности */}
+          {[-0.7, 0.6].map((z, i) => (
+            <mesh key={i} position={[0, 1.75, z]}>
+              <torusGeometry args={[0.8, 0.06, 8, 20, Math.PI]} />
+              <meshStandardMaterial color="#20242c" metalness={0.6} roughness={0.3} />
+            </mesh>
+          ))}
+          {/* багажник на крыше-дугах */}
+          <mesh position={[0, 1.85, -0.05]}>
+            <boxGeometry args={[1.5, 0.06, 1.4]} />
+            <meshStandardMaterial color="#2a2e36" metalness={0.5} roughness={0.4} />
+          </mesh>
+        </>
+      )}
+
+      {variant === 'pickup' && (
+        <>
+          {/* кабина спереди */}
+          <mesh castShadow position={[0, 1.05, 0.75]}>
+            <boxGeometry args={[1.75, 0.95, 1.6]} />
+            <meshStandardMaterial color={color} roughness={0.45} metalness={0.35} />
+          </mesh>
+          {/* морда */}
+          <mesh castShadow position={[0, 0.85, 1.75]}>
+            <boxGeometry args={[1.75, 0.55, 0.5]} />
+            <meshStandardMaterial color={color} roughness={0.45} metalness={0.35} />
+          </mesh>
+          {/* открытый грузовой кузов */}
+          <mesh castShadow position={[0, 0.9, -1.15]}>
+            <boxGeometry args={[1.75, 0.7, 1.9]} />
+            <meshStandardMaterial color={color} roughness={0.6} metalness={0.2} />
+          </mesh>
+          <mesh position={[0, 1.05, -1.15]}>
+            <boxGeometry args={[1.5, 0.3, 1.6]} />
+            <meshStandardMaterial color="#15171c" roughness={0.9} />
+          </mesh>
+          {/* стекло кабины */}
+          <mesh position={[0, 1.5, 1.35]} rotation={[-0.4, 0, 0]}>
+            <boxGeometry args={[1.6, 0.55, 0.05]} />
+            <meshStandardMaterial color="#bfe4ff" transparent opacity={0.45} metalness={0.3} roughness={0.1} />
+          </mesh>
+        </>
+      )}
+
+      {/* сиденья (видно в открытом верхе) */}
+      {[-0.42, 0.42].map((x, i) => (
+        <group key={i} position={[x, 0.75, -0.15]}>
+          <mesh castShadow>
+            <boxGeometry args={[0.5, 0.16, 0.55]} />
+            <meshStandardMaterial color="#26282f" roughness={0.8} />
+          </mesh>
+          <mesh castShadow position={[0, 0.32, -0.28]}>
+            <boxGeometry args={[0.5, 0.6, 0.14]} />
+            <meshStandardMaterial color="#26282f" roughness={0.8} />
+          </mesh>
+        </group>
+      ))}
+
       {/* руль */}
-      <mesh position={[-0.36, 0.92, 0.35]} rotation={[-0.9, 0, 0]}>
-        <torusGeometry args={[0.18, 0.03, 8, 20]} />
+      <mesh position={[-0.42, 1.15, 0.35]} rotation={[-0.9, 0, 0]}>
+        <torusGeometry args={[0.2, 0.035, 8, 20]} />
         <meshStandardMaterial color="#15171c" roughness={0.5} />
       </mesh>
 
       {/* фары */}
-      {[0.45, -0.45].map((x, i) => (
-        <mesh key={i} position={[x, 0.5, 1.85]}>
-          <boxGeometry args={[0.24, 0.16, 0.05]} />
-          <meshStandardMaterial color="#fff4c2" emissive="#fff0a0" emissiveIntensity={1.3} />
+      {[0.55, -0.55].map((x, i) => (
+        <mesh key={i} position={[x, 0.7, 1.9]}>
+          <boxGeometry args={[0.28, 0.2, 0.06]} />
+          <meshStandardMaterial color="#fff4c2" emissive="#fff0a0" emissiveIntensity={1.4} />
         </mesh>
       ))}
       {/* стопы */}
-      {[0.5, -0.5].map((x, i) => (
-        <mesh key={i} position={[x, 0.5, -1.85]}>
-          <boxGeometry args={[0.2, 0.14, 0.05]} />
-          <meshStandardMaterial color="#e02020" emissive="#ff2020" emissiveIntensity={0.7} />
+      {[0.55, -0.55].map((x, i) => (
+        <mesh key={i} position={[x, 0.7, -1.9]}>
+          <boxGeometry args={[0.24, 0.16, 0.06]} />
+          <meshStandardMaterial color="#e02020" emissive="#ff2020" emissiveIntensity={0.8} />
         </mesh>
       ))}
 
-      {/* колёса */}
-      <Wheel position={[0.85, 0.34, 1.2]} />
-      <Wheel position={[-0.85, 0.34, 1.2]} />
-      <Wheel position={[0.85, 0.34, -1.2]} />
-      <Wheel position={[-0.85, 0.34, -1.2]} />
+      {WHEELS.map((p, i) => (
+        <Wheel key={i} position={p} />
+      ))}
     </group>
   )
 }
@@ -193,10 +250,10 @@ function Car({
       density={1.2}
       enabledRotations={[false, true, false]}
     >
-      <CuboidCollider args={[0.9, 0.5, 1.9]} position={[0, 0.55, 0]} />
+      <CuboidCollider args={[0.95, 0.7, 2.0]} position={[0, 0.7, 0]} />
       <Body variant={variant} color={color} />
       {/* водитель (виден только когда за рулём) */}
-      <group ref={rider} position={[-0.02, 0.35, -0.25]} visible={false}>
+      <group ref={rider} position={[-0.42, 0.62, -0.1]} visible={false}>
         <SittingRider skin={skin} />
       </group>
     </RigidBody>
