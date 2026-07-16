@@ -11,3 +11,6 @@ dist-ssr
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# lockfile не коммитим — npm бага с опциональными бинарями rollup под разные ОС
+package-lock.json
