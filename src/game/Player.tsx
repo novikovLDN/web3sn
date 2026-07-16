@@ -1,4 +1,4 @@
-import { useRef, type MutableRefObject } from 'react'
+import { useEffect, useRef, type MutableRefObject } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import {
   RigidBody,
@@ -6,6 +6,7 @@ import {
   useRapier,
   type RapierRigidBody,
 } from '@react-three/rapier'
+import type { KinematicCharacterController } from '@dimforge/rapier3d-compat'
 import * as THREE from 'three'
 import { playerState, WATER_LEVEL, inAnyWater, groundInfo } from './playerState'
 import { driving, carRegistry } from './driving'
@@ -15,6 +16,12 @@ import type { SplashHandle } from './Water'
 import type { DustHandle } from './Dust'
 
 type Keys = MutableRefObject<Record<string, boolean>>
+
+const G = 26 // гравитация
+const WALK = 5
+const RUN = 8.6
+const JUMP = 9.5
+const SPAWN = new THREE.Vector3(0, 4, 6)
 
 function lerpAngle(a: number, b: number, t: number) {
   let d = b - a
@@ -42,26 +49,47 @@ export default function Player({
 }) {
   const body = useRef<RapierRigidBody>(null)
   const model = useRef<THREE.Group>(null)
+  const bodyGrp = useRef<THREE.Group | null>(null)
   const legL = useRef<THREE.Group | null>(null)
   const legR = useRef<THREE.Group | null>(null)
   const armL = useRef<THREE.Group | null>(null)
   const armR = useRef<THREE.Group | null>(null)
-  const { rapier, world } = useRapier()
+  const { world } = useRapier()
   const { camera } = useThree()
 
+  const controller = useRef<KinematicCharacterController | null>(null)
+  const vy = useRef(0)
+  const grounded = useRef(false)
   const walkPhase = useRef(0)
-  const camPos = useRef(new THREE.Vector3(0, 5, 10))
+  const crouch = useRef(0)
+  const camPos = useRef(new THREE.Vector3(0, 6, 14))
   const tmp = useRef(new THREE.Vector3())
-  const wasInWater = useRef(false)
   const prevF = useRef(false)
-  // приземление
-  const airborne = useRef(false)
-  const maxAirY = useRef(0)
-  const crouch = useRef(0) // 0..1 текущая глубина приседа
-  const bodyRef = useRef<THREE.Group | null>(null)
+  const wasInWater = useRef(false)
+
+  // Создаём kinematic character controller (надёжная физика)
+  useEffect(() => {
+    const c = world.createCharacterController(0.08)
+    c.enableAutostep(0.6, 0.25, true) // сам шагает на уступы до 0.6
+    c.enableSnapToGround(0.5) // прилипает к земле (не подпрыгивает)
+    c.setApplyImpulsesToDynamicBodies(true) // толкает ящики/машины
+    c.setCharacterMass(1)
+    c.setSlideEnabled(true)
+    c.setMaxSlopeClimbAngle((55 * Math.PI) / 180)
+    c.setMinSlopeSlideAngle((45 * Math.PI) / 180)
+    controller.current = c
+    if (debug) (window as unknown as { __ps: typeof playerState }).__ps = playerState
+    return () => {
+      try {
+        world.removeCharacterController(c)
+      } catch {
+        /* noop */
+      }
+    }
+  }, [world, debug])
 
   const updateCamera = (dt: number) => {
-    if (debug) return // в debug-режиме камерой управляет DebugCam
+    if (debug) return
     const p = playerState.position
     const sin = Math.sin(yaw.current)
     const cos = Math.cos(yaw.current)
@@ -72,68 +100,62 @@ export default function Player({
       p.y + 2.2 + Math.sin(pitch.current) * dist,
       p.z - cos * dist * cp
     )
-    camPos.current.lerp(tmp.current, 1 - Math.pow(0.001, dt))
+    camPos.current.lerp(tmp.current, 1 - Math.pow(0.0015, dt))
     camera.position.copy(camPos.current)
     camera.lookAt(p.x, p.y + 1.4, p.z)
   }
 
-  useFrame((_, dt) => {
+  useFrame((_, rawDt) => {
     const b = body.current
-    if (!b) return
+    const c = controller.current
+    if (!b || !c) return
+    const dt = Math.min(rawDt, 0.05)
 
-    // Вход/выход из машины по F (только в активной игре)
+    // ── Вход/выход из машины (F) ──
     const fDown = !!keys.current['KeyF']
     if (playerState.active && fDown && !prevF.current) {
       if (driving.carId == null) {
         const pp = b.translation()
         let best: { id: number; d: number } | null = null
-        for (const c of carRegistry) {
-          const t = c.body.translation()
+        for (const car of carRegistry) {
+          const t = car.body.translation()
           const d = Math.hypot(t.x - pp.x, t.z - pp.z)
-          if (d < 4 && (!best || d < best.d)) best = { id: c.id, d }
+          if (d < 4.5 && (!best || d < best.d)) best = { id: car.id, d }
         }
         if (best) {
           driving.carId = best.id
-          b.setEnabled(false)
           if (model.current) model.current.visible = false
         }
       } else {
-        const c = carRegistry.find((c) => c.id === driving.carId)
+        const car = carRegistry.find((c2) => c2.id === driving.carId)
         driving.carId = null
-        b.setEnabled(true)
-        if (c) {
-          const t = c.body.translation()
-          b.setTranslation({ x: t.x + 2.4, y: 3, z: t.z }, true)
+        if (car) {
+          const t = car.body.translation()
+          b.setNextKinematicTranslation({ x: t.x + 2.6, y: t.y + 2, z: t.z })
         }
-        b.setLinvel({ x: 0, y: 0, z: 0 }, true)
+        vy.current = 0
         if (model.current) model.current.visible = true
       }
     }
     prevF.current = fDown
 
-    // За рулём: тело выключено, камеру ведёт машина (playerState.position)
+    // За рулём — тело «припарковано» далеко, камеру ведёт машина
     if (driving.carId != null) {
+      b.setNextKinematicTranslation({ x: 0, y: -80, z: 0 })
       updateCamera(dt)
       return
     }
 
-    // Пауза/не активна: только камера
+    // Пауза — только камера
     if (!playerState.active) {
       updateCamera(dt)
       return
     }
 
     const pos = b.translation()
+    const wasGrounded = grounded.current
 
-    // На земле? — луч вниз
-    const ray = new rapier.Ray(
-      { x: pos.x, y: pos.y, z: pos.z },
-      { x: 0, y: -1, z: 0 }
-    )
-    const hit = world.castRay(ray, 1.4, true, undefined, undefined, undefined, b)
-    const grounded = !!hit && hit.timeOfImpact <= 1.12
-
-    // Ввод в осях камеры
+    // ── Ввод (оси камеры) ──
     let fwd = 0
     let str = 0
     if (keys.current['KeyW']) fwd += 1
@@ -141,125 +163,108 @@ export default function Player({
     if (keys.current['KeyD']) str += 1
     if (keys.current['KeyA']) str -= 1
     const moving = fwd !== 0 || str !== 0
-    const speed = keys.current['ShiftLeft'] || keys.current['ShiftRight'] ? 8.5 : 5
+    const speed = keys.current['ShiftLeft'] || keys.current['ShiftRight'] ? RUN : WALK
 
     const sin = Math.sin(yaw.current)
     const cos = Math.cos(yaw.current)
-    let vx = 0
-    let vz = 0
+    let dirX = 0
+    let dirZ = 0
     if (moving) {
-      vx = sin * fwd - cos * str
-      vz = cos * fwd + sin * str
-      const len = Math.hypot(vx, vz) || 1
-      vx = (vx / len) * speed
-      vz = (vz / len) * speed
+      dirX = sin * fwd - cos * str
+      dirZ = cos * fwd + sin * str
+      const len = Math.hypot(dirX, dirZ) || 1
+      dirX /= len
+      dirZ /= len
     }
 
-    const cur = b.linvel()
-    let vy = cur.y
-
-    // Вода
+    // ── Вода ──
     const feetY = pos.y - 1.0
-    const region = inAnyWater(pos.x, pos.z)
-    const inWater = region && feetY < WATER_LEVEL
-    const submerged = region && pos.y < WATER_LEVEL
+    const inWater = inAnyWater(pos.x, pos.z) && feetY < WATER_LEVEL
+    const submerged = inAnyWater(pos.x, pos.z) && pos.y < WATER_LEVEL
     playerState.inWater = inWater
 
+    let hSpeed = speed
     if (inWater) {
+      hSpeed = speed * 0.55
       // всплеск при входе
-      if (!wasInWater.current && cur.y < -1.2) {
-        splash.current?.burst(pos.x, pos.z, Math.min(2, Math.abs(cur.y) / 5))
+      if (!wasInWater.current && vy.current < -3) {
+        splash.current?.burst(pos.x, pos.z, Math.min(2, Math.abs(vy.current) / 6))
       }
-      // сопротивление воды + медленное погружение (можно утонуть)
-      vx *= 0.55
-      vz *= 0.55
-      vy = cur.y * 0.82 - 5 * dt
-      // всплыть / держаться на плаву — Пробел
-      if (keys.current['Space']) vy = 4.8
-    } else if (grounded && keys.current['Space'] && vy < 3) {
-      vy = 9
-    }
-    if (submerged && moving && Math.random() < 0.25) {
-      splash.current?.burst(pos.x, pos.z, 0.5)
+      if (submerged && moving && Math.random() < 0.25) {
+        splash.current?.burst(pos.x, pos.z, 0.5)
+      }
+      // плавучесть: медленно тонет, Пробел — всплыть
+      vy.current += (keys.current['Space'] ? 20 : -8) * dt
+      vy.current = THREE.MathUtils.clamp(vy.current, -3, 5)
+    } else {
+      // гравитация
+      if (wasGrounded && vy.current <= 0) vy.current = -1
+      else vy.current -= G * dt
+      if (wasGrounded && keys.current['Space']) vy.current = JUMP
     }
     wasInWater.current = inWater
 
-    // Плавный разгон/торможение по горизонтали (не рывками)
-    const accel = grounded ? 1 - Math.pow(0.0006, dt) : 1 - Math.pow(0.06, dt)
-    const smx = THREE.MathUtils.lerp(cur.x, vx, accel)
-    const smz = THREE.MathUtils.lerp(cur.z, vz, accel)
-    b.setLinvel({ x: smx, y: vy, z: smz }, true)
-
-    // ── Приземление: присед при падении > 2 блоков + пыль ─────
-    if (!grounded) {
-      airborne.current = true
-      if (pos.y > maxAirY.current) maxAirY.current = pos.y
-    } else if (airborne.current) {
-      airborne.current = false
-      const fall = maxAirY.current - pos.y
-      if (fall > 2 && !inWater) {
-        crouch.current = Math.min(1, 0.4 + (fall - 2) / 5)
-        const g = groundInfo(pos.x, pos.z)
-        if (g.type !== 'water') {
-          dust.current?.burst(pos.x, feetY, pos.z, g.color, Math.min(1.6, fall / 3))
-        }
-      }
-      maxAirY.current = pos.y
+    // ── Движение через контроллер ──
+    const desired = {
+      x: dirX * hSpeed * dt,
+      y: vy.current * dt,
+      z: dirZ * hSpeed * dt,
     }
-    if (grounded) maxAirY.current = pos.y
-    // затухание приседа
-    crouch.current = Math.max(0, crouch.current - dt * 3.2)
-    const cr = crouch.current * crouch.current * (3 - 2 * crouch.current) // smooth
+    const collider = b.collider(0)
+    c.computeColliderMovement(collider, desired)
+    const mv = c.computedMovement()
+    const nowGrounded = c.computedGrounded()
 
-    // Поворот модели по движению
+    // приземление: присед + пыль
+    if (!wasGrounded && nowGrounded && vy.current < -13 && !inWater) {
+      crouch.current = Math.min(1, 0.4 + Math.abs(vy.current) / 30)
+      const g = groundInfo(pos.x, pos.z)
+      dust.current?.burst(pos.x, feetY, pos.z, g.color, Math.min(1.6, Math.abs(vy.current) / 18))
+    }
+    grounded.current = nowGrounded
+    if (nowGrounded && vy.current < 0) vy.current = 0
+
+    b.setNextKinematicTranslation({
+      x: pos.x + mv.x,
+      y: pos.y + mv.y,
+      z: pos.z + mv.z,
+    })
+
+    // общая позиция для камеры/травы/воды
+    playerState.position.set(pos.x + mv.x, pos.y + mv.y, pos.z + mv.z)
+    playerState.velocityY = vy.current
+
+    // респавн
+    if (pos.y < -25) {
+      b.setNextKinematicTranslation({ x: SPAWN.x, y: SPAWN.y, z: SPAWN.z })
+      vy.current = 0
+    }
+
+    // ── Анимация ──
+    crouch.current = Math.max(0, crouch.current - dt * 3.2)
+    const cr = crouch.current * crouch.current * (3 - 2 * crouch.current)
+
     if (model.current && moving) {
-      const target = Math.atan2(vx, vz)
+      const target = Math.atan2(dirX, dirZ)
       model.current.rotation.y = lerpAngle(model.current.rotation.y, target, 0.22)
     }
-
-    // Ходьба + покачивание корпуса
-    if (moving && grounded) walkPhase.current += dt * speed * 1.7
-    const run = speed > 6 ? 1.15 : 1
-    const swing = moving && grounded ? Math.sin(walkPhase.current) * 0.62 * run : 0
-    const swing2 = moving && grounded ? Math.cos(walkPhase.current) * 0.62 * run : 0
-    const airLegs = airborne.current ? 0.5 : 0 // подтянуть ноги в прыжке
-    const k = 0.3 // сглаживание конечностей
-    if (legL.current)
-      legL.current.rotation.x = THREE.MathUtils.lerp(legL.current.rotation.x, swing + cr * 0.6 + airLegs, k)
-    if (legR.current)
-      legR.current.rotation.x = THREE.MathUtils.lerp(legR.current.rotation.x, -swing + cr * 0.6 + airLegs, k)
-    if (armL.current)
-      armL.current.rotation.x = THREE.MathUtils.lerp(armL.current.rotation.x, -swing2 * 0.75 - cr * 0.3, k)
-    if (armR.current)
-      armR.current.rotation.x = THREE.MathUtils.lerp(armR.current.rotation.x, swing2 * 0.75 - cr * 0.3, k)
-
-    // покачивание при ходьбе / дыхание в покое / присед / плавание
-    if (bodyRef.current) {
-      const clock = walkPhase.current
-      const idleBreath = !moving && grounded ? Math.sin(performance.now() * 0.002) * 0.02 : 0
-      const bob = moving && grounded ? Math.abs(Math.sin(clock)) * 0.06 : idleBreath
-      const lean = moving && speed > 6 ? 0.08 : 0
-      const swim = submerged && !grounded ? 1.1 : 0 // горизонтальная поза в воде
-      bodyRef.current.position.y = THREE.MathUtils.lerp(
-        bodyRef.current.position.y,
-        bob - cr * 0.4,
-        0.35
-      )
-      bodyRef.current.rotation.x = THREE.MathUtils.lerp(
-        bodyRef.current.rotation.x,
-        lean + swim,
-        0.12
-      )
-    }
-
-    // Общая позиция для камеры/травы/воды
-    playerState.position.set(pos.x, pos.y, pos.z)
-    playerState.velocityY = cur.y
-
-    // Респавн
-    if (pos.y < -12) {
-      b.setTranslation({ x: 0, y: 3, z: 6 }, true)
-      b.setLinvel({ x: 0, y: 0, z: 0 }, true)
+    if (moving && nowGrounded) walkPhase.current += dt * hSpeed * 1.7
+    const air = !nowGrounded && !inWater
+    const swingBase = moving && nowGrounded ? 0.62 : 0
+    const swing = Math.sin(walkPhase.current) * swingBase
+    const swing2 = Math.cos(walkPhase.current) * swingBase
+    const k = 0.3
+    const airLegs = air ? 0.5 : 0
+    if (legL.current) legL.current.rotation.x = THREE.MathUtils.lerp(legL.current.rotation.x, swing + cr * 0.6 + airLegs, k)
+    if (legR.current) legR.current.rotation.x = THREE.MathUtils.lerp(legR.current.rotation.x, -swing + cr * 0.6 + airLegs, k)
+    if (armL.current) armL.current.rotation.x = THREE.MathUtils.lerp(armL.current.rotation.x, -swing2 * 0.75 - cr * 0.3, k)
+    if (armR.current) armR.current.rotation.x = THREE.MathUtils.lerp(armR.current.rotation.x, swing2 * 0.75 - cr * 0.3, k)
+    if (bodyGrp.current) {
+      const idleBreath = !moving && nowGrounded ? Math.sin(performance.now() * 0.002) * 0.02 : 0
+      const bob = moving && nowGrounded ? Math.abs(Math.sin(walkPhase.current)) * 0.06 : idleBreath
+      const swim = submerged && !nowGrounded ? 1.1 : 0
+      bodyGrp.current.position.y = THREE.MathUtils.lerp(bodyGrp.current.position.y, bob - cr * 0.4, 0.35)
+      bodyGrp.current.rotation.x = THREE.MathUtils.lerp(bodyGrp.current.rotation.x, swim, 0.12)
     }
 
     updateCamera(dt)
@@ -268,18 +273,13 @@ export default function Player({
   return (
     <RigidBody
       ref={body}
+      type="kinematicPosition"
       colliders={false}
-      position={[0, 3, 6]}
-      enabledRotations={[false, false, false]}
-      mass={1}
-      friction={0.6}
-      linearDamping={0.6}
-      canSleep={false}
-      ccd
+      position={[SPAWN.x, SPAWN.y, SPAWN.z]}
     >
       <CapsuleCollider args={[0.6, 0.4]} />
       <group ref={model}>
-        <group ref={bodyRef}>
+        <group ref={bodyGrp}>
           <Character skin={skin} legL={legL} legR={legR} armL={armL} armR={armR} />
         </group>
       </group>
