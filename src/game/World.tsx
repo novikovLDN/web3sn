@@ -11,6 +11,7 @@ import {
   type Pit,
 } from './playerState'
 import { makeBlockNoise, makeBlockNormal } from './textures'
+import { biomeAt, BIOMES } from './biomes'
 
 function hash(x: number, z: number) {
   const s = Math.sin(x * 127.1 + z * 311.7) * 43758.5453
@@ -24,13 +25,10 @@ function VoxelFloor() {
   const normal = useMemo(() => makeBlockNormal(16, 1.3), [])
   const data = useMemo(() => {
     const items: { x: number; z: number; y: number; color: THREE.Color }[] = []
-    const grass = new THREE.Color('#4a7c3a')
-    const grass2 = new THREE.Color('#3f6d32')
-    const dirt = new THREE.Color('#6b4c34')
-    const stone = new THREE.Color('#6d7079')
     const sand = new THREE.Color('#c2b27a')
     const seabed = new THREE.Color('#8a7f52')
     const path = new THREE.Color('#8a8577')
+    const tmp = new THREE.Color()
     for (let x = -HALF; x < HALF; x++) {
       for (let z = -HALF; z < HALF; z++) {
         const cx = x + 0.5
@@ -42,12 +40,13 @@ function VoxelFloor() {
         } else if (isBeach(cx, cz)) {
           c = sand
         } else {
+          const b = BIOMES[biomeAt(cx, cz)]
           const n = hash(x, z)
-          c = n > 0.5 ? grass : grass2
-          if (Math.abs(x) < 2 && cz < 22) c = path
+          tmp.set(n > 0.5 ? b.ground[0] : b.ground[1])
+          c = tmp.clone()
+          if (Math.abs(x) < 2 && cz < 22) c = path.clone()
           const patch = hash(Math.floor(x / 4), Math.floor(z / 4))
-          if (patch > 0.88) c = stone
-          else if (patch < 0.07) c = dirt
+          if (patch < 0.07) c = new THREE.Color(b.dirt)
         }
         const y = -0.5 + (hash(x + 99, z - 99) > 0.95 ? 0.06 : 0)
         items.push({ x: cx, z: cz, y, color: c.clone() })
@@ -146,6 +145,8 @@ function Quarry({ pit }: { pit: Pit }) {
   const cx = (x0 + x1) / 2
   const cz = (z0 + z1) / 2
   const RINGS = Math.max(2, Math.min(3, Math.floor(Math.min(w, d) / 2) - 1))
+  const stoneTex = useMemo(() => makeBlockNoise(16, 0.22), [])
+  const stoneNrm = useMemo(() => makeBlockNormal(16, 1.6), [])
 
   // Террасная чаша: концентрические ступени по 1 блоку (спуск/подъём пешком)
   const boxes = useMemo(() => {
@@ -219,7 +220,13 @@ function Quarry({ pit }: { pit: Pit }) {
       {boxes.map((b, i) => (
         <mesh key={i} position={[b.x, b.y, b.z]} receiveShadow castShadow>
           <boxGeometry args={[b.sx, b.sy, b.sz]} />
-          <meshStandardMaterial color={b.color} roughness={1} />
+          <meshStandardMaterial
+            color={b.color}
+            map={stoneTex}
+            normalMap={stoneNrm}
+            normalScale={new THREE.Vector2(0.6, 0.6)}
+            roughness={1}
+          />
         </mesh>
       ))}
 
@@ -239,8 +246,16 @@ function Quarry({ pit }: { pit: Pit }) {
   )
 }
 
-/* ── Дерево ───────────────────────────────────────────────────── */
-function Tree({ position }: { position: [number, number, number] }) {
+/* ── Дерево (цвета по биому) ───────────────────────────────────── */
+function Tree({
+  position,
+  trunk,
+  leaves,
+}: {
+  position: [number, number, number]
+  trunk: string
+  leaves: [string, string]
+}) {
   const [x, y, z] = position
   return (
     <group position={[x, y, z]}>
@@ -248,17 +263,24 @@ function Tree({ position }: { position: [number, number, number] }) {
         <CuboidCollider args={[0.3, 1, 0.3]} />
         <mesh castShadow>
           <boxGeometry args={[0.5, 2, 0.5]} />
-          <meshStandardMaterial color="#5b3b23" roughness={0.9} />
+          <meshStandardMaterial color={trunk} roughness={0.9} />
         </mesh>
       </RigidBody>
+      {/* пышная крона из смещённых блоков (менее «топорно») */}
       {[
-        [0, 2.4, 0, 2.2],
-        [0, 3.4, 0, 1.6],
-        [0, 4.2, 0, 1.0],
-      ].map(([lx, ly, lz, s], i) => (
+        [0, 2.5, 0, 1.6, 0],
+        [0.9, 2.7, 0.3, 1.0, 1],
+        [-0.8, 2.6, -0.4, 1.1, 1],
+        [0.3, 2.9, -0.9, 0.9, 0],
+        [-0.4, 3.0, 0.8, 0.9, 1],
+        [0, 3.4, 0, 1.3, 0],
+        [0.5, 3.7, 0.2, 0.8, 1],
+        [-0.4, 3.8, -0.2, 0.8, 0],
+        [0, 4.2, 0, 0.7, 1],
+      ].map(([lx, ly, lz, s, ci], i) => (
         <mesh key={i} castShadow position={[lx, ly, lz]}>
-          <boxGeometry args={[s, 1, s]} />
-          <meshStandardMaterial color={i === 0 ? '#3f7a34' : '#4a8c3c'} roughness={0.9} />
+          <boxGeometry args={[s, s, s]} />
+          <meshStandardMaterial color={ci ? leaves[0] : leaves[1]} roughness={0.9} />
         </mesh>
       ))}
     </group>
@@ -277,14 +299,26 @@ function Rock({ position }: { position: [number, number, number] }) {
 }
 
 export default function World() {
-  const trees = useMemo<[number, number, number][]>(() => {
-    const arr: [number, number, number][] = []
-    for (let i = 0; i < 40; i++) {
-      const x = Math.round((hash(i * 3.1, 7.7) - 0.5) * (HALF * 1.85))
-      const z = Math.round((hash(11.3, i * 2.9) - 0.5) * (HALF * 1.85))
+  const trees = useMemo<
+    { pos: [number, number, number]; trunk: string; leaves: [string, string] }[]
+  >(() => {
+    const arr: {
+      pos: [number, number, number]
+      trunk: string
+      leaves: [string, string]
+    }[] = []
+    for (let i = 0; i < 90; i++) {
+      const x = Math.round((hash(i * 3.1, 7.7) - 0.5) * (HALF * 1.9))
+      const z = Math.round((hash(11.3, i * 2.9) - 0.5) * (HALF * 1.9))
       if (Math.abs(x) < 3 && Math.abs(z) < 8) continue
       if (inAnyWater(x, z) || isBeach(x, z) || pitAt(x, z)) continue
-      arr.push([x, 0, z])
+      const biome = biomeAt(x, z)
+      if (biome === 'desert') continue // в пустыне деревьев нет (кактусы отдельно)
+      // в лесу деревьев больше, в остальных — реже
+      const keep = biome === 'forest' ? true : hash(i * 5.1, 1.3) > 0.35
+      if (!keep) continue
+      const b = BIOMES[biome]
+      arr.push({ pos: [x, 0, z], trunk: b.trunk, leaves: b.leaves })
     }
     return arr
   }, [])
@@ -307,8 +341,8 @@ export default function World() {
       {PITS.map((p, i) => (
         <Quarry key={i} pit={p} />
       ))}
-      {trees.map((p, i) => (
-        <Tree key={`t${i}`} position={p} />
+      {trees.map((t, i) => (
+        <Tree key={`t${i}`} position={t.pos} trunk={t.trunk} leaves={t.leaves} />
       ))}
       {rocks.map((p, i) => (
         <Rock key={`r${i}`} position={p} />

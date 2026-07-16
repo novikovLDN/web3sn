@@ -50,6 +50,7 @@ function WaterPatch({
           uniform float uAmp;
           varying vec2 vUv;
           varying vec3 vNormal;
+          varying vec2 vRip;
           float wave(float x, float z, float t) {
             return sin(x * 0.6 + t * 1.4) * 0.45
                  + sin(z * 0.8 + t * 1.1) * 0.30
@@ -58,11 +59,11 @@ function WaterPatch({
           }
           void main() {
             vUv = uv;
+            vRip = position.xy;
             vec3 p = position;
             float t = uTime;
             float h = wave(p.x, p.y, t);
             p.z += h * uAmp;
-            // нормаль из производных волны (мелкая рябь ловит свет)
             float e = 0.25;
             float hx = wave(p.x + e, p.y, t) - wave(p.x - e, p.y, t);
             float hz = wave(p.x, p.y + e, t) - wave(p.x, p.y - e, t);
@@ -71,28 +72,51 @@ function WaterPatch({
           }
         `}
         fragmentShader={`
+          uniform float uTime;
           uniform vec3 uDeep;
           uniform vec3 uShallow;
           uniform float uRadial;
           varying vec2 vUv;
           varying vec3 vNormal;
+          varying vec2 vRip;
+
+          // мелкая рябь — второй слой нормалей (много деталей, блики)
+          float micro(vec2 p, float t) {
+            return sin(p.x * 3.1 + t * 2.2) * 0.5
+                 + sin(p.y * 3.7 - t * 1.9) * 0.5
+                 + sin((p.x + p.y) * 2.3 + t * 1.4) * 0.35
+                 + sin((p.x - p.y) * 4.6 - t * 2.7) * 0.2;
+          }
+
           void main() {
             float edge = 1.0;
             if (uRadial > 0.5) {
               vec2 c = vUv - 0.5;
               edge = smoothstep(0.5, 0.36, length(c));
             }
-            vec3 N = normalize(vNormal);
-            vec3 L = normalize(vec3(0.5, 0.9, 0.35));
+            float t = uTime;
+            float e = 0.12;
+            float mx = micro(vRip + vec2(e, 0.0), t) - micro(vRip - vec2(e, 0.0), t);
+            float my = micro(vRip + vec2(0.0, e), t) - micro(vRip - vec2(0.0, e), t);
+            vec3 microN = normalize(vec3(-mx, 4.0 * e, -my));
+            vec3 N = normalize(vNormal + microN * 0.7);
+
+            vec3 L = normalize(vec3(0.5, 0.85, 0.35));
             vec3 V = vec3(0.0, 1.0, 0.0);
+            vec3 sky = vec3(0.72, 0.85, 0.95);
+
             float diff = clamp(dot(N, L), 0.0, 1.0);
             float fres = pow(1.0 - clamp(N.y, 0.0, 1.0), 3.0);
-            vec3 col = mix(uDeep, uShallow, diff * 0.55 + 0.2);
-            col = mix(col, uShallow * 1.25, fres * 0.5);
-            // блик солнца
-            float spec = pow(clamp(dot(reflect(-L, N), V), 0.0, 1.0), 48.0);
-            col += vec3(spec) * 0.7;
-            gl_FragColor = vec4(col, edge * 0.9);
+
+            vec3 col = mix(uDeep, uShallow, diff * 0.5 + 0.2);
+            // френель — отражение неба у скользящих углов
+            col = mix(col, sky, clamp(fres, 0.0, 1.0) * 0.6);
+
+            // резкий солнечный блик (sparkle)
+            float spec = pow(clamp(dot(reflect(-L, N), V), 0.0, 1.0), 90.0);
+            col += vec3(1.0, 0.98, 0.9) * spec * 1.1;
+
+            gl_FragColor = vec4(col, edge * 0.92);
           }
         `}
       />
