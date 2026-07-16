@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Canvas, useThree } from '@react-three/fiber'
 import { Physics } from '@react-three/rapier'
 import { Sky } from '@react-three/drei'
+import { EffectComposer, Bloom, Vignette, SMAA } from '@react-three/postprocessing'
 import * as THREE from 'three'
 import World from './World'
 import Player from './Player'
@@ -120,7 +121,8 @@ export default function MiniGame() {
         camera={{ position: [0, 5, 13], fov: 60, near: 0.1, far: 300 }}
         onCreated={({ gl }) => {
           gl.toneMapping = THREE.ACESFilmicToneMapping
-          gl.toneMappingExposure = 1.0
+          gl.toneMappingExposure = 1.05
+          gl.shadowMap.type = THREE.PCFSoftShadowMap
           canvasEl.current = gl.domElement
         }}
       >
@@ -153,6 +155,12 @@ export default function MiniGame() {
         <Dust apiRef={dust} />
 
         <LookControls yaw={yaw} pitch={pitch} onLockChange={onLockChange} />
+
+        <EffectComposer multisampling={0} enableNormalPass={false}>
+          <Bloom mipmapBlur intensity={0.55} luminanceThreshold={0.78} luminanceSmoothing={0.28} radius={0.6} />
+          <Vignette eskil={false} offset={0.26} darkness={0.72} />
+          <SMAA />
+        </EffectComposer>
       </Canvas>
 
       {/* Прицел */}

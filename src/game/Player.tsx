@@ -180,7 +180,11 @@ export default function Player({
     }
     wasInWater.current = inWater
 
-    b.setLinvel({ x: vx, y: vy, z: vz }, true)
+    // Плавный разгон/торможение по горизонтали (не рывками)
+    const accel = grounded ? 1 - Math.pow(0.0006, dt) : 1 - Math.pow(0.06, dt)
+    const smx = THREE.MathUtils.lerp(cur.x, vx, accel)
+    const smz = THREE.MathUtils.lerp(cur.z, vz, accel)
+    b.setLinvel({ x: smx, y: vy, z: smz }, true)
 
     // ── Приземление: присед при падении > 2 блоков + пыль ─────
     if (!grounded) {
@@ -215,17 +219,32 @@ export default function Player({
     const swing = moving && grounded ? Math.sin(walkPhase.current) * 0.62 * run : 0
     const swing2 = moving && grounded ? Math.cos(walkPhase.current) * 0.62 * run : 0
     const airLegs = airborne.current ? 0.5 : 0 // подтянуть ноги в прыжке
-    if (legL.current) legL.current.rotation.x = swing + cr * 0.6 + airLegs
-    if (legR.current) legR.current.rotation.x = -swing + cr * 0.6 + airLegs
-    if (armL.current) armL.current.rotation.x = -swing2 * 0.75 - cr * 0.3
-    if (armR.current) armR.current.rotation.x = swing2 * 0.75 - cr * 0.3
+    const k = 0.3 // сглаживание конечностей
+    if (legL.current)
+      legL.current.rotation.x = THREE.MathUtils.lerp(legL.current.rotation.x, swing + cr * 0.6 + airLegs, k)
+    if (legR.current)
+      legR.current.rotation.x = THREE.MathUtils.lerp(legR.current.rotation.x, -swing + cr * 0.6 + airLegs, k)
+    if (armL.current)
+      armL.current.rotation.x = THREE.MathUtils.lerp(armL.current.rotation.x, -swing2 * 0.75 - cr * 0.3, k)
+    if (armR.current)
+      armR.current.rotation.x = THREE.MathUtils.lerp(armR.current.rotation.x, swing2 * 0.75 - cr * 0.3, k)
 
-    // покачивание/присед всего тела (визуально)
+    // покачивание при ходьбе / дыхание в покое / присед
     if (bodyRef.current) {
-      const bob = moving && grounded ? Math.abs(Math.sin(walkPhase.current)) * 0.06 : 0
+      const clock = walkPhase.current
+      const idleBreath = !moving && grounded ? Math.sin(performance.now() * 0.002) * 0.02 : 0
+      const bob = moving && grounded ? Math.abs(Math.sin(clock)) * 0.06 : idleBreath
       const lean = moving && speed > 6 ? 0.08 : 0
-      bodyRef.current.position.y = bob - cr * 0.4
-      bodyRef.current.rotation.x = lean
+      bodyRef.current.position.y = THREE.MathUtils.lerp(
+        bodyRef.current.position.y,
+        bob - cr * 0.4,
+        0.35
+      )
+      bodyRef.current.rotation.x = THREE.MathUtils.lerp(
+        bodyRef.current.rotation.x,
+        lean,
+        0.15
+      )
     }
 
     // Общая позиция для камеры/травы/воды

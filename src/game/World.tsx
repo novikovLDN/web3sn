@@ -10,7 +10,7 @@ import {
   isBeach,
   type Pit,
 } from './playerState'
-import { makeBlockNoise } from './textures'
+import { makeBlockNoise, makeBlockNormal } from './textures'
 
 function hash(x: number, z: number) {
   const s = Math.sin(x * 127.1 + z * 311.7) * 43758.5453
@@ -21,6 +21,7 @@ function hash(x: number, z: number) {
 function VoxelFloor() {
   const ref = useRef<THREE.InstancedMesh>(null)
   const noise = useMemo(() => makeBlockNoise(16, 0.18), [])
+  const normal = useMemo(() => makeBlockNormal(16, 1.3), [])
   const data = useMemo(() => {
     const items: { x: number; z: number; y: number; color: THREE.Color }[] = []
     const grass = new THREE.Color('#4a7c3a')
@@ -77,7 +78,13 @@ function VoxelFloor() {
       castShadow
     >
       <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial map={noise} roughness={0.95} metalness={0} />
+      <meshStandardMaterial
+        map={noise}
+        normalMap={normal}
+        normalScale={new THREE.Vector2(0.45, 0.45)}
+        roughness={0.95}
+        metalness={0}
+      />
     </instancedMesh>
   )
 }
