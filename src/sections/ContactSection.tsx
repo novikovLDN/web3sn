@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Send, ArrowUpRight, Github, Linkedin, Instagram, Mail } from 'lucide-react'
 import FadeIn from '../components/FadeIn'
-import ITWorkspaceScene from '../components/ITWorkspaceScene'
+import Workspace3DLazy from '../components/Workspace3DLazy'
 
 const CONTACT_EMAIL =
   import.meta.env.VITE_CONTACT_EMAIL ?? 'founder@atlassecure.uk'
@@ -36,54 +36,62 @@ export default function ContactSection() {
   }
 
   return (
-    <section
-      id="contact"
-      className="relative bg-[#0C0C0C] overflow-hidden pt-24 sm:pt-28 md:pt-32"
-    >
-      {/* Анимированная IT-сцена (разработчик за MacBook) */}
-      <div
-        className="absolute inset-0 flex items-center justify-center pointer-events-none"
-        aria-hidden="true"
-      >
-        <ITWorkspaceScene className="w-full max-w-[1100px] h-full opacity-[0.55]" />
-      </div>
-      <div className="absolute inset-0 bg-black/60" aria-hidden="true" />
-      <div
-        className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#0C0C0C] to-transparent"
-        aria-hidden="true"
-      />
-      <div
-        className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#0C0C0C] to-transparent"
-        aria-hidden="true"
-      />
+    <section id="contact" className="relative bg-[#0C0C0C] overflow-hidden">
+      {/* ── 3D-стейдж во весь блок ─────────────────────────────── */}
+      <div className="relative h-[78vh] min-h-[560px] w-full">
+        <Workspace3DLazy className="absolute inset-0 w-full h-full" />
 
-      {/* Контент */}
-      <div className="relative z-10 px-5 sm:px-8 md:px-10">
-        <div className="max-w-5xl mx-auto flex flex-col items-center text-center">
+        {/* затемнение по краям для читаемости заголовка */}
+        <div
+          className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_50%_40%,transparent_35%,rgba(12,12,12,0.65)_100%)]"
+          aria-hidden="true"
+        />
+        <div
+          className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-[#0C0C0C] to-transparent pointer-events-none"
+          aria-hidden="true"
+        />
+        <div
+          className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#0C0C0C] via-[#0C0C0C]/70 to-transparent pointer-events-none"
+          aria-hidden="true"
+        />
+
+        {/* Заголовок поверх сцены */}
+        <div className="absolute inset-x-0 top-0 z-10 flex flex-col items-center text-center px-5 pt-16 sm:pt-20 md:pt-24 pointer-events-none">
           <FadeIn
             as="span"
             delay={0}
             y={20}
-            className="text-xs text-[#9aa3af] uppercase tracking-[0.3em] mb-6"
+            className="text-xs text-[#9aa3af] uppercase tracking-[0.3em] mb-4"
           >
             Свяжитесь со мной
           </FadeIn>
-
           <FadeIn
             as="h2"
             delay={0.08}
             y={40}
             className="hero-heading font-bold uppercase leading-[0.95] tracking-tight"
-            style={{ fontSize: 'clamp(2.5rem, 9vw, 8rem)' }}
+            style={{ fontSize: 'clamp(2.5rem, 8vw, 7rem)' }}
           >
             Создадим вместе
           </FadeIn>
+        </div>
 
+        {/* Подсказка внизу сцены */}
+        <div className="absolute inset-x-0 bottom-6 z-10 flex justify-center px-5 pointer-events-none">
+          <span className="text-[#7c8494] text-[10px] sm:text-xs uppercase tracking-[0.25em]">
+            наведите курсор — сцена откликается
+          </span>
+        </div>
+      </div>
+
+      {/* ── Форма на сплошном фоне ─────────────────────────────── */}
+      <div className="relative z-10 px-5 sm:px-8 md:px-10 pt-8">
+        <div className="max-w-2xl mx-auto text-center mb-10 sm:mb-12">
           <FadeIn
             as="p"
-            delay={0.16}
+            delay={0}
             y={20}
-            className="text-[#c3cbd6] font-light mt-6 max-w-xl"
+            className="text-[#c3cbd6] font-light max-w-xl mx-auto"
             style={{ fontSize: 'clamp(0.95rem, 1.6vw, 1.2rem)' }}
           >
             Расскажите про задачу — отвечу в течение суток и предложу, как её
@@ -92,11 +100,7 @@ export default function ContactSection() {
         </div>
 
         {/* Форма */}
-        <FadeIn
-          delay={0.2}
-          y={30}
-          className="max-w-2xl mx-auto mt-14 sm:mt-16 md:mt-20"
-        >
+        <FadeIn delay={0} y={30} className="max-w-2xl mx-auto">
           {sent ? (
             <div className="rounded-3xl border border-[#D7E2EA]/20 bg-white/5 backdrop-blur-md p-10 text-center">
               <p className="accent-text font-bold text-2xl sm:text-3xl uppercase tracking-tight">
