@@ -1,12 +1,12 @@
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 
-const Workspace3D = lazy(() => import('./Workspace3D'))
+const MiniGame = lazy(() => import('./MiniGame'))
 
 /**
- * Ленивая обёртка: тяжёлый three.js-чанк грузится и монтируется только когда
- * секция подходит к вьюпорту — страница остаётся лёгкой.
+ * Ленивая обёртка: тяжёлый чанк игры (three.js + rapier wasm) грузится и
+ * монтируется только когда секция подходит к вьюпорту.
  */
-export default function Workspace3DLazy({
+export default function MiniGameLazy({
   className = '',
 }: {
   className?: string
@@ -24,7 +24,7 @@ export default function Workspace3DLazy({
           io.disconnect()
         }
       },
-      { rootMargin: '300px' }
+      { rootMargin: '250px' }
     )
     io.observe(el)
     return () => io.disconnect()
@@ -34,7 +34,7 @@ export default function Workspace3DLazy({
     <div ref={ref} className={className}>
       {inView ? (
         <Suspense fallback={<Poster />}>
-          <Workspace3D />
+          <MiniGame />
         </Suspense>
       ) : (
         <Poster />
@@ -45,11 +45,11 @@ export default function Workspace3DLazy({
 
 function Poster() {
   return (
-    <div className="w-full h-full flex items-center justify-center bg-[radial-gradient(ellipse_at_center,#15171d_0%,#0b0c10_70%)]">
+    <div className="w-full h-full flex items-center justify-center bg-[radial-gradient(ellipse_at_center,#1a2430_0%,#0b0c10_70%)]">
       <div className="flex flex-col items-center gap-3">
         <span className="w-8 h-8 rounded-full border-2 border-[#8fc8ff]/30 border-t-[#8fc8ff] animate-spin" />
         <span className="text-[#7c8494] text-xs uppercase tracking-[0.3em]">
-          Загрузка 3D-сцены
+          Загрузка игры
         </span>
       </div>
     </div>
