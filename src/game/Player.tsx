@@ -8,6 +8,9 @@ import {
 } from '@react-three/rapier'
 import * as THREE from 'three'
 import { playerState, WATER_LEVEL, inAnyWater } from './playerState'
+import { driving, carRegistry } from './driving'
+import { Character } from './Character'
+import type { Skin } from './skins'
 import type { SplashHandle } from './Water'
 
 type Keys = MutableRefObject<Record<string, boolean>>
@@ -19,125 +22,18 @@ function lerpAngle(a: number, b: number, t: number) {
   return a + d * t
 }
 
-/* ── Блочный персонаж (Minecraft-ish, но детализированный) ─────── */
-function Character({
-  legL,
-  legR,
-  armL,
-  armR,
-}: {
-  legL: MutableRefObject<THREE.Group | null>
-  legR: MutableRefObject<THREE.Group | null>
-  armL: MutableRefObject<THREE.Group | null>
-  armR: MutableRefObject<THREE.Group | null>
-}) {
-  const skin = '#d3a17a'
-  const shirt = '#7621b0'
-  const shirt2 = '#b600a8'
-  const pants = '#26303f'
-  return (
-    <group position={[0, -1, 0]}>
-      {/* Ноги (пивот у бедра для качания) */}
-      <group ref={legL} position={[-0.19, 0.9, 0]}>
-        <mesh castShadow position={[0, -0.45, 0]}>
-          <boxGeometry args={[0.32, 0.9, 0.34]} />
-          <meshStandardMaterial color={pants} roughness={0.9} />
-        </mesh>
-        <mesh castShadow position={[0, -0.94, 0.02]}>
-          <boxGeometry args={[0.34, 0.14, 0.4]} />
-          <meshStandardMaterial color="#161a20" roughness={0.7} />
-        </mesh>
-      </group>
-      <group ref={legR} position={[0.19, 0.9, 0]}>
-        <mesh castShadow position={[0, -0.45, 0]}>
-          <boxGeometry args={[0.32, 0.9, 0.34]} />
-          <meshStandardMaterial color={pants} roughness={0.9} />
-        </mesh>
-        <mesh castShadow position={[0, -0.94, 0.02]}>
-          <boxGeometry args={[0.34, 0.14, 0.4]} />
-          <meshStandardMaterial color="#161a20" roughness={0.7} />
-        </mesh>
-      </group>
-
-      {/* Торс */}
-      <mesh castShadow position={[0, 1.32, 0]}>
-        <boxGeometry args={[0.72, 0.9, 0.42]} />
-        <meshStandardMaterial color={shirt} roughness={0.75} />
-      </mesh>
-      {/* акцентная полоса на груди */}
-      <mesh position={[0, 1.32, 0.22]}>
-        <boxGeometry args={[0.72, 0.24, 0.02]} />
-        <meshStandardMaterial
-          color={shirt2}
-          emissive={shirt2}
-          emissiveIntensity={0.4}
-          roughness={0.6}
-        />
-      </mesh>
-
-      {/* Руки (пивот у плеча) */}
-      <group ref={armL} position={[-0.46, 1.72, 0]}>
-        <mesh castShadow position={[0, -0.42, 0]}>
-          <boxGeometry args={[0.22, 0.9, 0.28]} />
-          <meshStandardMaterial color={shirt} roughness={0.75} />
-        </mesh>
-        <mesh castShadow position={[0, -0.94, 0]}>
-          <boxGeometry args={[0.2, 0.22, 0.26]} />
-          <meshStandardMaterial color={skin} roughness={0.8} />
-        </mesh>
-      </group>
-      <group ref={armR} position={[0.46, 1.72, 0]}>
-        <mesh castShadow position={[0, -0.42, 0]}>
-          <boxGeometry args={[0.22, 0.9, 0.28]} />
-          <meshStandardMaterial color={shirt} roughness={0.75} />
-        </mesh>
-        <mesh castShadow position={[0, -0.94, 0]}>
-          <boxGeometry args={[0.2, 0.22, 0.26]} />
-          <meshStandardMaterial color={skin} roughness={0.8} />
-        </mesh>
-      </group>
-
-      {/* Шея */}
-      <mesh position={[0, 1.86, 0]}>
-        <boxGeometry args={[0.3, 0.14, 0.3]} />
-        <meshStandardMaterial color={skin} roughness={0.8} />
-      </mesh>
-
-      {/* Голова */}
-      <group position={[0, 2.28, 0]}>
-        <mesh castShadow>
-          <boxGeometry args={[0.68, 0.68, 0.66]} />
-          <meshStandardMaterial color={skin} roughness={0.8} />
-        </mesh>
-        {/* волосы */}
-        <mesh position={[0, 0.26, -0.02]}>
-          <boxGeometry args={[0.72, 0.24, 0.7]} />
-          <meshStandardMaterial color="#241a12" roughness={0.9} />
-        </mesh>
-        {/* глаза */}
-        <mesh position={[-0.15, 0.02, 0.34]}>
-          <boxGeometry args={[0.1, 0.12, 0.02]} />
-          <meshStandardMaterial color="#15110d" />
-        </mesh>
-        <mesh position={[0.15, 0.02, 0.34]}>
-          <boxGeometry args={[0.1, 0.12, 0.02]} />
-          <meshStandardMaterial color="#15110d" />
-        </mesh>
-      </group>
-    </group>
-  )
-}
-
 export default function Player({
   keys,
   yaw,
   pitch,
   splash,
+  skin,
 }: {
   keys: Keys
   yaw: MutableRefObject<number>
   pitch: MutableRefObject<number>
   splash: MutableRefObject<SplashHandle | null>
+  skin: Skin
 }) {
   const body = useRef<RapierRigidBody>(null)
   const model = useRef<THREE.Group>(null)
@@ -152,13 +48,73 @@ export default function Player({
   const camPos = useRef(new THREE.Vector3(0, 5, 10))
   const tmp = useRef(new THREE.Vector3())
   const wasInWater = useRef(false)
+  const prevF = useRef(false)
+
+  const updateCamera = (dt: number) => {
+    const p = playerState.position
+    const sin = Math.sin(yaw.current)
+    const cos = Math.cos(yaw.current)
+    const dist = driving.carId != null ? 9 : 7
+    const cp = Math.cos(pitch.current)
+    tmp.current.set(
+      p.x - sin * dist * cp,
+      p.y + 2.2 + Math.sin(pitch.current) * dist,
+      p.z - cos * dist * cp
+    )
+    camPos.current.lerp(tmp.current, 1 - Math.pow(0.001, dt))
+    camera.position.copy(camPos.current)
+    camera.lookAt(p.x, p.y + 1.4, p.z)
+  }
 
   useFrame((_, dt) => {
     const b = body.current
     if (!b) return
+
+    // Вход/выход из машины по F (только в активной игре)
+    const fDown = !!keys.current['KeyF']
+    if (playerState.active && fDown && !prevF.current) {
+      if (driving.carId == null) {
+        const pp = b.translation()
+        let best: { id: number; d: number } | null = null
+        for (const c of carRegistry) {
+          const t = c.body.translation()
+          const d = Math.hypot(t.x - pp.x, t.z - pp.z)
+          if (d < 4 && (!best || d < best.d)) best = { id: c.id, d }
+        }
+        if (best) {
+          driving.carId = best.id
+          b.setEnabled(false)
+          if (model.current) model.current.visible = false
+        }
+      } else {
+        const c = carRegistry.find((c) => c.id === driving.carId)
+        driving.carId = null
+        b.setEnabled(true)
+        if (c) {
+          const t = c.body.translation()
+          b.setTranslation({ x: t.x + 2.4, y: 3, z: t.z }, true)
+        }
+        b.setLinvel({ x: 0, y: 0, z: 0 }, true)
+        if (model.current) model.current.visible = true
+      }
+    }
+    prevF.current = fDown
+
+    // За рулём: тело выключено, камеру ведёт машина (playerState.position)
+    if (driving.carId != null) {
+      updateCamera(dt)
+      return
+    }
+
+    // Пауза/не активна: только камера
+    if (!playerState.active) {
+      updateCamera(dt)
+      return
+    }
+
     const pos = b.translation()
 
-    // Проверка «на земле» лучом вниз
+    // На земле? — луч вниз
     const ray = new rapier.Ray(
       { x: pos.x, y: pos.y, z: pos.z },
       { x: 0, y: -1, z: 0 }
@@ -166,7 +122,7 @@ export default function Player({
     const hit = world.castRay(ray, 1.4, true, undefined, undefined, undefined, b)
     const grounded = !!hit && hit.timeOfImpact <= 1.12
 
-    // Ввод в локальных осях камеры
+    // Ввод в осях камеры
     let fwd = 0
     let str = 0
     if (keys.current['KeyW']) fwd += 1
@@ -178,7 +134,6 @@ export default function Player({
 
     const sin = Math.sin(yaw.current)
     const cos = Math.cos(yaw.current)
-    // Вперёд камеры F = (sin, cos); вправо R = (-cos, sin)
     let vx = 0
     let vz = 0
     if (moving) {
@@ -192,31 +147,26 @@ export default function Player({
     const cur = b.linvel()
     let vy = cur.y
 
-    // ── Вода: плавучесть, брызги, замедление ──────────────────
+    // Вода
     const feetY = pos.y - 1.0
     const region = inAnyWater(pos.x, pos.z)
     const inWater = region && feetY < WATER_LEVEL
     const submerged = region && pos.y < WATER_LEVEL
     playerState.inWater = inWater
 
-    if (grounded && keys.current['Space'] && vy < 3) vy = 8.6
+    if (grounded && keys.current['Space'] && vy < 3) vy = 9
 
     if (inWater) {
-      // всплеск при входе (по вертикальной скорости)
       if (!wasInWater.current && cur.y < -1.2) {
         splash.current?.burst(pos.x, pos.z, Math.min(2, Math.abs(cur.y) / 5))
       }
-      // выталкивание + сопротивление воды
       const depth = THREE.MathUtils.clamp(WATER_LEVEL - feetY, 0, 1.4)
-      vy += depth * 34 * dt // архимедова сила
-      vy *= 0.9 // демпфирование
+      vy += depth * 34 * dt
+      vy *= 0.9
       vx *= 0.55
       vz *= 0.55
-      // «выпрыгнуть»/плыть вверх пробелом
       if (keys.current['Space']) vy = 5.5
     }
-
-    // мелкие брызги при движении по воде
     if (submerged && moving && Math.random() < 0.25) {
       splash.current?.burst(pos.x, pos.z, 0.5)
     }
@@ -224,13 +174,13 @@ export default function Player({
 
     b.setLinvel({ x: vx, y: vy, z: vz }, true)
 
-    // Поворот модели по направлению движения
+    // Поворот модели по движению
     if (model.current && moving) {
       const target = Math.atan2(vx, vz)
       model.current.rotation.y = lerpAngle(model.current.rotation.y, target, 0.2)
     }
 
-    // Анимация ходьбы
+    // Ходьба
     if (moving && grounded) walkPhase.current += dt * speed * 1.6
     const swing = moving ? Math.sin(walkPhase.current) * 0.6 : 0
     const swing2 = moving ? Math.cos(walkPhase.current) * 0.6 : 0
@@ -239,26 +189,17 @@ export default function Player({
     if (armL.current) armL.current.rotation.x = -swing2 * 0.7
     if (armR.current) armR.current.rotation.x = swing2 * 0.7
 
-    // Камера от 3-го лица (орбита за спиной)
-    const dist = 7
-    const cp = Math.cos(pitch.current)
-    const desiredX = pos.x - sin * dist * cp
-    const desiredZ = pos.z - cos * dist * cp
-    const desiredY = pos.y + 2.2 + Math.sin(pitch.current) * dist
-    tmp.current.set(desiredX, desiredY, desiredZ)
-    camPos.current.lerp(tmp.current, 1 - Math.pow(0.001, dt))
-    camera.position.copy(camPos.current)
-    camera.lookAt(pos.x, pos.y + 1.4, pos.z)
-
-    // Разделяемая позиция для травы/воды
+    // Общая позиция для камеры/травы/воды
     playerState.position.set(pos.x, pos.y, pos.z)
     playerState.velocityY = cur.y
 
-    // Респавн, если вдруг провалился
-    if (pos.y < -10) {
+    // Респавн
+    if (pos.y < -12) {
       b.setTranslation({ x: 0, y: 3, z: 6 }, true)
       b.setLinvel({ x: 0, y: 0, z: 0 }, true)
     }
+
+    updateCamera(dt)
   })
 
   return (
@@ -274,7 +215,7 @@ export default function Player({
     >
       <CapsuleCollider args={[0.6, 0.4]} />
       <group ref={model}>
-        <Character legL={legL} legR={legR} armL={armL} armR={armR} />
+        <Character skin={skin} legL={legL} legR={legR} armL={armL} armR={armR} />
       </group>
     </RigidBody>
   )

@@ -6,13 +6,17 @@ import * as THREE from 'three'
 import World from './World'
 import Player from './Player'
 import Props from './Props'
+import Cars from './Cars'
 import Grass from './Grass'
 import Vegetation from './Vegetation'
 import Water, { type SplashHandle } from './Water'
 import Boat from './Boat'
-import { SEA_Z, HALF } from './playerState'
+import { SEA_Z, HALF, playerState } from './playerState'
+import { SKINS } from './skins'
 
-/* ── Клавиатура (через ref, без ре-рендеров) ──────────────────── */
+type Phase = 'select' | 'ready' | 'playing' | 'paused'
+
+/* ── Клавиатура ───────────────────────────────────────────────── */
 function useKeyboard() {
   const keys = useRef<Record<string, boolean>>({})
   useEffect(() => {
@@ -37,7 +41,7 @@ function useKeyboard() {
   return keys
 }
 
-/* ── Pointer-lock + мышь → поворот камеры ─────────────────────── */
+/* ── Мышь → камера + отслеживание захвата ─────────────────────── */
 function LookControls({
   yaw,
   pitch,
@@ -48,13 +52,8 @@ function LookControls({
   onLockChange: (v: boolean) => void
 }) {
   const { gl } = useThree()
-
   useEffect(() => {
     const canvas = gl.domElement
-
-    const onClick = () => {
-      if (!document.pointerLockElement) canvas.requestPointerLock()
-    }
     const onMove = (e: MouseEvent) => {
       if (document.pointerLockElement !== canvas) return
       yaw.current -= e.movementX * 0.0022
@@ -64,17 +63,13 @@ function LookControls({
       )
     }
     const onLock = () => onLockChange(document.pointerLockElement === canvas)
-
-    canvas.addEventListener('click', onClick)
     document.addEventListener('mousemove', onMove)
     document.addEventListener('pointerlockchange', onLock)
     return () => {
-      canvas.removeEventListener('click', onClick)
       document.removeEventListener('mousemove', onMove)
       document.removeEventListener('pointerlockchange', onLock)
     }
   }, [gl, yaw, pitch, onLockChange])
-
   return null
 }
 
@@ -84,12 +79,38 @@ export default function MiniGame() {
   const pitch = useRef(0.4)
   const splash = useRef<SplashHandle | null>(null)
   const canvasEl = useRef<HTMLCanvasElement | null>(null)
-  const [playing, setPlaying] = useState(false)
 
-  const enterGame = () => canvasEl.current?.requestPointerLock()
+  const [phase, setPhase] = useState<Phase>('select')
+  const [skinIndex, setSkinIndex] = useState(0)
+  const phaseRef = useRef<Phase>('select')
+  phaseRef.current = phase
+
+  // активность управления только в игре
+  useEffect(() => {
+    playerState.active = phase === 'playing'
+  }, [phase])
+
+  const lockPointer = () => canvasEl.current?.requestPointerLock()
+  const exitPointer = () => {
+    if (document.pointerLockElement) document.exitPointerLock()
+  }
+
+  const onLockChange = (locked: boolean) => {
+    if (locked) setPhase('playing')
+    else if (phaseRef.current === 'playing') setPhase('paused')
+  }
+
+  const chooseSkin = (i: number) => {
+    setSkinIndex(i)
+    setPhase('ready')
+  }
+  const exitToSite = () => {
+    exitPointer()
+    setPhase('ready')
+  }
 
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-full select-none">
       <Canvas
         shadows
         dpr={[1, 1.8]}
@@ -113,39 +134,75 @@ export default function MiniGame() {
           shadow-mapSize={[2048, 2048]}
           shadow-bias={-0.0004}
         >
-          <orthographicCamera
-            attach="shadow-camera"
-            args={[-60, 60, 60, -60, 0.1, 180]}
-          />
+          <orthographicCamera attach="shadow-camera" args={[-60, 60, 60, -60, 0.1, 180]} />
         </directionalLight>
 
         <Physics gravity={[0, -22, 0]}>
           <World />
           <Props />
+          <Cars keys={keys} skin={SKINS[skinIndex]} yaw={yaw} />
           <Boat position={[-14, 0, SEA_Z + (HALF - SEA_Z) / 2]} />
-          <Player keys={keys} yaw={yaw} pitch={pitch} splash={splash} />
+          <Player keys={keys} yaw={yaw} pitch={pitch} splash={splash} skin={SKINS[skinIndex]} />
         </Physics>
 
-        {/* Трава, растительность и вода — визуальные слои */}
         <Grass />
         <Vegetation />
         <Water apiRef={splash} />
 
-        <LookControls yaw={yaw} pitch={pitch} onLockChange={setPlaying} />
+        <LookControls yaw={yaw} pitch={pitch} onLockChange={onLockChange} />
       </Canvas>
 
-      {/* Прицел по центру */}
-      {playing && (
+      {/* Прицел */}
+      {phase === 'playing' && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="w-1.5 h-1.5 rounded-full bg-white/70 shadow" />
         </div>
       )}
 
-      {/* Оверлей-подсказка (клик = вход в игру / захват мыши) */}
-      {!playing && (
+      {/* HUD */}
+      {phase === 'playing' && (
+        <div className="absolute top-4 left-4 pointer-events-none text-[#e6ebf2]/85 text-xs uppercase tracking-widest space-y-0.5">
+          <p>WASD · Пробел · Shift</p>
+          <p>F — сесть / выйти из машины</p>
+          <p className="text-[#9aa3af]">Esc — меню</p>
+        </div>
+      )}
+
+      {/* Выбор персонажа */}
+      {phase === 'select' && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/55 backdrop-blur-sm px-6">
+          <p className="accent-text font-bold uppercase tracking-tight text-3xl sm:text-4xl mb-8">
+            Выберите персонажа
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+            {SKINS.map((s, i) => (
+              <button
+                key={s.name}
+                onClick={() => chooseSkin(i)}
+                className="group flex flex-col items-center gap-3 rounded-2xl border border-[#D7E2EA]/15 bg-white/5 hover:bg-white/10 p-5 transition-colors"
+              >
+                <span
+                  className="w-16 h-16 rounded-xl border-2"
+                  style={{ background: s.shirt, borderColor: s.shirt2 }}
+                />
+                <span className="text-[#e6ebf2] text-sm font-medium">{s.name}</span>
+                <span className="text-[#9aa3af] text-xs">
+                  {s.female ? 'жен.' : 'муж.'}
+                </span>
+              </button>
+            ))}
+          </div>
+          <p className="text-[#9aa3af] text-xs uppercase tracking-widest">
+            Мир 100×100 · машины · море и кораблик · карьеры с рудой
+          </p>
+        </div>
+      )}
+
+      {/* Старт: клик = играть */}
+      {phase === 'ready' && (
         <button
-          onClick={enterGame}
-          className="absolute inset-0 flex items-center justify-center bg-black/35 backdrop-blur-[2px] cursor-pointer"
+          onClick={lockPointer}
+          className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px] cursor-pointer"
         >
           <div className="text-center px-6">
             <p className="accent-text font-bold uppercase tracking-tight text-3xl sm:text-4xl mb-4">
@@ -158,23 +215,51 @@ export default function MiniGame() {
                 <b className="font-medium">Пробел</b> — прыжок / плыть
               </p>
               <p>
+                <b className="font-medium">F</b> — сесть в машину ·{' '}
                 <b className="font-medium">Мышь</b> — камера ·{' '}
-                <b className="font-medium">Esc</b> — выход (мышь освобождается)
-              </p>
-              <p className="text-[#9aa3af] mt-2">
-                Мир 100×100 · море и кораблик · озеро · карьеры с рудой ·
-                толкайте ящики и машинки
+                <b className="font-medium">Esc</b> — меню
               </p>
             </div>
           </div>
         </button>
       )}
 
-      {/* HUD при игре */}
-      {playing && (
-        <div className="absolute top-4 left-4 pointer-events-none text-[#e6ebf2]/80 text-xs uppercase tracking-widest space-y-0.5">
-          <p>WASD · Пробел · Shift</p>
-          <p className="text-[#9aa3af]">Esc — выход</p>
+      {/* Меню-пауза (Esc) */}
+      {phase === 'paused' && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm px-6">
+          <p className="accent-text font-bold uppercase tracking-tight text-3xl sm:text-4xl mb-8">
+            Пауза
+          </p>
+          <div className="flex flex-col gap-3 w-full max-w-xs">
+            <button
+              onClick={lockPointer}
+              className="rounded-full py-3 text-white font-medium uppercase tracking-widest text-sm"
+              style={{
+                background:
+                  'linear-gradient(123deg, #18011F 7%, #B600A8 37%, #7621B0 72%, #BE4C00 100%)',
+                boxShadow: '4px 4px 12px #7721B1 inset',
+                outline: '2px solid #FFFFFF',
+                outlineOffset: '-3px',
+              }}
+            >
+              Продолжить
+            </button>
+            <button
+              onClick={() => setPhase('select')}
+              className="rounded-full py-3 border-2 border-[#D7E2EA]/40 text-[#D7E2EA] font-medium uppercase tracking-widest text-sm hover:bg-white/5 transition-colors"
+            >
+              Сменить персонажа
+            </button>
+            <button
+              onClick={exitToSite}
+              className="rounded-full py-3 border-2 border-[#e0473c]/50 text-[#f0a59d] font-medium uppercase tracking-widest text-sm hover:bg-[#e0473c]/10 transition-colors"
+            >
+              Выйти из игры
+            </button>
+          </div>
+          <p className="text-[#9aa3af] text-xs uppercase tracking-widest mt-6">
+            Esc снова — вернуться в игру нельзя, нажмите «Продолжить»
+          </p>
         </div>
       )}
     </div>

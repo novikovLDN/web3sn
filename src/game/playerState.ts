@@ -8,6 +8,7 @@ export const playerState = {
   position: new THREE.Vector3(0, 3, 6),
   velocityY: 0,
   inWater: false,
+  active: false, // управление активно только в фазе игры
 }
 
 export const HALF = 50 // мир 100×100 (в 4 раза больше прежнего)
