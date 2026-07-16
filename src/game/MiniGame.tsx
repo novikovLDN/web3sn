@@ -13,6 +13,8 @@ import Vegetation from './Vegetation'
 import Water, { type SplashHandle } from './Water'
 import Dust, { type DustHandle } from './Dust'
 import Boat from './Boat'
+import Clouds from './Clouds'
+import Structures from './Structures'
 import { SEA_Z, HALF, playerState } from './playerState'
 import { SKINS } from './skins'
 
@@ -146,8 +148,8 @@ export default function MiniGame() {
           canvasEl.current = gl.domElement
         }}
       >
-        <Sky sunPosition={[60, 40, 30]} turbidity={5} rayleigh={1.1} mieCoefficient={0.005} />
-        <fog attach="fog" args={['#bcd4e6', 70, 150]} />
+        <Sky sunPosition={[60, 40, 30]} turbidity={4} rayleigh={1.0} mieCoefficient={0.004} />
+        <fog attach="fog" args={['#c4d8e8', 130, 300]} />
 
         <ambientLight intensity={0.55} />
         <hemisphereLight args={['#cfe6ff', '#4a5a3a', 0.6]} />
@@ -158,12 +160,13 @@ export default function MiniGame() {
           shadow-mapSize={[2048, 2048]}
           shadow-bias={-0.0004}
         >
-          <orthographicCamera attach="shadow-camera" args={[-60, 60, 60, -60, 0.1, 180]} />
+          <orthographicCamera attach="shadow-camera" args={[-90, 90, 90, -90, 0.1, 220]} />
         </directionalLight>
 
         <Physics gravity={[0, -22, 0]}>
           <World />
           <Props />
+          <Structures />
           <Cars keys={keys} skin={SKINS[skinIndex]} yaw={yaw} />
           <Boat position={[-14, 0, SEA_Z + (HALF - SEA_Z) / 2]} />
           <Player keys={keys} yaw={yaw} pitch={pitch} splash={splash} dust={dust} skin={SKINS[skinIndex]} debug={debug} />
@@ -173,6 +176,7 @@ export default function MiniGame() {
         <Vegetation />
         <Water apiRef={splash} />
         <Dust apiRef={dust} />
+        <Clouds />
 
         {debug && <DebugCam />}
         <LookControls yaw={yaw} pitch={pitch} onLockChange={onLockChange} />

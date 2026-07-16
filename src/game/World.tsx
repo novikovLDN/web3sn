@@ -29,7 +29,7 @@ function VoxelFloor() {
     const seabed = new THREE.Color('#8a7f52')
     const path = new THREE.Color('#8a8577')
     const tmp = new THREE.Color()
-    const STEP = 0.5 // мелкие блоки — вдвое детальнее текстуры
+    const STEP = 0.75 // мелкие блоки — детальнее текстуры, но не слишком тяжело
     for (let x = -HALF; x < HALF; x += STEP) {
       for (let z = -HALF; z < HALF; z += STEP) {
         const cx = x + STEP / 2
@@ -56,7 +56,7 @@ function VoxelFloor() {
     return items
   }, [])
 
-  const STEP = 0.5
+  const STEP = 0.75
 
   useLayoutEffect(() => {
     const mesh = ref.current

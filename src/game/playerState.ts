@@ -11,15 +11,15 @@ export const playerState = {
   active: false, // управление активно только в фазе игры
 }
 
-export const HALF = 50 // мир 100×100 (в 4 раза больше прежнего)
+export const HALF = 100 // мир 200×200
 export const WATER_LEVEL = 0.4
 
 // Пруд (озеро) в глубине суши
 export const POND = { cx: 16, cz: -16, rx: 9, rz: 8 }
 
 // Море — вся северная кромка карты
-export const SEA_Z = 30 // берег: вода при z > SEA_Z
-export const BEACH_Z = 24 // песок между сушей и морем
+export const SEA_Z = 62 // берег: вода при z > SEA_Z
+export const BEACH_Z = 54 // песок между сушей и морем
 
 // Карьеры (ямы) с рудой — квадратные, выровнены по сетке 10
 export type Pit = {
@@ -34,6 +34,9 @@ export const PITS: Pit[] = [
   { x0: -30, x1: -20, z0: 0, z1: 10, depth: 4 },
   { x0: 20, x1: 30, z0: -10, z1: 0, depth: 5 },
   { x0: -10, x1: 0, z0: -30, z1: -20, depth: 6 },
+  { x0: 50, x1: 60, z0: 20, z1: 30, depth: 5 },
+  { x0: -60, x1: -50, z0: -40, z1: -30, depth: 6 },
+  { x0: 30, x1: 40, z0: -60, z1: -50, depth: 4 },
 ]
 
 export function inPond(x: number, z: number) {
