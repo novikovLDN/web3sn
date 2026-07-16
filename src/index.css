@@ -121,6 +121,103 @@ html {
   animation: soft-pulse 1.8s ease-in-out infinite;
 }
 
+/* ── Анимированная IT-сцена (разработчик за MacBook) ─────────────── */
+.scene-body-lean {
+  transform-box: view-box;
+  transform-origin: 305px 300px;
+  transition: transform 1.25s cubic-bezier(0.45, 0.02, 0.2, 1);
+}
+.scene-body-rock {
+  transform-box: view-box;
+  transform-origin: 305px 300px;
+  animation: body-rock 4.6s ease-in-out infinite alternate;
+}
+.scene-still .scene-body-rock {
+  /* pause замораживает на текущем угле — без рывка при наклоне */
+  animation-play-state: paused;
+}
+@keyframes body-rock {
+  from {
+    transform: rotate(-1.7deg);
+  }
+  to {
+    transform: rotate(1.7deg);
+  }
+}
+
+.scene-arm {
+  transition: opacity 0.9s ease;
+}
+
+.scene-hand-l,
+.scene-hand-r {
+  transform-box: view-box;
+}
+.scene-typing .scene-hand-l {
+  animation: type-tap-a 0.34s ease-in-out infinite;
+}
+.scene-typing .scene-hand-r {
+  animation: type-tap-b 0.29s ease-in-out infinite;
+}
+@keyframes type-tap-a {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2.6px);
+  }
+}
+@keyframes type-tap-b {
+  0%,
+  100% {
+    transform: translateY(-2px);
+  }
+  50% {
+    transform: translateY(0.6px);
+  }
+}
+
+.scene-screen-glow {
+  animation: screen-breathe 3.6s ease-in-out infinite;
+}
+.scene-typing .scene-screen-glow {
+  animation: screen-work 0.55s steps(2, end) infinite;
+}
+@keyframes screen-breathe {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.74;
+  }
+}
+@keyframes screen-work {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.86;
+  }
+  100% {
+    opacity: 0.58;
+  }
+}
+
+.scene-lamp-glow {
+  animation: lamp-flicker 5s ease-in-out infinite;
+}
+@keyframes lamp-flicker {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.58;
+  }
+}
+
 /* Уважение к системной настройке «меньше движения» */
 @media (prefers-reduced-motion: reduce) {
   *,

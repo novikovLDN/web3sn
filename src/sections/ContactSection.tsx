@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Send, ArrowUpRight, Github, Linkedin, Instagram, Mail } from 'lucide-react'
 import FadeIn from '../components/FadeIn'
+import ITWorkspaceScene from '../components/ITWorkspaceScene'
 
 const CONTACT_EMAIL =
   import.meta.env.VITE_CONTACT_EMAIL ?? 'founder@atlassecure.uk'
@@ -11,9 +12,6 @@ const SOCIALS = [
   { label: 'Instagram', href: '#', Icon: Instagram },
   { label: 'Email', href: `mailto:${CONTACT_EMAIL}`, Icon: Mail },
 ]
-
-const VIDEO_URL =
-  'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260418_063509_7d167302-4fd4-480b-8260-18ab572333d4.mp4'
 
 const MARQUEE_TEXT = 'СОЗДАЁМ БУДУЩЕЕ'
 
@@ -42,20 +40,20 @@ export default function ContactSection() {
       id="contact"
       className="relative bg-[#0C0C0C] overflow-hidden pt-24 sm:pt-28 md:pt-32"
     >
-      {/* Фоновое видео */}
-      <video
-        className="absolute inset-0 w-full h-full object-cover opacity-60"
-        autoPlay
-        loop
-        muted
-        playsInline
+      {/* Анимированная IT-сцена (разработчик за MacBook) */}
+      <div
+        className="absolute inset-0 flex items-center justify-center pointer-events-none"
         aria-hidden="true"
       >
-        <source src={VIDEO_URL} type="video/mp4" />
-      </video>
-      <div className="absolute inset-0 bg-black/70" aria-hidden="true" />
+        <ITWorkspaceScene className="w-full max-w-[1100px] h-full opacity-[0.55]" />
+      </div>
+      <div className="absolute inset-0 bg-black/60" aria-hidden="true" />
       <div
         className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#0C0C0C] to-transparent"
+        aria-hidden="true"
+      />
+      <div
+        className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#0C0C0C] to-transparent"
         aria-hidden="true"
       />
 
