@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { Physics } from '@react-three/rapier'
 import { Sky } from '@react-three/drei'
@@ -24,6 +24,7 @@ import Clouds from './Clouds'
 import Structures from './Structures'
 import Animals from './Animals'
 import Atmosphere from './Atmosphere'
+import TouchControls from './TouchControls'
 import { SEA_Z, HALF, playerState } from './playerState'
 import { SKINS } from './skins'
 
@@ -124,9 +125,24 @@ export default function MiniGame() {
     playerState.active = phase === 'playing'
   }, [phase])
 
+  const isTouch = useMemo(
+    () =>
+      typeof window !== 'undefined' &&
+      ('ontouchstart' in window || navigator.maxTouchPoints > 0),
+    []
+  )
+  const rootRef = useRef<HTMLDivElement>(null)
+
   const lockPointer = () => canvasEl.current?.requestPointerLock()
   const exitPointer = () => {
     if (document.pointerLockElement) document.exitPointerLock()
+  }
+  // на тач-устройствах pointer-lock не используем — играем напрямую
+  const startPlay = () => (isTouch ? setPhase('playing') : lockPointer())
+  const toggleFullscreen = () => {
+    const el = rootRef.current
+    if (!document.fullscreenElement) el?.requestFullscreen?.()
+    else document.exitFullscreen?.()
   }
 
   const onLockChange = (locked: boolean) => {
@@ -144,7 +160,7 @@ export default function MiniGame() {
   }
 
   return (
-    <div className="relative w-full h-full select-none">
+    <div ref={rootRef} className="relative w-full h-full select-none bg-[#0C0C0C]">
       <Canvas
         shadows
         dpr={[1, 1.8]}
@@ -206,11 +222,33 @@ export default function MiniGame() {
         </EffectComposer>
       </Canvas>
 
-      {/* Прицел */}
-      {phase === 'playing' && (
+      {/* Кнопка полного экрана */}
+      <button
+        onClick={toggleFullscreen}
+        className="absolute top-4 right-4 z-30 w-10 h-10 rounded-lg border border-white/20 bg-black/40 backdrop-blur text-white/80 hover:text-white flex items-center justify-center"
+        aria-label="Полный экран"
+      >
+        ⛶
+      </button>
+
+      {/* Прицел (не на тач) */}
+      {phase === 'playing' && !isTouch && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="w-1.5 h-1.5 rounded-full bg-white/70 shadow" />
         </div>
+      )}
+
+      {/* Сенсорное управление + кнопка меню (тач) */}
+      {phase === 'playing' && isTouch && (
+        <>
+          <TouchControls keys={keys} yaw={yaw} pitch={pitch} />
+          <button
+            onClick={() => setPhase('paused')}
+            className="absolute top-4 left-4 z-30 px-4 h-10 rounded-lg border border-white/20 bg-black/40 backdrop-blur text-white/85 text-sm"
+          >
+            Меню
+          </button>
+        </>
       )}
 
       {/* HUD */}
@@ -255,7 +293,7 @@ export default function MiniGame() {
       {/* Старт: клик = играть */}
       {phase === 'ready' && (
         <button
-          onClick={lockPointer}
+          onClick={startPlay}
           className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px] cursor-pointer"
         >
           <div className="text-center px-6">
@@ -286,7 +324,7 @@ export default function MiniGame() {
           </p>
           <div className="flex flex-col gap-3 w-full max-w-xs">
             <button
-              onClick={lockPointer}
+              onClick={startPlay}
               className="rounded-full py-3 text-white font-medium uppercase tracking-widest text-sm"
               style={{
                 background:
