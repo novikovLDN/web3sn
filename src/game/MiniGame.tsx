@@ -10,6 +10,7 @@ import Cars from './Cars'
 import Grass from './Grass'
 import Vegetation from './Vegetation'
 import Water, { type SplashHandle } from './Water'
+import Dust, { type DustHandle } from './Dust'
 import Boat from './Boat'
 import { SEA_Z, HALF, playerState } from './playerState'
 import { SKINS } from './skins'
@@ -78,6 +79,7 @@ export default function MiniGame() {
   const yaw = useRef(0)
   const pitch = useRef(0.4)
   const splash = useRef<SplashHandle | null>(null)
+  const dust = useRef<DustHandle | null>(null)
   const canvasEl = useRef<HTMLCanvasElement | null>(null)
 
   const [phase, setPhase] = useState<Phase>('select')
@@ -142,12 +144,13 @@ export default function MiniGame() {
           <Props />
           <Cars keys={keys} skin={SKINS[skinIndex]} yaw={yaw} />
           <Boat position={[-14, 0, SEA_Z + (HALF - SEA_Z) / 2]} />
-          <Player keys={keys} yaw={yaw} pitch={pitch} splash={splash} skin={SKINS[skinIndex]} />
+          <Player keys={keys} yaw={yaw} pitch={pitch} splash={splash} dust={dust} skin={SKINS[skinIndex]} />
         </Physics>
 
         <Grass />
         <Vegetation />
         <Water apiRef={splash} />
+        <Dust apiRef={dust} />
 
         <LookControls yaw={yaw} pitch={pitch} onLockChange={onLockChange} />
       </Canvas>

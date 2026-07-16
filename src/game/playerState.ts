@@ -59,3 +59,18 @@ export function pitAt(x: number, z: number): Pit | null {
   }
   return null
 }
+
+function hash(x: number, z: number) {
+  const s = Math.sin(x * 127.1 + z * 311.7) * 43758.5453
+  return s - Math.floor(s)
+}
+
+/** Тип и цвет поверхности под точкой — для пыли/эффектов при приземлении. */
+export function groundInfo(x: number, z: number): { type: string; color: string } {
+  if (inAnyWater(x, z)) return { type: 'water', color: '#bfe6f5' }
+  if (isBeach(x, z)) return { type: 'sand', color: '#c2b27a' }
+  const patch = hash(Math.floor(x / 4), Math.floor(z / 4))
+  if (patch > 0.88) return { type: 'stone', color: '#8b8f98' }
+  if (patch < 0.07) return { type: 'dirt', color: '#7a5a40' }
+  return { type: 'grass', color: '#6aa64f' }
+}

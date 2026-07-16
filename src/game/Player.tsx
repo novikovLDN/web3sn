@@ -7,11 +7,12 @@ import {
   type RapierRigidBody,
 } from '@react-three/rapier'
 import * as THREE from 'three'
-import { playerState, WATER_LEVEL, inAnyWater } from './playerState'
+import { playerState, WATER_LEVEL, inAnyWater, groundInfo } from './playerState'
 import { driving, carRegistry } from './driving'
 import { Character } from './Character'
 import type { Skin } from './skins'
 import type { SplashHandle } from './Water'
+import type { DustHandle } from './Dust'
 
 type Keys = MutableRefObject<Record<string, boolean>>
 
@@ -27,12 +28,14 @@ export default function Player({
   yaw,
   pitch,
   splash,
+  dust,
   skin,
 }: {
   keys: Keys
   yaw: MutableRefObject<number>
   pitch: MutableRefObject<number>
   splash: MutableRefObject<SplashHandle | null>
+  dust: MutableRefObject<DustHandle | null>
   skin: Skin
 }) {
   const body = useRef<RapierRigidBody>(null)
@@ -49,6 +52,11 @@ export default function Player({
   const tmp = useRef(new THREE.Vector3())
   const wasInWater = useRef(false)
   const prevF = useRef(false)
+  // приземление
+  const airborne = useRef(false)
+  const maxAirY = useRef(0)
+  const crouch = useRef(0) // 0..1 текущая глубина приседа
+  const bodyRef = useRef<THREE.Group | null>(null)
 
   const updateCamera = (dt: number) => {
     const p = playerState.position
@@ -174,20 +182,51 @@ export default function Player({
 
     b.setLinvel({ x: vx, y: vy, z: vz }, true)
 
+    // ── Приземление: присед при падении > 2 блоков + пыль ─────
+    if (!grounded) {
+      airborne.current = true
+      if (pos.y > maxAirY.current) maxAirY.current = pos.y
+    } else if (airborne.current) {
+      airborne.current = false
+      const fall = maxAirY.current - pos.y
+      if (fall > 2 && !inWater) {
+        crouch.current = Math.min(1, 0.4 + (fall - 2) / 5)
+        const g = groundInfo(pos.x, pos.z)
+        if (g.type !== 'water') {
+          dust.current?.burst(pos.x, feetY, pos.z, g.color, Math.min(1.6, fall / 3))
+        }
+      }
+      maxAirY.current = pos.y
+    }
+    if (grounded) maxAirY.current = pos.y
+    // затухание приседа
+    crouch.current = Math.max(0, crouch.current - dt * 3.2)
+    const cr = crouch.current * crouch.current * (3 - 2 * crouch.current) // smooth
+
     // Поворот модели по движению
     if (model.current && moving) {
       const target = Math.atan2(vx, vz)
-      model.current.rotation.y = lerpAngle(model.current.rotation.y, target, 0.2)
+      model.current.rotation.y = lerpAngle(model.current.rotation.y, target, 0.22)
     }
 
-    // Ходьба
-    if (moving && grounded) walkPhase.current += dt * speed * 1.6
-    const swing = moving ? Math.sin(walkPhase.current) * 0.6 : 0
-    const swing2 = moving ? Math.cos(walkPhase.current) * 0.6 : 0
-    if (legL.current) legL.current.rotation.x = swing
-    if (legR.current) legR.current.rotation.x = -swing
-    if (armL.current) armL.current.rotation.x = -swing2 * 0.7
-    if (armR.current) armR.current.rotation.x = swing2 * 0.7
+    // Ходьба + покачивание корпуса
+    if (moving && grounded) walkPhase.current += dt * speed * 1.7
+    const run = speed > 6 ? 1.15 : 1
+    const swing = moving && grounded ? Math.sin(walkPhase.current) * 0.62 * run : 0
+    const swing2 = moving && grounded ? Math.cos(walkPhase.current) * 0.62 * run : 0
+    const airLegs = airborne.current ? 0.5 : 0 // подтянуть ноги в прыжке
+    if (legL.current) legL.current.rotation.x = swing + cr * 0.6 + airLegs
+    if (legR.current) legR.current.rotation.x = -swing + cr * 0.6 + airLegs
+    if (armL.current) armL.current.rotation.x = -swing2 * 0.75 - cr * 0.3
+    if (armR.current) armR.current.rotation.x = swing2 * 0.75 - cr * 0.3
+
+    // покачивание/присед всего тела (визуально)
+    if (bodyRef.current) {
+      const bob = moving && grounded ? Math.abs(Math.sin(walkPhase.current)) * 0.06 : 0
+      const lean = moving && speed > 6 ? 0.08 : 0
+      bodyRef.current.position.y = bob - cr * 0.4
+      bodyRef.current.rotation.x = lean
+    }
 
     // Общая позиция для камеры/травы/воды
     playerState.position.set(pos.x, pos.y, pos.z)
@@ -215,7 +254,9 @@ export default function Player({
     >
       <CapsuleCollider args={[0.6, 0.4]} />
       <group ref={model}>
-        <Character skin={skin} legL={legL} legR={legR} armL={armL} armR={armR} />
+        <group ref={bodyRef}>
+          <Character skin={skin} legL={legL} legR={legR} armL={armL} armR={armR} />
+        </group>
       </group>
     </RigidBody>
   )
