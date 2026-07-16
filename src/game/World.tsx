@@ -29,10 +29,11 @@ function VoxelFloor() {
     const seabed = new THREE.Color('#8a7f52')
     const path = new THREE.Color('#8a8577')
     const tmp = new THREE.Color()
-    for (let x = -HALF; x < HALF; x++) {
-      for (let z = -HALF; z < HALF; z++) {
-        const cx = x + 0.5
-        const cz = z + 0.5
+    const STEP = 0.5 // мелкие блоки — вдвое детальнее текстуры
+    for (let x = -HALF; x < HALF; x += STEP) {
+      for (let z = -HALF; z < HALF; z += STEP) {
+        const cx = x + STEP / 2
+        const cz = z + STEP / 2
         if (pitAt(cx, cz)) continue // дно ям строится отдельно
         let c: THREE.Color
         if (inAnyWater(cx, cz)) {
@@ -55,6 +56,8 @@ function VoxelFloor() {
     return items
   }, [])
 
+  const STEP = 0.5
+
   useLayoutEffect(() => {
     const mesh = ref.current
     if (!mesh) return
@@ -76,7 +79,7 @@ function VoxelFloor() {
       receiveShadow
       castShadow
     >
-      <boxGeometry args={[1, 1, 1]} />
+      <boxGeometry args={[STEP, 1, STEP]} />
       <meshStandardMaterial
         map={noise}
         normalMap={normal}
