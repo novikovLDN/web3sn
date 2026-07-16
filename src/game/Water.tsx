@@ -222,6 +222,15 @@ export default function Water({
       </mesh>
       <WaterPatch center={[POND.cx, WATER_LEVEL, POND.cz]} size={[POND.rx * 2, POND.rz * 2]} radial />
 
+      {/* Дно моря (песок на -3, видно сквозь воду) */}
+      <mesh
+        rotation={[-Math.PI / 2, 0, 0]}
+        position={[0, -3, SEA_Z + seaDepth / 2]}
+        receiveShadow
+      >
+        <planeGeometry args={[HALF * 2, seaDepth]} />
+        <meshStandardMaterial color="#b8a668" roughness={1} />
+      </mesh>
       {/* Море */}
       <WaterPatch
         center={[0, WATER_LEVEL, SEA_Z + seaDepth / 2]}

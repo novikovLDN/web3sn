@@ -232,12 +232,13 @@ export default function Player({
     if (armR.current)
       armR.current.rotation.x = THREE.MathUtils.lerp(armR.current.rotation.x, swing2 * 0.75 - cr * 0.3, k)
 
-    // покачивание при ходьбе / дыхание в покое / присед
+    // покачивание при ходьбе / дыхание в покое / присед / плавание
     if (bodyRef.current) {
       const clock = walkPhase.current
       const idleBreath = !moving && grounded ? Math.sin(performance.now() * 0.002) * 0.02 : 0
       const bob = moving && grounded ? Math.abs(Math.sin(clock)) * 0.06 : idleBreath
       const lean = moving && speed > 6 ? 0.08 : 0
+      const swim = submerged && !grounded ? 1.1 : 0 // горизонтальная поза в воде
       bodyRef.current.position.y = THREE.MathUtils.lerp(
         bodyRef.current.position.y,
         bob - cr * 0.4,
@@ -245,8 +246,8 @@ export default function Player({
       )
       bodyRef.current.rotation.x = THREE.MathUtils.lerp(
         bodyRef.current.rotation.x,
-        lean,
-        0.15
+        lean + swim,
+        0.12
       )
     }
 

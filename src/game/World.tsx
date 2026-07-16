@@ -3,9 +3,11 @@ import * as THREE from 'three'
 import { RigidBody, CuboidCollider } from '@react-three/rapier'
 import {
   HALF,
+  SEA_Z,
   PITS,
   pitAt,
   inSea,
+  inPond,
   inAnyWater,
   isBeach,
   type Pit,
@@ -35,9 +37,10 @@ function VoxelFloor() {
         const cx = x + STEP / 2
         const cz = z + STEP / 2
         if (pitAt(cx, cz)) continue // дно ям строится отдельно
+        if (inSea(cx, cz)) continue // глубокое море — дно отдельным слоем
         let c: THREE.Color
-        if (inAnyWater(cx, cz)) {
-          c = inSea(cx, cz) ? seabed : sand
+        if (inPond(cx, cz)) {
+          c = seabed // мелкий пруд-брод (дно у поверхности)
         } else if (isBeach(cx, cz)) {
           c = sand
         } else {
@@ -101,11 +104,15 @@ function GroundColliders() {
         const cx = x + S / 2
         const cz = z + S / 2
         if (pitAt(cx, cz)) continue // прорезь под яму
+        if (inSea(cx, cz)) continue // море — дно ниже (отдельный коллайдер)
         arr.push([cx, cz, S])
       }
     }
     return arr
   }, [])
+
+  const seaMidZ = (SEA_Z + HALF) / 2
+  const seaHalfZ = (HALF - SEA_Z) / 2
 
   return (
     <RigidBody type="fixed" colliders={false} friction={1}>
@@ -113,6 +120,8 @@ function GroundColliders() {
         // толстая плита (верх на y=0) + небольшое перекрытие швов, чтобы не проваливаться
         <CuboidCollider key={i} args={[s / 2 + 0.05, 1.5, s / 2 + 0.05]} position={[cx, -1.5, cz]} />
       ))}
+      {/* дно моря (верх на -3) — глубина для плавания */}
+      <CuboidCollider args={[HALF, 2, seaHalfZ + 0.1]} position={[0, -5, seaMidZ]} />
       {/* границы мира */}
       <CuboidCollider args={[HALF, 6, 0.5]} position={[0, 6, -HALF]} />
       <CuboidCollider args={[HALF, 6, 0.5]} position={[0, 6, HALF]} />

@@ -15,6 +15,7 @@ import Dust, { type DustHandle } from './Dust'
 import Boat from './Boat'
 import Clouds from './Clouds'
 import Structures from './Structures'
+import Animals from './Animals'
 import { SEA_Z, HALF, playerState } from './playerState'
 import { SKINS } from './skins'
 
@@ -168,6 +169,7 @@ export default function MiniGame() {
           <Props />
           <Structures />
           <Cars keys={keys} skin={SKINS[skinIndex]} yaw={yaw} />
+          <Animals />
           <Boat position={[-14, 0, SEA_Z + (HALF - SEA_Z) / 2]} />
           <Player keys={keys} yaw={yaw} pitch={pitch} splash={splash} dust={dust} skin={SKINS[skinIndex]} debug={debug} />
         </Physics>
