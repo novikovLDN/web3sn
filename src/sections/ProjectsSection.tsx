@@ -52,15 +52,15 @@ function ProjectCard({ card, index, total }: { card: CardData; index: number; to
   return (
     <div
       ref={containerRef}
-      className="h-[85vh] flex items-start justify-center sticky top-24 md:top-32"
-      style={{ top: `${index * 28}px` }}
+      className="h-[96vh] flex items-start justify-center sticky"
+      style={{ top: `${88 + index * 26}px` }}
     >
       <motion.div
-        style={{ scale, background: theme.bg, color: theme.fg }}
-        className={`w-full ${RADIUS} overflow-hidden p-6 sm:p-8 md:p-12`}
+        style={{ scale, background: theme.bg, color: theme.fg, transformOrigin: 'top center' }}
+        className={`w-full ${RADIUS} overflow-hidden p-7 sm:p-10 md:p-14 min-h-[74vh] md:min-h-[78vh] flex flex-col`}
       >
         {/* Верхняя строка: номер + статус */}
-        <div className="flex items-center justify-between mb-8 md:mb-10">
+        <div className="flex items-center justify-between mb-8 md:mb-12">
           <span className="font-bold leading-none" style={{ fontSize: 'clamp(3rem, 10vw, 130px)' }}>
             {card.number}
           </span>
@@ -73,27 +73,29 @@ function ProjectCard({ card, index, total }: { card: CardData; index: number; to
           </span>
         </div>
 
-        {/* Тело: скриншот (если есть) или статичная иконка слева + текст */}
-        {card.image ? (
-          <div className="flex flex-col md:flex-row md:items-center gap-8 md:gap-12">
-            {text}
-            <div className="md:w-[46%]">
-              <img
-                src={card.image}
-                alt={card.title.replace('\n', ' ')}
-                loading="lazy"
-                className="w-full h-[26vh] md:h-[38vh] object-cover rounded-2xl md:rounded-3xl"
-              />
+        {/* Тело (вертикально по центру карточки): скриншот или иконка + текст */}
+        <div className="flex-1 flex items-center">
+          {card.image ? (
+            <div className="w-full flex flex-col md:flex-row md:items-center gap-8 md:gap-14">
+              {text}
+              <div className="md:w-[46%]">
+                <img
+                  src={card.image}
+                  alt={card.title.replace('\n', ' ')}
+                  loading="lazy"
+                  className="w-full h-[26vh] md:h-[40vh] object-cover rounded-2xl md:rounded-3xl"
+                />
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="flex flex-col md:flex-row md:items-end gap-8 md:gap-12">
-            <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 shrink-0">
-              <StaticIcon name={card.icon ?? 'spark'} color={theme.accent} />
+          ) : (
+            <div className="w-full flex flex-col md:flex-row md:items-center gap-8 md:gap-14">
+              <div className="w-28 h-28 sm:w-36 sm:h-36 md:w-44 md:h-44 shrink-0">
+                <StaticIcon name={card.icon ?? 'spark'} color={theme.accent} />
+              </div>
+              {text}
             </div>
-            {text}
-          </div>
-        )}
+          )}
+        </div>
       </motion.div>
     </div>
   )
