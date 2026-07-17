@@ -14,6 +14,7 @@ import Particles, { type ParticleHandle } from './Particles'
 import TouchControls from './TouchControls'
 import { world } from './state'
 import { PAL, SUN_POS, SEA_LEVEL, TUNE } from './config'
+import { QUALITY } from './quality'
 
 type Phase = 'menu' | 'playing'
 
@@ -157,10 +158,10 @@ export default function Game() {
   return (
     <div ref={rootRef} className="relative w-full h-full select-none bg-[#0b1016]">
       <Canvas
-        shadows
+        shadows={QUALITY.shadows}
         frameloop={onScreen ? 'always' : 'never'}
-        dpr={[1, 1.8]}
-        gl={{ antialias: true, powerPreference: 'high-performance' }}
+        dpr={[1, QUALITY.dpr]}
+        gl={{ antialias: !QUALITY.low, powerPreference: 'high-performance' }}
         camera={{ position: [0, 12, 18], fov: 52, near: 0.1, far: 500 }}
         onCreated={({ gl }) => {
           gl.toneMapping = THREE.ACESFilmicToneMapping
@@ -177,8 +178,8 @@ export default function Game() {
           position={SUN_POS}
           intensity={2.7}
           color={PAL.sun}
-          castShadow
-          shadow-mapSize={[2048, 2048]}
+          castShadow={QUALITY.shadows}
+          shadow-mapSize={[QUALITY.shadowMap, QUALITY.shadowMap]}
           shadow-bias={-0.0004}
           shadow-normalBias={0.04}
         >
@@ -205,11 +206,13 @@ export default function Game() {
         <Collectibles />
         <Particles apiRef={particles} />
 
-        <EffectComposer multisampling={0} enableNormalPass={false}>
-          <Bloom mipmapBlur intensity={0.55} luminanceThreshold={0.75} luminanceSmoothing={0.3} radius={0.7} />
-          <Vignette eskil={false} offset={0.32} darkness={0.55} />
-          <SMAA />
-        </EffectComposer>
+        {QUALITY.postfx && (
+          <EffectComposer multisampling={0} enableNormalPass={false}>
+            <Bloom mipmapBlur intensity={0.55} luminanceThreshold={0.75} luminanceSmoothing={0.3} radius={0.7} />
+            <Vignette eskil={false} offset={0.32} darkness={0.55} />
+            <SMAA />
+          </EffectComposer>
+        )}
       </Canvas>
 
       <Hud />

@@ -1,8 +1,12 @@
 import { useMemo } from 'react'
 import { RigidBody, HeightfieldCollider } from '@react-three/rapier'
 import * as THREE from 'three'
-import { WORLD, SEG, PHYS_SEG, PAL } from './config'
+import { WORLD, PAL } from './config'
 import { terrainHeight, terrainSlope } from './heightmap'
+import { QUALITY } from './quality'
+
+const SEG = QUALITY.seg
+const PHYS_SEG = QUALITY.physSeg
 
 /**
  * Остров: детальный визуальный меш (вершинные цвета по биомам + наклон)

@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import * as THREE from 'three'
 import { WORLD, PAL } from './config'
 import { terrainHeight, terrainSlope, isWater, POND, rng } from './heightmap'
+import { QUALITY } from './quality'
 
 /**
  * Вся статичная растительность одним модулем на InstancedMesh —
@@ -47,7 +48,7 @@ function buildVegetation(): THREE.Object3D[] {
     const z = (rand() * 2 - 1) * R
     const y = plantable(x, z, 1.2, 15, 0.5)
     if (y == null) continue
-    if (trees.length >= 340) break
+    if (trees.length >= QUALITY.trees) break
     trees.push({ x, y, z, s: 0.8 + rand() * 0.9, rot: rand() * Math.PI * 2, autumn: rand() > 0.82 })
   }
 
@@ -102,7 +103,7 @@ function buildVegetation(): THREE.Object3D[] {
     const z = (rr() * 2 - 1) * R
     const y = plantable(x, z, -0.3, 20, 0.9)
     if (y == null) continue
-    if (rocks.length >= 160) break
+    if (rocks.length >= QUALITY.rocks) break
     rocks.push({ x, y: y - 0.15, z, s: 0.4 + rr() * 1.4, rot: rr() * Math.PI * 2 })
   }
   const rockGeo = new THREE.DodecahedronGeometry(0.6, 0)
@@ -128,7 +129,7 @@ function buildVegetation(): THREE.Object3D[] {
     const z = (gr() * 2 - 1) * R
     const y = plantable(x, z, 0.8, 12, 0.55)
     if (y == null) continue
-    if (grassMatrices.length >= 5200) break
+    if (grassMatrices.length >= QUALITY.grass) break
     q.setFromAxisAngle(up, gr() * Math.PI * 2)
     const s = 0.5 + gr() * 0.7
     scl.set(s, s * (0.8 + gr() * 0.8), s)
@@ -157,7 +158,7 @@ function buildVegetation(): THREE.Object3D[] {
     const z = (fr() * 2 - 1) * R
     const y = plantable(x, z, 0.9, 8, 0.4)
     if (y == null) continue
-    if (flowers.length >= 900) break
+    if (flowers.length >= QUALITY.flowers) break
     flowers.push({ x, y, z, c: Math.floor(fr() * PAL.flower.length) })
   }
   const budGeo = new THREE.SphereGeometry(0.09, 8, 8)

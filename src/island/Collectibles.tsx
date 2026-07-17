@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import { WORLD, PAL } from './config'
 import { terrainHeight, terrainSlope, isWater, POND, rng } from './heightmap'
 import { world } from './state'
+import { QUALITY } from './quality'
 
 type Gem = { x: number; y: number; z: number; color: string; collected: boolean }
 
@@ -13,7 +14,7 @@ export default function Collectibles() {
     const R = WORLD / 2 - 8
     const rand = rng(4242)
     const list: Gem[] = []
-    for (let i = 0; i < 6000 && list.length < 24; i++) {
+    for (let i = 0; i < 6000 && list.length < QUALITY.gems; i++) {
       const x = (rand() * 2 - 1) * R
       const z = (rand() * 2 - 1) * R
       const y = terrainHeight(x, z)

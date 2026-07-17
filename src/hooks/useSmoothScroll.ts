@@ -8,6 +8,8 @@ import Lenis from 'lenis'
 export default function useSmoothScroll() {
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    // На тач-устройствах нативный скролл лучше — не вмешиваемся.
+    if (window.matchMedia('(pointer: coarse)').matches) return
 
     const lenis = new Lenis({
       lerp: 0.085, // мягкое сглаживание

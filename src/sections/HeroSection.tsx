@@ -1,5 +1,8 @@
+import { useEffect, useRef } from 'react'
 import FadeIn from '../components/FadeIn'
 import ContactButton from '../components/ContactButton'
+import StaticIcon from '../components/StaticIcon'
+import type { IconName } from '../data/projects'
 
 const NAV_LINKS: { label: string; href: string }[] = [
   { label: 'О себе', href: '#about' },
@@ -8,48 +11,131 @@ const NAV_LINKS: { label: string; href: string }[] = [
   { label: 'Контакты', href: '#contact' },
 ]
 
-/** Элегантный плавно-морфящийся градиентный «блоб» под именем. */
-function HeroMark() {
+// Позиции иконок (доля от ширины/высоты героя) — по бокам, вне текста.
+const FLOATERS: { x: number; y: number; icon: IconName; size: number }[] = [
+  { x: 0.11, y: 0.3, icon: 'cube', size: 88 },
+  { x: 0.89, y: 0.26, icon: 'orbit', size: 100 },
+  { x: 0.17, y: 0.75, icon: 'spark', size: 76 },
+  { x: 0.85, y: 0.78, icon: 'chip', size: 90 },
+  { x: 0.06, y: 0.55, icon: 'gyro', size: 64 },
+  { x: 0.95, y: 0.6, icon: 'spark', size: 70 },
+]
+
+/**
+ * Левитирующие иконки по бокам. Плавно колышутся; отталкиваются от курсора
+ * (можно «расталкивать» мышью), а через 2 секунды бездействия мягко
+ * возвращаются на место.
+ */
+function FloatingIcons() {
+  const wrap = useRef<HTMLDivElement>(null)
+  const nodes = useRef<(HTMLDivElement | null)[]>([])
+
+  useEffect(() => {
+    const el = wrap.current
+    if (!el) return
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    const state = FLOATERS.map((_, i) => ({
+      home: { x: 0, y: 0 },
+      pos: { x: 0, y: 0 },
+      vel: { x: 0, y: 0 },
+      phase: i * 1.7,
+      lastPush: -9999,
+    }))
+    let rect = el.getBoundingClientRect()
+    const cursor = { x: -9999, y: -9999 }
+
+    const setHome = (t: number) => {
+      FLOATERS.forEach((c, i) => {
+        const s = state[i]
+        s.home.x = c.x * rect.width + Math.sin(t * 0.0006 + s.phase) * 10
+        s.home.y = c.y * rect.height + Math.cos(t * 0.0005 + s.phase) * 14
+      })
+    }
+
+    setHome(0)
+    state.forEach((s) => {
+      s.pos.x = s.home.x
+      s.pos.y = s.home.y
+    })
+
+    const onMove = (e: MouseEvent) => {
+      cursor.x = e.clientX - rect.left
+      cursor.y = e.clientY - rect.top
+    }
+    const onGeom = () => (rect = el.getBoundingClientRect())
+
+    let raf = 0
+    let last = performance.now()
+    const loop = (now: number) => {
+      const dt = Math.min((now - last) / 1000, 0.04)
+      last = now
+      rect = el.getBoundingClientRect()
+      setHome(now)
+      state.forEach((s, i) => {
+        const node = nodes.current[i]
+        if (!node) return
+        if (reduce) {
+          s.pos.x = s.home.x
+          s.pos.y = s.home.y
+        } else {
+          const dx = s.pos.x - cursor.x
+          const dy = s.pos.y - cursor.y
+          const dist = Math.hypot(dx, dy)
+          const R = 150
+          if (dist < R && dist > 0.01) {
+            const f = ((R - dist) / R) * 900
+            s.vel.x += (dx / dist) * f * dt
+            s.vel.y += (dy / dist) * f * dt
+            s.lastPush = now
+          }
+          // слабая тяга домой пока «толкают», сильная — через 2с покоя
+          const k = now - s.lastPush > 2000 ? 7 : 1.6
+          s.vel.x += (s.home.x - s.pos.x) * k * dt
+          s.vel.y += (s.home.y - s.pos.y) * k * dt
+          s.vel.x *= 0.9
+          s.vel.y *= 0.9
+          s.pos.x += s.vel.x * dt
+          s.pos.y += s.vel.y * dt
+        }
+        node.style.transform = `translate(${s.pos.x}px, ${s.pos.y}px) translate(-50%, -50%)`
+      })
+      raf = requestAnimationFrame(loop)
+    }
+
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('resize', onGeom)
+    window.addEventListener('scroll', onGeom, { passive: true })
+    raf = requestAnimationFrame(loop)
+    return () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('resize', onGeom)
+      window.removeEventListener('scroll', onGeom)
+    }
+  }, [])
+
   return (
-    <div className="relative w-[280px] h-[280px] sm:w-[380px] sm:h-[380px] md:w-[480px] md:h-[480px] flex items-center justify-center animate-float-y">
-      {/* мягкое внешнее свечение */}
-      <div
-        className="absolute inset-0 rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(239,74,35,0.30), transparent 66%)' }}
-      />
-      {/* тонкое элегантное кольцо-орбита */}
-      <svg viewBox="0 0 200 200" className="absolute inset-0 w-full h-full animate-spin-slow">
-        <ellipse cx="100" cy="100" rx="94" ry="94" fill="none" stroke="var(--cream-dim)" strokeWidth="0.6" strokeDasharray="1 12" opacity="0.5" />
-      </svg>
-      {/* морфящийся градиентный блоб */}
-      <div
-        className="relative w-[62%] h-[62%] animate-blob overflow-hidden"
-        style={{
-          background: 'linear-gradient(145deg, var(--accent-2), var(--accent) 55%, #b8360f 100%)',
-          boxShadow: '0 40px 100px -22px rgba(239,74,35,0.55)',
-        }}
-      >
-        {/* медленный глянцевый блик */}
+    <div ref={wrap} className="absolute inset-0 z-0 pointer-events-none">
+      {FLOATERS.map((c, i) => (
         <div
-          className="absolute inset-[-30%] animate-spin-slow"
-          style={{
-            background: 'conic-gradient(from 0deg, transparent 0deg, rgba(255,255,255,0.28) 60deg, transparent 140deg)',
-            mixBlendMode: 'soft-light',
+          key={i}
+          ref={(node) => {
+            nodes.current[i] = node
           }}
-        />
-        {/* световое пятно */}
-        <div
-          className="absolute inset-0"
-          style={{ background: 'radial-gradient(circle at 34% 28%, rgba(255,255,255,0.5), transparent 45%)' }}
-        />
-      </div>
+          className="absolute top-0 left-0"
+          style={{ width: c.size, height: c.size, opacity: 0.9 }}
+        >
+          <StaticIcon name={c.icon} color="#ef4a23" />
+        </div>
+      ))}
     </div>
   )
 }
 
 export default function HeroSection() {
   return (
-    <section className="relative h-screen flex flex-col" style={{ overflowX: 'clip' }}>
+    <section className="relative h-screen flex flex-col overflow-hidden">
       {/* Навбар */}
       <FadeIn
         as="nav"
@@ -68,37 +154,31 @@ export default function HeroSection() {
         ))}
       </FadeIn>
 
-      {/* Центральный анимированный знак */}
-      <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 z-0">
-        <FadeIn delay={0.5} y={30}>
-          <HeroMark />
-        </FadeIn>
-      </div>
+      {/* Левитирующие иконки по бокам */}
+      <FloatingIcons />
 
-      {/* Главный заголовок поверх знака */}
-      <div className="relative z-10 flex flex-col items-center mt-6 sm:mt-4 md:mt-2 pointer-events-none">
+      {/* Центрированный заголовок */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center pointer-events-none">
         <FadeIn
           as="span"
           delay={0.1}
           y={20}
-          className="accent-text font-medium uppercase tracking-[0.35em] text-xs sm:text-sm md:text-lg mb-1 sm:mb-2 md:mb-3"
+          className="accent-text font-medium uppercase tracking-[0.35em] text-xs sm:text-sm md:text-lg mb-2 md:mb-4"
         >
           3D-креатор · Motion · Брендинг
         </FadeIn>
-        <div className="overflow-hidden w-full">
-          <FadeIn
-            as="h1"
-            delay={0.15}
-            y={40}
-            className="hero-heading font-bold uppercase tracking-tighter leading-[0.82] text-center whitespace-nowrap w-full text-[19vw] sm:text-[17vw] md:text-[15vw]"
-          >
-            NOVIKOV<span className="text-[var(--accent)]">.</span>
-          </FadeIn>
-        </div>
+        <FadeIn
+          as="h1"
+          delay={0.15}
+          y={40}
+          className="hero-heading font-bold uppercase tracking-tighter leading-[0.82] text-center whitespace-nowrap text-[19vw] sm:text-[17vw] md:text-[15vw]"
+        >
+          NOVIKOV<span className="text-[var(--accent)]">.</span>
+        </FadeIn>
       </div>
 
       {/* Нижняя строка */}
-      <div className="relative z-20 mt-auto flex justify-between items-end px-6 md:px-10 pb-7 sm:pb-8 md:pb-10">
+      <div className="relative z-20 flex justify-between items-end px-6 md:px-10 pb-7 sm:pb-8 md:pb-10">
         <FadeIn
           as="p"
           delay={0.35}
