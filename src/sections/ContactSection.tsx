@@ -164,8 +164,14 @@ export default function ContactSection() {
           )}
         </FadeIn>
 
-        {/* Бегущая строка */}
-        <div className="mt-20 sm:mt-24 md:mt-28 overflow-hidden py-4 md:py-6">
+        {/* Бегущая строка (на всю ширину + плавное затухание по краям) */}
+        <div
+          className="mt-20 sm:mt-24 md:mt-28 overflow-hidden py-4 md:py-6 -mx-5 sm:-mx-8 md:-mx-10"
+          style={{
+            WebkitMaskImage: 'linear-gradient(to right, transparent, black 7%, black 93%, transparent)',
+            maskImage: 'linear-gradient(to right, transparent, black 7%, black 93%, transparent)',
+          }}
+        >
           <div className="flex w-max animate-marquee">
             {Array.from({ length: 2 }).map((_, blockIndex) => (
               <div key={blockIndex} className="flex shrink-0" aria-hidden={blockIndex === 1}>
