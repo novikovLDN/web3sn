@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import LoadingScreen from './components/LoadingScreen'
-import MiniRunner from './components/MiniRunner'
+import CustomCursor from './components/CustomCursor'
 import MiniPlayer from './components/MiniPlayer'
+import useSmoothScroll from './hooks/useSmoothScroll'
 import HeroSection from './sections/HeroSection'
 import MarqueeSection from './sections/MarqueeSection'
 import AboutSection from './sections/AboutSection'
@@ -13,10 +14,11 @@ import ContactSection from './sections/ContactSection'
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(true)
+  useSmoothScroll()
 
   return (
     <>
-      <MiniRunner />
+      <CustomCursor />
 
       <AnimatePresence>
         {isLoading && <LoadingScreen onComplete={() => setIsLoading(false)} />}

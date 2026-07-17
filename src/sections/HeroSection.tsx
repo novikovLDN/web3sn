@@ -1,10 +1,5 @@
-import { useEffect, useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
 import FadeIn from '../components/FadeIn'
 import ContactButton from '../components/ContactButton'
-import { IconGyro, IconCube, IconOrbit, IconChip, IconSpark } from '../components/TechIcons'
-
-const CENTER_ICONS = [IconGyro, IconOrbit, IconChip, IconCube, IconSpark]
 
 const NAV_LINKS: { label: string; href: string }[] = [
   { label: 'О себе', href: '#about' },
@@ -13,94 +8,42 @@ const NAV_LINKS: { label: string; href: string }[] = [
   { label: 'Контакты', href: '#contact' },
 ]
 
-/** Крупный анимированный техно-эмблем вместо портрета. */
+/** Элегантный плавно-морфящийся градиентный «блоб» под именем. */
 function HeroMark() {
   return (
-    <div className="relative w-[260px] h-[260px] sm:w-[360px] sm:h-[360px] md:w-[460px] md:h-[460px] animate-float-y">
-      {/* внешнее пунктирное кольцо */}
+    <div className="relative w-[280px] h-[280px] sm:w-[380px] sm:h-[380px] md:w-[480px] md:h-[480px] flex items-center justify-center animate-float-y">
+      {/* мягкое внешнее свечение */}
+      <div
+        className="absolute inset-0 rounded-full"
+        style={{ background: 'radial-gradient(circle, rgba(239,74,35,0.30), transparent 66%)' }}
+      />
+      {/* тонкое элегантное кольцо-орбита */}
       <svg viewBox="0 0 200 200" className="absolute inset-0 w-full h-full animate-spin-slow">
-        <circle cx="100" cy="100" r="96" fill="none" stroke="var(--cream-dim)" strokeWidth="0.8" strokeDasharray="2 10" opacity="0.55" />
+        <ellipse cx="100" cy="100" rx="94" ry="94" fill="none" stroke="var(--cream-dim)" strokeWidth="0.6" strokeDasharray="1 12" opacity="0.5" />
       </svg>
-      {/* кольцо-дуги (акцент) в обратную сторону */}
-      <svg viewBox="0 0 200 200" className="absolute inset-0 w-full h-full animate-spin-slow-rev">
-        <circle cx="100" cy="100" r="84" fill="none" stroke="var(--accent)" strokeWidth="2" strokeDasharray="70 46" />
-      </svg>
-      {/* деления */}
-      <svg viewBox="0 0 200 200" className="absolute inset-0 w-full h-full animate-spin-slow">
-        {Array.from({ length: 36 }).map((_, i) => {
-          const a = (i / 36) * Math.PI * 2
-          return (
-            <line
-              key={i}
-              x1={100 + Math.cos(a) * 66}
-              y1={100 + Math.sin(a) * 66}
-              x2={100 + Math.cos(a) * 72}
-              y2={100 + Math.sin(a) * 72}
-              stroke="var(--cream)"
-              strokeWidth="1.2"
-              opacity="0.45"
-            />
-          )
-        })}
-      </svg>
-      {/* эллипс-орбиты со спутниками */}
-      <svg viewBox="0 0 200 200" className="absolute inset-0 w-full h-full animate-spin-med">
-        <ellipse cx="100" cy="100" rx="90" ry="40" fill="none" stroke="var(--accent)" strokeWidth="1.4" opacity="0.7" />
-        <circle cx="190" cy="100" r="5" fill="var(--accent)" />
-      </svg>
-      <svg viewBox="0 0 200 200" className="absolute inset-0 w-full h-full animate-spin-med-rev">
-        <ellipse cx="100" cy="100" rx="90" ry="40" fill="none" stroke="var(--cream-dim)" strokeWidth="1.2" transform="rotate(60 100 100)" opacity="0.5" />
-        <circle cx="190" cy="100" r="4" fill="var(--cream)" transform="rotate(60 100 100)" />
-      </svg>
-      {/* вращающийся многоугольник */}
-      <svg viewBox="0 0 200 200" className="absolute inset-0 w-full h-full animate-spin-med">
-        <polygon
-          points="100,44 148,72 148,128 100,156 52,128 52,72"
-          fill="none"
-          stroke="var(--cream)"
-          strokeWidth="1.6"
-          opacity="0.35"
-        />
-      </svg>
-      {/* мягкое свечение-фокус */}
-      <div className="absolute inset-0 flex items-center justify-center">
+      {/* морфящийся градиентный блоб */}
+      <div
+        className="relative w-[62%] h-[62%] animate-blob overflow-hidden"
+        style={{
+          background: 'linear-gradient(145deg, var(--accent-2), var(--accent) 55%, #b8360f 100%)',
+          boxShadow: '0 40px 100px -22px rgba(239,74,35,0.55)',
+        }}
+      >
+        {/* медленный глянцевый блик */}
         <div
-          className="w-28 h-28 sm:w-36 sm:h-36 md:w-44 md:h-44 rounded-full animate-soft-pulse"
-          style={{ background: 'radial-gradient(circle, rgba(239,74,35,0.28), transparent 70%)' }}
+          className="absolute inset-[-30%] animate-spin-slow"
+          style={{
+            background: 'conic-gradient(from 0deg, transparent 0deg, rgba(255,255,255,0.28) 60deg, transparent 140deg)',
+            mixBlendMode: 'soft-light',
+          }}
         />
-      </div>
-
-      {/* центр: плавная смена разных техно-иконок «в разнобой» */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="relative w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40">
-          <CenterIconCycler />
-        </div>
+        {/* световое пятно */}
+        <div
+          className="absolute inset-0"
+          style={{ background: 'radial-gradient(circle at 34% 28%, rgba(255,255,255,0.5), transparent 45%)' }}
+        />
       </div>
     </div>
-  )
-}
-
-/** Плавно (crossfade) меняет разные техно-иконки в центре знака. */
-function CenterIconCycler() {
-  const [i, setI] = useState(0)
-  useEffect(() => {
-    const id = window.setInterval(() => setI((n) => (n + 1) % CENTER_ICONS.length), 3200)
-    return () => window.clearInterval(id)
-  }, [])
-  const Icon = CENTER_ICONS[i]
-  return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={i}
-        className="absolute inset-0"
-        initial={{ opacity: 0, scale: 0.7, rotate: -12 }}
-        animate={{ opacity: 1, scale: 1, rotate: 0 }}
-        exit={{ opacity: 0, scale: 0.7, rotate: 12 }}
-        transition={{ duration: 0.9, ease: [0.22, 0.61, 0.36, 1] }}
-      >
-        <Icon color="#ef4a23" />
-      </motion.div>
-    </AnimatePresence>
   )
 }
 
