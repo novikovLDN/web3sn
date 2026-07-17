@@ -1,6 +1,7 @@
 import { useRef, type ReactNode } from 'react'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import FadeIn from '../components/FadeIn'
+import { IconSpark, IconCube, IconOrbit } from '../components/TechIcons'
 
 type Slot = {
   number: string
@@ -13,27 +14,6 @@ type Slot = {
   icon: ReactNode
 }
 
-/* ── Сгенерированные векторные иконки ───────────────────────────── */
-const IconCube = (c: string) => (
-  <svg viewBox="0 0 48 48" fill="none" stroke={c} strokeWidth="2.4" strokeLinejoin="round">
-    <path d="M24 4 44 14v20L24 44 4 34V14z" />
-    <path d="M24 4v20M24 24 4 14M24 24l20-10M24 24v20" />
-  </svg>
-)
-const IconSpark = (c: string) => (
-  <svg viewBox="0 0 48 48" fill="none" stroke={c} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M24 4v14M24 30v14M4 24h14M30 24h14" />
-    <path d="M12 12l8 8M28 28l8 8M36 12l-8 8M20 28l-8 8" opacity="0.5" />
-  </svg>
-)
-const IconOrbit = (c: string) => (
-  <svg viewBox="0 0 48 48" fill="none" stroke={c} strokeWidth="2.4" strokeLinecap="round">
-    <circle cx="24" cy="24" r="7" fill={c} stroke="none" />
-    <ellipse cx="24" cy="24" rx="20" ry="9" />
-    <ellipse cx="24" cy="24" rx="20" ry="9" transform="rotate(60 24 24)" />
-  </svg>
-)
-
 const SLOTS: Slot[] = [
   {
     number: '01',
@@ -43,7 +23,7 @@ const SLOTS: Slot[] = [
     bg: '#ef4a23',
     fg: '#0c0b0a',
     accent: '#0c0b0a',
-    icon: IconSpark('#0c0b0a'),
+    icon: <IconSpark color="#0c0b0a" />,
   },
   {
     number: '02',
@@ -53,7 +33,7 @@ const SLOTS: Slot[] = [
     bg: '#ece7db',
     fg: '#0c0b0a',
     accent: '#ef4a23',
-    icon: IconCube('#ef4a23'),
+    icon: <IconCube color="#ef4a23" />,
   },
   {
     number: '03',
@@ -63,7 +43,7 @@ const SLOTS: Slot[] = [
     bg: '#151311',
     fg: '#ece7db',
     accent: '#ef4a23',
-    icon: IconOrbit('#ef4a23'),
+    icon: <IconOrbit color="#ef4a23" />,
   },
 ]
 

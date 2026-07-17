@@ -8,48 +8,65 @@ const NAV_LINKS: { label: string; href: string }[] = [
   { label: 'Контакты', href: '#contact' },
 ]
 
-/** Анимированный центральный знак вместо портрета — вращающиеся кольца + ядро. */
+/** Крупный анимированный техно-эмблем вместо портрета. */
 function HeroMark() {
   return (
-    <div className="relative w-[240px] h-[240px] sm:w-[320px] sm:h-[320px] md:w-[400px] md:h-[400px] animate-float-y">
+    <div className="relative w-[260px] h-[260px] sm:w-[360px] sm:h-[360px] md:w-[460px] md:h-[460px] animate-float-y">
       {/* внешнее пунктирное кольцо */}
       <svg viewBox="0 0 200 200" className="absolute inset-0 w-full h-full animate-spin-slow">
-        <circle
-          cx="100"
-          cy="100"
-          r="94"
-          fill="none"
-          stroke="var(--cream-dim)"
-          strokeWidth="1"
-          strokeDasharray="2 10"
-          opacity="0.6"
-        />
+        <circle cx="100" cy="100" r="96" fill="none" stroke="var(--cream-dim)" strokeWidth="0.8" strokeDasharray="2 10" opacity="0.55" />
       </svg>
-      {/* среднее кольцо в обратную сторону */}
+      {/* кольцо-дуги (акцент) в обратную сторону */}
       <svg viewBox="0 0 200 200" className="absolute inset-0 w-full h-full animate-spin-slow-rev">
-        <circle cx="100" cy="100" r="72" fill="none" stroke="var(--accent)" strokeWidth="2" strokeDasharray="60 30" />
+        <circle cx="100" cy="100" r="84" fill="none" stroke="var(--accent)" strokeWidth="2" strokeDasharray="70 46" />
       </svg>
-      {/* внутренний медленный круг с делениями */}
+      {/* деления */}
       <svg viewBox="0 0 200 200" className="absolute inset-0 w-full h-full animate-spin-slow">
-        {Array.from({ length: 24 }).map((_, i) => {
-          const a = (i / 24) * Math.PI * 2
-          const x1 = 100 + Math.cos(a) * 50
-          const y1 = 100 + Math.sin(a) * 50
-          const x2 = 100 + Math.cos(a) * 56
-          const y2 = 100 + Math.sin(a) * 56
-          return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="var(--cream)" strokeWidth="1.4" opacity="0.5" />
+        {Array.from({ length: 36 }).map((_, i) => {
+          const a = (i / 36) * Math.PI * 2
+          return (
+            <line
+              key={i}
+              x1={100 + Math.cos(a) * 66}
+              y1={100 + Math.sin(a) * 66}
+              x2={100 + Math.cos(a) * 72}
+              y2={100 + Math.sin(a) * 72}
+              stroke="var(--cream)"
+              strokeWidth="1.2"
+              opacity="0.45"
+            />
+          )
         })}
+      </svg>
+      {/* эллипс-орбиты со спутниками */}
+      <svg viewBox="0 0 200 200" className="absolute inset-0 w-full h-full animate-spin-med">
+        <ellipse cx="100" cy="100" rx="90" ry="40" fill="none" stroke="var(--accent)" strokeWidth="1.4" opacity="0.7" />
+        <circle cx="190" cy="100" r="5" fill="var(--accent)" />
+      </svg>
+      <svg viewBox="0 0 200 200" className="absolute inset-0 w-full h-full animate-spin-med-rev">
+        <ellipse cx="100" cy="100" rx="90" ry="40" fill="none" stroke="var(--cream-dim)" strokeWidth="1.2" transform="rotate(60 100 100)" opacity="0.5" />
+        <circle cx="190" cy="100" r="4" fill="var(--cream)" transform="rotate(60 100 100)" />
+      </svg>
+      {/* вращающийся многоугольник */}
+      <svg viewBox="0 0 200 200" className="absolute inset-0 w-full h-full animate-spin-med">
+        <polygon
+          points="100,44 148,72 148,128 100,156 52,128 52,72"
+          fill="none"
+          stroke="var(--cream)"
+          strokeWidth="1.6"
+          opacity="0.35"
+        />
       </svg>
       {/* пульсирующее ядро с треугольником «showreel» */}
       <div className="absolute inset-0 flex items-center justify-center">
         <div
-          className="w-28 h-28 sm:w-36 sm:h-36 md:w-44 md:h-44 rounded-full flex items-center justify-center animate-soft-pulse"
+          className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full flex items-center justify-center animate-soft-pulse"
           style={{
             background: 'radial-gradient(circle at 35% 30%, var(--accent-2), var(--accent) 60%, #b8360f 100%)',
-            boxShadow: '0 20px 60px -10px rgba(239,74,35,0.5)',
+            boxShadow: '0 20px 70px -8px rgba(239,74,35,0.55)',
           }}
         >
-          <svg width="40%" height="40%" viewBox="0 0 24 24" fill="none">
+          <svg width="38%" height="38%" viewBox="0 0 24 24" fill="none">
             <path d="M8 5v14l11-7z" fill="var(--ink)" />
           </svg>
         </div>

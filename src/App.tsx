@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import LoadingScreen from './components/LoadingScreen'
+import CustomCursor from './components/CustomCursor'
+import MiniPlayer from './components/MiniPlayer'
 import HeroSection from './sections/HeroSection'
 import MarqueeSection from './sections/MarqueeSection'
 import AboutSection from './sections/AboutSection'
@@ -14,9 +16,13 @@ export default function App() {
 
   return (
     <>
+      <CustomCursor />
+
       <AnimatePresence>
         {isLoading && <LoadingScreen onComplete={() => setIsLoading(false)} />}
       </AnimatePresence>
+
+      <MiniPlayer start={!isLoading} />
 
       <main className="bg-[#0c0b0a]" style={{ overflowX: 'clip' }}>
         <HeroSection />

@@ -95,6 +95,62 @@ html {
 .animate-spin-slow-rev {
   animation: spin-slow 18s linear infinite reverse;
 }
+.animate-spin-med {
+  animation: spin-slow 12s linear infinite;
+}
+.animate-spin-med-rev {
+  animation: spin-slow 9s linear infinite reverse;
+}
+.animate-spin-fast {
+  animation: spin-slow 6s linear infinite;
+}
+
+/* Пульс масштабом (ядро иконок) */
+@keyframes pulse-scale {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+}
+.animate-pulse-scale {
+  animation: pulse-scale 2.6s ease-in-out infinite;
+}
+
+/* Кастомный курсор: прячем системный на устройствах с точным указателем */
+@media (hover: hover) and (pointer: fine) {
+  .has-custom-cursor,
+  .has-custom-cursor * {
+    cursor: none !important;
+  }
+}
+.cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100000;
+  pointer-events: none;
+  border-radius: 9999px;
+  mix-blend-mode: normal;
+  transition: width 0.18s ease, height 0.18s ease, background-color 0.2s ease,
+    border-color 0.2s ease, opacity 0.2s ease;
+  will-change: transform;
+}
+
+/* Эквалайзер мини-плеера */
+@keyframes eq-bar {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
 @keyframes float-y {
   0%,
   100% {
