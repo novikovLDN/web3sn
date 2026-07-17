@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { IconGyro } from './TechIcons'
 
-const WORDS = ['Моделинг', 'Рендер', 'Моушн', 'Брендинг']
-const DURATION = 2700
+const WORDS = ['Motion-дизайн', '3D', 'Кодинг']
+const DURATION = 4200
 
 export default function LoadingScreen({ onComplete }: { onComplete: () => void }) {
   const [count, setCount] = useState(0)
@@ -29,7 +29,7 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
   }, [onComplete])
 
   useEffect(() => {
-    const id = window.setInterval(() => setWordIndex((i) => (i + 1) % WORDS.length), 800)
+    const id = window.setInterval(() => setWordIndex((i) => (i + 1) % WORDS.length), 1350)
     return () => window.clearInterval(id)
   }, [])
 
@@ -73,10 +73,10 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
         <AnimatePresence mode="wait">
           <motion.span
             key={wordIndex}
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -16 }}
-            transition={{ duration: 0.35, ease: 'easeOut' }}
+            initial={{ opacity: 0, y: 22, filter: 'blur(6px)' }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            exit={{ opacity: 0, y: -22, filter: 'blur(6px)' }}
+            transition={{ duration: 0.7, ease: [0.22, 0.61, 0.36, 1] }}
             className="text-3xl md:text-5xl lg:text-6xl font-bold uppercase tracking-tight text-[var(--cream)]"
           >
             {WORDS[wordIndex]}

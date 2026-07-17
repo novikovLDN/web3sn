@@ -144,10 +144,21 @@ export default function Game() {
 
   const started = useMemo(() => phase === 'playing', [phase])
 
+  // Пауза рендера, когда canvas вне экрана — иначе WebGL молотит впустую (тормоза).
+  const [onScreen, setOnScreen] = useState(true)
+  useEffect(() => {
+    const el = rootRef.current
+    if (!el) return
+    const io = new IntersectionObserver((e) => setOnScreen(e[0].isIntersecting), { threshold: 0.01 })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
+
   return (
     <div ref={rootRef} className="relative w-full h-full select-none bg-[#0b1016]">
       <Canvas
         shadows
+        frameloop={onScreen ? 'always' : 'never'}
         dpr={[1, 1.8]}
         gl={{ antialias: true, powerPreference: 'high-performance' }}
         camera={{ position: [0, 12, 18], fov: 52, near: 0.1, far: 500 }}

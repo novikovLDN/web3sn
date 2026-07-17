@@ -1,5 +1,10 @@
+import { useEffect, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import FadeIn from '../components/FadeIn'
 import ContactButton from '../components/ContactButton'
+import { IconGyro, IconCube, IconOrbit, IconChip, IconSpark } from '../components/TechIcons'
+
+const CENTER_ICONS = [IconGyro, IconOrbit, IconChip, IconCube, IconSpark]
 
 const NAV_LINKS: { label: string; href: string }[] = [
   { label: 'О себе', href: '#about' },
@@ -57,21 +62,45 @@ function HeroMark() {
           opacity="0.35"
         />
       </svg>
-      {/* пульсирующее ядро с треугольником «showreel» */}
+      {/* мягкое свечение-фокус */}
       <div className="absolute inset-0 flex items-center justify-center">
         <div
-          className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full flex items-center justify-center animate-soft-pulse"
-          style={{
-            background: 'radial-gradient(circle at 35% 30%, var(--accent-2), var(--accent) 60%, #b8360f 100%)',
-            boxShadow: '0 20px 70px -8px rgba(239,74,35,0.55)',
-          }}
-        >
-          <svg width="38%" height="38%" viewBox="0 0 24 24" fill="none">
-            <path d="M8 5v14l11-7z" fill="var(--ink)" />
-          </svg>
+          className="w-28 h-28 sm:w-36 sm:h-36 md:w-44 md:h-44 rounded-full animate-soft-pulse"
+          style={{ background: 'radial-gradient(circle, rgba(239,74,35,0.28), transparent 70%)' }}
+        />
+      </div>
+
+      {/* центр: плавная смена разных техно-иконок «в разнобой» */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="relative w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40">
+          <CenterIconCycler />
         </div>
       </div>
     </div>
+  )
+}
+
+/** Плавно (crossfade) меняет разные техно-иконки в центре знака. */
+function CenterIconCycler() {
+  const [i, setI] = useState(0)
+  useEffect(() => {
+    const id = window.setInterval(() => setI((n) => (n + 1) % CENTER_ICONS.length), 3200)
+    return () => window.clearInterval(id)
+  }, [])
+  const Icon = CENTER_ICONS[i]
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={i}
+        className="absolute inset-0"
+        initial={{ opacity: 0, scale: 0.7, rotate: -12 }}
+        animate={{ opacity: 1, scale: 1, rotate: 0 }}
+        exit={{ opacity: 0, scale: 0.7, rotate: 12 }}
+        transition={{ duration: 0.9, ease: [0.22, 0.61, 0.36, 1] }}
+      >
+        <Icon color="#ef4a23" />
+      </motion.div>
+    </AnimatePresence>
   )
 }
 

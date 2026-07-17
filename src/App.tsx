@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import LoadingScreen from './components/LoadingScreen'
-import CustomCursor from './components/CustomCursor'
+import MiniRunner from './components/MiniRunner'
 import MiniPlayer from './components/MiniPlayer'
 import HeroSection from './sections/HeroSection'
 import MarqueeSection from './sections/MarqueeSection'
@@ -16,7 +16,7 @@ export default function App() {
 
   return (
     <>
-      <CustomCursor />
+      <MiniRunner />
 
       <AnimatePresence>
         {isLoading && <LoadingScreen onComplete={() => setIsLoading(false)} />}

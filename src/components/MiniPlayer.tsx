@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 
-// Путь к аудиофайлу. Положите трек сюда: public/audio/track.mp3
-const AUDIO_SRC = '/audio/track.mp3'
+// Путь к аудиофайлу (лежит в public/audio/).
+const AUDIO_SRC = '/audio/aer216head-shizuka.mp3'
 const BARS = [0, 0.18, 0.36, 0.12, 0.28]
 
 /**

@@ -121,24 +121,67 @@ html {
   animation: pulse-scale 2.6s ease-in-out infinite;
 }
 
-/* Кастомный курсор: прячем системный на устройствах с точным указателем */
-@media (hover: hover) and (pointer: fine) {
-  .has-custom-cursor,
-  .has-custom-cursor * {
-    cursor: none !important;
-  }
-}
-.cursor-dot {
+/* Человечек, бегущий за курсором */
+.mini-runner {
   position: fixed;
   top: 0;
   left: 0;
   z-index: 100000;
   pointer-events: none;
-  border-radius: 9999px;
-  mix-blend-mode: normal;
-  transition: width 0.18s ease, height 0.18s ease, background-color 0.2s ease,
-    border-color 0.2s ease, opacity 0.2s ease;
   will-change: transform;
+}
+/* Анимация ног при беге (плавная, apple-ish) */
+@keyframes leg-run-a {
+  0%,
+  100% {
+    transform: rotate(28deg);
+  }
+  50% {
+    transform: rotate(-28deg);
+  }
+}
+@keyframes leg-run-b {
+  0%,
+  100% {
+    transform: rotate(-28deg);
+  }
+  50% {
+    transform: rotate(28deg);
+  }
+}
+@keyframes arm-run-a {
+  0%,
+  100% {
+    transform: rotate(-22deg);
+  }
+  50% {
+    transform: rotate(22deg);
+  }
+}
+@keyframes arm-run-b {
+  0%,
+  100% {
+    transform: rotate(22deg);
+  }
+  50% {
+    transform: rotate(-22deg);
+  }
+}
+.runner-run .leg-a {
+  animation: leg-run-a 0.32s ease-in-out infinite;
+}
+.runner-run .leg-b {
+  animation: leg-run-b 0.32s ease-in-out infinite;
+}
+.runner-run .arm-a {
+  animation: arm-run-a 0.32s ease-in-out infinite;
+}
+.runner-run .arm-b {
+  animation: arm-run-b 0.32s ease-in-out infinite;
+}
+.runner-limb {
+  transform-box: fill-box;
+  transform-origin: top center;
 }
 
 /* Эквалайзер мини-плеера */
@@ -304,14 +347,10 @@ html {
   }
 }
 
-/* Уважение к системной настройке «меньше движения» */
+/* При системной «меньше движения» отключаем только авто-скролл,
+   но оставляем фирменные декоративные анимации — они часть дизайна. */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
-    scroll-behavior: auto !important;
+  html {
+    scroll-behavior: auto;
   }
 }
