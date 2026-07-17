@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Send, ArrowUpRight, Github, Linkedin, Instagram, Mail } from 'lucide-react'
 import FadeIn from '../components/FadeIn'
-import ArenaGameLazy from '../arena/ArenaGameLazy'
+import MiniGameLazy from '../game/MiniGameLazy'
 
 const CONTACT_EMAIL =
   import.meta.env.VITE_CONTACT_EMAIL ?? 'founder@atlassecure.uk'
@@ -61,7 +61,7 @@ export default function ContactSection() {
       {/* ── Мини-игра во весь блок ──────────────────────────────── */}
       <div className="relative w-full px-3 sm:px-6 md:px-10">
         <div className="relative mx-auto max-w-[1400px] h-[70vh] min-h-[520px] w-full overflow-hidden rounded-3xl border border-[#D7E2EA]/10">
-          <ArenaGameLazy className="absolute inset-0 w-full h-full" />
+          <MiniGameLazy className="absolute inset-0 w-full h-full" />
         </div>
       </div>
 

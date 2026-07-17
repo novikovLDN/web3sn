@@ -13,6 +13,7 @@ type Variant = 'roadster' | 'jeep' | 'pickup'
 
 const _q = new THREE.Quaternion()
 const _fwd = new THREE.Vector3()
+const _right = new THREE.Vector3()
 
 /* Колесо с диском */
 function Wheel({ position }: { position: [number, number, number] }) {
@@ -204,34 +205,49 @@ function Car({
     if (rider.current) rider.current.visible = isDriven
     if (!isDriven) return
 
-    // текущий forward из поворота кузова
+    // оси кузова
     const r = b.rotation()
     _q.set(r.x, r.y, r.z, r.w)
     _fwd.set(0, 0, 1).applyQuaternion(_q)
+    _right.set(1, 0, 0).applyQuaternion(_q)
     const vel = b.linvel()
-    const speed = vel.x * _fwd.x + vel.z * _fwd.z // проекция скорости на forward
+    // разложение скорости: продольная (vf) и боковая (vlat)
+    const vf = vel.x * _fwd.x + vel.z * _fwd.z
+    const vlat = vel.x * _right.x + vel.z * _right.z
 
     let throttle = 0
     if (keys.current['KeyW']) throttle += 1
     if (keys.current['KeyS']) throttle -= 1
-    const maxV = throttle > 0 ? 16 : 8
-    const target = throttle * maxV
-    const newSpeed = THREE.MathUtils.lerp(speed, target, 0.05)
+    const handbrake = !!keys.current['Space'] // ручник → занос
 
-    b.setLinvel(
-      { x: _fwd.x * newSpeed, y: vel.y, z: _fwd.z * newSpeed },
-      true
-    )
+    // двигатель
+    const maxF = 24
+    const maxR = 10
+    const targetV = throttle > 0 ? maxF : throttle < 0 ? -maxR : 0
+    const newVf =
+      throttle !== 0 ? THREE.MathUtils.lerp(vf, targetV, 0.045) : vf * 0.985
 
-    // руление зависит от скорости и знака движения
+    // сцепление колёс: обычно гасим боковую (цепко); ручник/резкий занос — скользим
+    let grip = 0.16 // доля боковой скорости, что сохраняется (мал = цепко)
+    if (handbrake) grip = 0.92
+    else if (Math.abs(vlat) > 6) grip = 0.4 // естественный снос на скорости
+    const newVlat = vlat * grip
+
+    // собираем скорость обратно
+    const nx = _fwd.x * newVf + _right.x * newVlat
+    const nz = _fwd.z * newVf + _right.z * newVlat
+    b.setLinvel({ x: nx, y: vel.y, z: nz }, true)
+
+    // руление: сильнее в заносе, зависит от скорости и направления
     let steer = 0
     if (keys.current['KeyA']) steer += 1
     if (keys.current['KeyD']) steer -= 1
-    const grip = THREE.MathUtils.clamp(Math.abs(newSpeed) / 3, 0, 1)
-    const dirSign = newSpeed >= 0 ? 1 : -1
-    b.setAngvel({ x: 0, y: steer * 1.8 * grip * dirSign, z: 0 }, true)
+    const speedFactor = THREE.MathUtils.clamp(Math.abs(newVf) / 4, 0, 1)
+    const dirSign = newVf >= 0 ? 1 : -1
+    const turnRate = handbrake ? 2.7 : 2.0
+    b.setAngvel({ x: 0, y: steer * turnRate * speedFactor * dirSign, z: 0 }, true)
 
-    // камера следит за машиной; синхронизируем yaw с курсом машины при езде
+    // камера следит за машиной; синхронизируем yaw с курсом
     const t = b.translation()
     playerState.position.set(t.x, t.y + 0.6, t.z)
     const heading = Math.atan2(_fwd.x, _fwd.z)
