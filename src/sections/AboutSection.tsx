@@ -70,7 +70,7 @@ export default function AboutSection() {
 
           <AnimatedText
             text={ABOUT_TEXT}
-            className="text-[#D7E2EA] font-medium text-center leading-relaxed max-w-[620px]"
+            className="text-[#ece7db] font-medium text-center leading-relaxed max-w-[620px]"
             style={{ fontSize: 'clamp(1rem, 2vw, 1.35rem)' }}
           />
         </div>

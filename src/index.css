@@ -36,6 +36,15 @@
   font-display: swap;
 }
 
+/* ── Палитра в духе monkeytalkie: почти-чёрный, кремовый, оранжево-красный ── */
+:root {
+  --ink: #0c0b0a;
+  --cream: #ece7db;
+  --cream-dim: #a7a196;
+  --accent: #ef4a23;
+  --accent-2: #ff6a3d;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -45,7 +54,8 @@
 html,
 body,
 #root {
-  background: #0c0c0c;
+  background: var(--ink);
+  color: var(--cream);
   font-family: 'MTS Wide', system-ui, -apple-system, Arial, sans-serif;
   /* без искусственно синтезированных начертаний — используем только реальные веса */
   font-synthesis: none;
@@ -59,23 +69,43 @@ html {
 }
 
 .hero-heading {
-  background: linear-gradient(180deg, #646973 0%, #bbccd7 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
+  color: var(--cream);
 }
 
-/* Фирменный акцентный градиент (прогресс-бар, рамки, точки) */
+/* Фирменный акцентный цвет (прогресс-бар, рамки, точки) */
 .accent-gradient {
-  background: linear-gradient(90deg, #b600a8 0%, #7621b0 55%, #be4c00 100%);
+  background: var(--accent);
 }
 .accent-text {
-  background: linear-gradient(90deg, #d64bc8 0%, #9b57d6 55%, #ff7a2e 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
+  color: var(--accent);
+}
+
+/* Медленное вращение декоративных колец в герое */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-spin-slow {
+  animation: spin-slow 26s linear infinite;
+}
+.animate-spin-slow-rev {
+  animation: spin-slow 18s linear infinite reverse;
+}
+@keyframes float-y {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-16px);
+  }
+}
+.animate-float-y {
+  animation: float-y 6s ease-in-out infinite;
 }
 
 /* Бегущая строка футера */

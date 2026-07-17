@@ -10,7 +10,7 @@ export default function StatsSection() {
   return (
     <section
       id="stats"
-      className="bg-[#0C0C0C] px-5 sm:px-8 md:px-10 py-20 sm:py-24 md:py-28 border-t border-[#1a1a1a]"
+      className="bg-[#0c0b0a] px-5 sm:px-8 md:px-10 py-20 sm:py-24 md:py-28 border-t border-[#1a1a1a]"
     >
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8">
         {STATS.map((stat, i) => (

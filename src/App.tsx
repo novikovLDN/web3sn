@@ -18,7 +18,7 @@ export default function App() {
         {isLoading && <LoadingScreen onComplete={() => setIsLoading(false)} />}
       </AnimatePresence>
 
-      <main className="bg-[#0C0C0C]" style={{ overflowX: 'clip' }}>
+      <main className="bg-[#0c0b0a]" style={{ overflowX: 'clip' }}>
         <HeroSection />
         <MarqueeSection />
         <AboutSection />

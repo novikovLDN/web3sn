@@ -1,65 +1,80 @@
-import { useRef } from 'react'
+import { useRef, type ReactNode } from 'react'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import FadeIn from '../components/FadeIn'
-import LiveProjectButton from '../components/LiveProjectButton'
 
-type Project = {
+type Slot = {
   number: string
-  category: string
-  name: string
-  images: [string, string, string] // col1-top, col1-bottom, col2
+  tag: string
+  title: string
+  text: string
+  bg: string
+  fg: string
+  accent: string
+  icon: ReactNode
 }
 
-const PROJECTS: Project[] = [
+/* ── Сгенерированные векторные иконки ───────────────────────────── */
+const IconCube = (c: string) => (
+  <svg viewBox="0 0 48 48" fill="none" stroke={c} strokeWidth="2.4" strokeLinejoin="round">
+    <path d="M24 4 44 14v20L24 44 4 34V14z" />
+    <path d="M24 4v20M24 24 4 14M24 24l20-10M24 24v20" />
+  </svg>
+)
+const IconSpark = (c: string) => (
+  <svg viewBox="0 0 48 48" fill="none" stroke={c} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M24 4v14M24 30v14M4 24h14M30 24h14" />
+    <path d="M12 12l8 8M28 28l8 8M36 12l-8 8M20 28l-8 8" opacity="0.5" />
+  </svg>
+)
+const IconOrbit = (c: string) => (
+  <svg viewBox="0 0 48 48" fill="none" stroke={c} strokeWidth="2.4" strokeLinecap="round">
+    <circle cx="24" cy="24" r="7" fill={c} stroke="none" />
+    <ellipse cx="24" cy="24" rx="20" ry="9" />
+    <ellipse cx="24" cy="24" rx="20" ry="9" transform="rotate(60 24 24)" />
+  </svg>
+)
+
+const SLOTS: Slot[] = [
   {
     number: '01',
-    category: 'Клиент',
-    name: 'Nextlevel Studio',
-    images: [
-      'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260412_055344_5eff02e0-87a5-41ce-b64f-eb08da8f33db.png&w=1280&q=85',
-      'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260412_055431_11d841fd-8b41-46a5-82e4-b04f2407a7d8.png&w=1280&q=85',
-      'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260412_055451_e317bf2d-28d4-48cc-86b0-6f72f25b6327.png&w=1280&q=85',
-    ],
+    tag: 'В работе',
+    title: 'Скоро здесь\nбудет магия',
+    text: 'Уже колдуем над первым кейсом. Заглядывайте чуть позже — покажем что-то яркое.',
+    bg: '#ef4a23',
+    fg: '#0c0b0a',
+    accent: '#0c0b0a',
+    icon: IconSpark('#0c0b0a'),
   },
   {
     number: '02',
-    category: 'Личный проект',
-    name: 'Aura Brand Identity',
-    images: [
-      'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260412_055654_911201c5-36d9-4bc6-bac7-331adfce159f.png&w=1280&q=85',
-      'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260412_055723_5ceda0b8-d9c2-4665-b2e3-83ba19ba76d1.png&w=1280&q=85',
-      'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260412_055753_adc5dcbd-a8e6-49c0-b43a-9b030d835cea.png&w=1280&q=85',
-    ],
+    tag: 'Готовим',
+    title: 'Кое-что\nинтересное',
+    text: 'Собираем проект по кусочкам, как хороший low-poly мир. Ещё немного терпения :)',
+    bg: '#ece7db',
+    fg: '#0c0b0a',
+    accent: '#ef4a23',
+    icon: IconCube('#ef4a23'),
   },
   {
     number: '03',
-    category: 'Клиент',
-    name: 'Solaris Digital',
-    images: [
-      'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260412_055759_963cfb0b-4bd1-4b0f-9d0a-09bd6cf95b2f.png&w=1280&q=85',
-      'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260412_060108_438f781a-9846-4dcc-89ab-c4e6cb830f5b.png&w=1280&q=85',
-      'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260412_055818_9d062121-ad7e-46b9-999a-1a6a692ef1ee.png&w=1280&q=85',
-    ],
+    tag: 'Загружается',
+    title: 'Место для\nвашего кейса',
+    text: 'Хотите оказаться здесь? Давайте сделаем проект, которым будем гордиться вместе.',
+    bg: '#151311',
+    fg: '#ece7db',
+    accent: '#ef4a23',
+    icon: IconOrbit('#ef4a23'),
   },
 ]
 
-const RADIUS = 'rounded-[40px] sm:rounded-[50px] md:rounded-[60px]'
+const RADIUS = 'rounded-[32px] sm:rounded-[44px] md:rounded-[56px]'
 
-function ProjectCard({
-  project,
-  index,
-  total,
-}: {
-  project: Project
-  index: number
-  total: number
-}) {
+function ProjectCard({ slot, index, total }: { slot: Slot; index: number; total: number }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ['start end', 'start start'],
   })
-
   const targetScale = 1 - (total - 1 - index) * 0.03
   const scale = useTransform(scrollYProgress, [0, 1], [1, targetScale])
 
@@ -70,58 +85,45 @@ function ProjectCard({
       style={{ top: `${index * 28}px` }}
     >
       <motion.div
-        style={{ scale }}
-        className={`w-full ${RADIUS} border-2 border-[#D7E2EA] bg-[#0C0C0C] p-4 sm:p-6 md:p-8`}
+        style={{ scale, background: slot.bg, color: slot.fg }}
+        className={`w-full ${RADIUS} overflow-hidden p-6 sm:p-8 md:p-12`}
       >
-        {/* Top row */}
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-4 sm:mb-6 md:mb-8">
-          <div className="flex items-center gap-4 sm:gap-6 md:gap-8">
-            <span
-              className="text-[#D7E2EA] font-bold leading-none"
-              style={{ fontSize: 'clamp(3rem, 10vw, 140px)' }}
-            >
-              {project.number}
-            </span>
-            <div className="flex flex-col gap-1">
-              <span className="text-[#D7E2EA]/60 font-light uppercase tracking-widest text-xs sm:text-sm">
-                {project.category}
-              </span>
+        {/* Верхняя строка */}
+        <div className="flex items-center justify-between mb-8 md:mb-12">
+          <span className="font-bold leading-none" style={{ fontSize: 'clamp(3rem, 10vw, 130px)' }}>
+            {slot.number}
+          </span>
+          <span
+            className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs sm:text-sm font-medium uppercase tracking-widest"
+            style={{ border: `1.5px solid ${slot.accent}`, color: slot.accent }}
+          >
+            <span className="relative flex h-2 w-2">
               <span
-                className="text-[#D7E2EA] font-medium uppercase leading-tight"
-                style={{ fontSize: 'clamp(1rem, 2.2vw, 2.1rem)' }}
-              >
-                {project.name}
-              </span>
-            </div>
-          </div>
-          <LiveProjectButton />
+                className="absolute inline-flex h-full w-full rounded-full animate-soft-pulse"
+                style={{ background: slot.accent }}
+              />
+              <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: slot.accent }} />
+            </span>
+            {slot.tag}
+          </span>
         </div>
 
-        {/* Bottom row: image grid */}
-        <div className="flex gap-3 sm:gap-4">
-          <div className="flex flex-col gap-3 sm:gap-4" style={{ width: '40%' }}>
-            <img
-              src={project.images[0]}
-              alt={`${project.name} preview 1`}
-              loading="lazy"
-              className={`w-full object-cover ${RADIUS}`}
-              style={{ height: 'clamp(130px, 16vw, 230px)' }}
-            />
-            <img
-              src={project.images[1]}
-              alt={`${project.name} preview 2`}
-              loading="lazy"
-              className={`w-full object-cover ${RADIUS}`}
-              style={{ height: 'clamp(160px, 22vw, 340px)' }}
-            />
-          </div>
-          <div style={{ width: '60%' }}>
-            <img
-              src={project.images[2]}
-              alt={`${project.name} preview 3`}
-              loading="lazy"
-              className={`w-full h-full object-cover ${RADIUS}`}
-            />
+        {/* Контент: иконка + текст */}
+        <div className="flex flex-col md:flex-row md:items-end gap-8 md:gap-12">
+          <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 shrink-0">{slot.icon}</div>
+          <div className="flex-1">
+            <h3
+              className="font-bold uppercase leading-[0.95] tracking-tight whitespace-pre-line mb-4"
+              style={{ fontSize: 'clamp(2rem, 6vw, 5rem)' }}
+            >
+              {slot.title}
+            </h3>
+            <p
+              className="font-light max-w-xl"
+              style={{ fontSize: 'clamp(0.95rem, 1.6vw, 1.35rem)', opacity: 0.8 }}
+            >
+              {slot.text}
+            </p>
           </div>
         </div>
       </motion.div>
@@ -133,11 +135,19 @@ export default function ProjectsSection() {
   return (
     <section
       id="projects"
-      className="relative z-10 bg-[#0C0C0C] rounded-t-[40px] sm:rounded-t-[50px] md:rounded-t-[60px] -mt-10 sm:-mt-12 md:-mt-14 px-5 sm:px-8 md:px-10 pt-20 sm:pt-24 md:pt-32 pb-20"
+      className="relative z-10 bg-[var(--ink)] rounded-t-[40px] sm:rounded-t-[50px] md:rounded-t-[60px] -mt-10 sm:-mt-12 md:-mt-14 px-5 sm:px-8 md:px-10 pt-20 sm:pt-24 md:pt-32 pb-20"
     >
       <FadeIn
-        as="h2"
+        as="span"
         delay={0}
+        y={20}
+        className="accent-text block text-center font-medium uppercase tracking-[0.3em] text-xs sm:text-sm mb-4"
+      >
+        Портфолио
+      </FadeIn>
+      <FadeIn
+        as="h2"
+        delay={0.06}
         y={40}
         className="hero-heading font-bold uppercase leading-none tracking-tight text-center mb-8 sm:mb-12"
         style={{ fontSize: 'clamp(3rem, 12vw, 160px)' }}
@@ -146,13 +156,8 @@ export default function ProjectsSection() {
       </FadeIn>
 
       <div className="max-w-6xl mx-auto">
-        {PROJECTS.map((project, i) => (
-          <ProjectCard
-            key={project.number}
-            project={project}
-            index={i}
-            total={PROJECTS.length}
-          />
+        {SLOTS.map((slot, i) => (
+          <ProjectCard key={slot.number} slot={slot} index={i} total={SLOTS.length} />
         ))}
       </div>
     </section>

@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Send, ArrowUpRight, Github, Linkedin, Instagram, Mail } from 'lucide-react'
 import FadeIn from '../components/FadeIn'
-import MiniGameLazy from '../game/MiniGameLazy'
+import GameLazy from '../island/GameLazy'
 
 const CONTACT_EMAIL =
   import.meta.env.VITE_CONTACT_EMAIL ?? 'founder@atlassecure.uk'
@@ -36,14 +36,14 @@ export default function ContactSection() {
   }
 
   return (
-    <section id="contact" className="relative bg-[#0C0C0C] overflow-hidden">
+    <section id="contact" className="relative bg-[#0c0b0a] overflow-hidden">
       {/* ── Заголовок ──────────────────────────────────────────── */}
       <div className="flex flex-col items-center text-center px-5 pt-20 sm:pt-24 md:pt-28 pb-8">
         <FadeIn
           as="span"
           delay={0}
           y={20}
-          className="text-xs text-[#9aa3af] uppercase tracking-[0.3em] mb-4"
+          className="text-xs text-[#a7a196] uppercase tracking-[0.3em] mb-4"
         >
           Свяжитесь со мной
         </FadeIn>
@@ -60,8 +60,8 @@ export default function ContactSection() {
 
       {/* ── Мини-игра во весь блок ──────────────────────────────── */}
       <div className="relative w-full px-3 sm:px-6 md:px-10">
-        <div className="relative mx-auto max-w-[1400px] h-[70vh] min-h-[520px] w-full overflow-hidden rounded-3xl border border-[#D7E2EA]/10">
-          <MiniGameLazy className="absolute inset-0 w-full h-full" />
+        <div className="relative mx-auto max-w-[1400px] h-[70vh] min-h-[520px] w-full overflow-hidden rounded-3xl border border-[#ece7db]/10">
+          <GameLazy className="absolute inset-0 w-full h-full" />
         </div>
       </div>
 
@@ -72,7 +72,7 @@ export default function ContactSection() {
             as="p"
             delay={0}
             y={20}
-            className="text-[#c3cbd6] font-light max-w-xl mx-auto"
+            className="text-[#a7a196] font-light max-w-xl mx-auto"
             style={{ fontSize: 'clamp(0.95rem, 1.6vw, 1.2rem)' }}
           >
             Расскажите про задачу — отвечу в течение суток и предложу, как её
@@ -83,11 +83,11 @@ export default function ContactSection() {
         {/* Форма */}
         <FadeIn delay={0} y={30} className="max-w-2xl mx-auto">
           {sent ? (
-            <div className="rounded-3xl border border-[#D7E2EA]/20 bg-white/5 backdrop-blur-md p-10 text-center">
+            <div className="rounded-3xl border border-[#ece7db]/20 bg-white/5 backdrop-blur-md p-10 text-center">
               <p className="accent-text font-bold text-2xl sm:text-3xl uppercase tracking-tight">
                 Спасибо!
               </p>
-              <p className="text-[#c3cbd6] font-light mt-3">
+              <p className="text-[#a7a196] font-light mt-3">
                 Письмо открылось в вашей почте. Если нет — напишите на{' '}
                 <a
                   href={`mailto:${CONTACT_EMAIL}`}
@@ -101,11 +101,11 @@ export default function ContactSection() {
           ) : (
             <form
               onSubmit={handleSubmit}
-              className="rounded-3xl border border-[#D7E2EA]/15 bg-white/5 backdrop-blur-md p-6 sm:p-8 md:p-10 flex flex-col gap-5"
+              className="rounded-3xl border border-[#ece7db]/15 bg-white/5 backdrop-blur-md p-6 sm:p-8 md:p-10 flex flex-col gap-5"
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <label className="flex flex-col gap-2">
-                  <span className="text-xs uppercase tracking-widest text-[#9aa3af]">
+                  <span className="text-xs uppercase tracking-widest text-[#a7a196]">
                     Имя
                   </span>
                   <input
@@ -114,11 +114,11 @@ export default function ContactSection() {
                     onChange={handleChange}
                     required
                     placeholder="Как к вам обращаться"
-                    className="bg-[#0C0C0C]/60 border border-[#D7E2EA]/15 rounded-xl px-4 py-3 text-[#D7E2EA] placeholder:text-[#5c636e] outline-none focus:border-[#B600A8] transition-colors"
+                    className="bg-[#0c0b0a]/60 border border-[#ece7db]/15 rounded-xl px-4 py-3 text-[#ece7db] placeholder:text-[#6b665c] outline-none focus:border-[var(--accent)] transition-colors"
                   />
                 </label>
                 <label className="flex flex-col gap-2">
-                  <span className="text-xs uppercase tracking-widest text-[#9aa3af]">
+                  <span className="text-xs uppercase tracking-widest text-[#a7a196]">
                     Email
                   </span>
                   <input
@@ -128,13 +128,13 @@ export default function ContactSection() {
                     onChange={handleChange}
                     required
                     placeholder="you@example.com"
-                    className="bg-[#0C0C0C]/60 border border-[#D7E2EA]/15 rounded-xl px-4 py-3 text-[#D7E2EA] placeholder:text-[#5c636e] outline-none focus:border-[#B600A8] transition-colors"
+                    className="bg-[#0c0b0a]/60 border border-[#ece7db]/15 rounded-xl px-4 py-3 text-[#ece7db] placeholder:text-[#6b665c] outline-none focus:border-[var(--accent)] transition-colors"
                   />
                 </label>
               </div>
 
               <label className="flex flex-col gap-2">
-                <span className="text-xs uppercase tracking-widest text-[#9aa3af]">
+                <span className="text-xs uppercase tracking-widest text-[#a7a196]">
                   Сообщение
                 </span>
                 <textarea
@@ -144,20 +144,17 @@ export default function ContactSection() {
                   required
                   rows={4}
                   placeholder="Пара слов о проекте, сроках и бюджете"
-                  className="bg-[#0C0C0C]/60 border border-[#D7E2EA]/15 rounded-xl px-4 py-3 text-[#D7E2EA] placeholder:text-[#5c636e] outline-none focus:border-[#B600A8] transition-colors resize-none"
+                  className="bg-[#0c0b0a]/60 border border-[#ece7db]/15 rounded-xl px-4 py-3 text-[#ece7db] placeholder:text-[#6b665c] outline-none focus:border-[var(--accent)] transition-colors resize-none"
                 />
               </label>
 
               <button
                 type="submit"
-                className="group inline-flex items-center justify-center gap-2 self-start rounded-full text-white font-medium uppercase tracking-widest px-8 py-3.5 text-sm transition-transform duration-200 hover:scale-[1.03]"
+                className="group inline-flex items-center justify-center gap-2 self-start rounded-full font-medium uppercase tracking-widest px-8 py-3.5 text-sm transition-transform duration-200 hover:scale-[1.03]"
                 style={{
-                  background:
-                    'linear-gradient(123deg, #18011F 7%, #B600A8 37%, #7621B0 72%, #BE4C00 100%)',
-                  boxShadow:
-                    '0px 4px 4px rgba(181, 1, 167, 0.25), 4px 4px 12px #7721B1 inset',
-                  outline: '2px solid #FFFFFF',
-                  outlineOffset: '-3px',
+                  background: 'var(--accent)',
+                  color: 'var(--ink)',
+                  boxShadow: '0px 6px 20px -6px rgba(239,74,35,0.6)',
                 }}
               >
                 Отправить
@@ -193,7 +190,7 @@ export default function ContactSection() {
               <span className="absolute inline-flex h-full w-full rounded-full bg-green-400 animate-soft-pulse" />
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
             </span>
-            <span className="text-[#c3cbd6] text-sm uppercase tracking-widest">
+            <span className="text-[#a7a196] text-sm uppercase tracking-widest">
               Доступен для проектов
             </span>
           </div>
@@ -206,7 +203,7 @@ export default function ContactSection() {
                 target={href.startsWith('http') ? '_blank' : undefined}
                 rel={href.startsWith('http') ? 'noreferrer' : undefined}
                 aria-label={label}
-                className="text-[#9aa3af] hover:text-white transition-colors"
+                className="text-[#a7a196] hover:text-white transition-colors"
               >
                 <Icon className="w-5 h-5" />
               </a>
@@ -215,15 +212,15 @@ export default function ContactSection() {
 
           <a
             href={`mailto:${CONTACT_EMAIL}`}
-            className="group inline-flex items-center gap-1.5 text-[#c3cbd6] hover:text-white transition-colors text-sm uppercase tracking-widest"
+            className="group inline-flex items-center gap-1.5 text-[#a7a196] hover:text-white transition-colors text-sm uppercase tracking-widest"
           >
             {CONTACT_EMAIL}
             <ArrowUpRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </a>
         </footer>
 
-        <p className="relative z-10 text-center text-[#5c636e] text-xs pb-6">
-          © {2026} Максим Новиков — 3D-креатор
+        <p className="relative z-10 text-center text-[#6b665c] text-xs pb-6">
+          © {2026} NOVIKOV. — 3D-креатор
         </p>
       </div>
     </section>
