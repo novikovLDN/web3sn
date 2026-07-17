@@ -16,7 +16,7 @@ import { world } from './state'
 import { PAL, SUN_POS, SEA_LEVEL, TUNE } from './config'
 import { QUALITY } from './quality'
 
-type Phase = 'menu' | 'playing'
+type Phase = 'menu' | 'playing' | 'paused'
 
 /** Отладочный облёт острова сверху (URL ?over) — для проверки сцены. */
 function OverCam() {
@@ -62,7 +62,7 @@ function Hud() {
   )
 }
 
-export default function Game() {
+export default function Game({ onExit }: { onExit?: () => void }) {
   const keys = useInput()
   const yaw = useRef(Math.PI) // старт лицом к острову (игрок на южном пляже)
   const pitch = useRef(0.32)
@@ -77,6 +77,8 @@ export default function Game() {
   const over = params.has('over')
   const noOcean = params.has('noocean')
   const [phase, setPhase] = useState<Phase>('menu')
+  const phaseRef = useRef<Phase>('menu')
+  phaseRef.current = phase
   useEffect(() => {
     world.active = phase === 'playing'
   }, [phase])
@@ -98,6 +100,33 @@ export default function Game() {
     setPhase('playing')
     lockPointer()
   }
+  const openPause = () => {
+    setPhase('paused')
+    try {
+      document.exitPointerLock?.()
+    } catch {
+      /* noop */
+    }
+  }
+  const exitGame = () => {
+    try {
+      if (document.fullscreenElement) document.exitFullscreen?.()
+    } catch {
+      /* noop */
+    }
+    onExit?.()
+  }
+
+  // ESC / потеря захвата курсора → пауза (курсор снова доступен).
+  useEffect(() => {
+    const onLockChange = () => {
+      if (!document.pointerLockElement && phaseRef.current === 'playing') {
+        setPhase('paused')
+      }
+    }
+    document.addEventListener('pointerlockchange', onLockChange)
+    return () => document.removeEventListener('pointerlockchange', onLockChange)
+  }, [])
 
   // Мышь (desktop, pointer lock).
   useEffect(() => {
@@ -217,13 +246,27 @@ export default function Game() {
 
       <Hud />
 
-      <button
-        onClick={toggleFullscreen}
-        aria-label="Полный экран"
-        className="absolute top-4 right-4 z-30 w-10 h-10 rounded-lg border border-white/20 bg-black/40 backdrop-blur text-white/80 flex items-center justify-center"
-      >
-        ⛶
-      </button>
+      <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
+        {phase === 'playing' && (
+          <button
+            onClick={openPause}
+            aria-label="Меню (Esc)"
+            className="w-10 h-10 rounded-lg border border-white/20 bg-black/40 backdrop-blur text-white/80 flex items-center justify-center"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="6" y="5" width="4" height="14" rx="1" />
+              <rect x="14" y="5" width="4" height="14" rx="1" />
+            </svg>
+          </button>
+        )}
+        <button
+          onClick={toggleFullscreen}
+          aria-label="Полный экран"
+          className="w-10 h-10 rounded-lg border border-white/20 bg-black/40 backdrop-blur text-white/80 flex items-center justify-center"
+        >
+          ⛶
+        </button>
+      </div>
 
       {started && <TouchControls keys={keys} />}
 
@@ -248,6 +291,30 @@ export default function Game() {
             ▶ Играть
           </span>
         </button>
+      )}
+
+      {phase === 'paused' && (
+        <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/55 backdrop-blur-[3px]">
+          <p className="accent-text font-bold uppercase tracking-tight text-4xl sm:text-5xl mb-2">Пауза</p>
+          <p className="text-[#c3cbd6] mb-8 text-sm uppercase tracking-widest">
+            Собрано кристаллов: {world.score} / {world.totalGems}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={startPlay}
+              className="rounded-full px-8 py-3.5 font-medium uppercase tracking-widest"
+              style={{ background: 'var(--accent)', color: 'var(--ink)', boxShadow: '0px 6px 20px -6px rgba(239,74,35,0.6)' }}
+            >
+              ▶ Продолжить
+            </button>
+            <button
+              onClick={exitGame}
+              className="rounded-full px-8 py-3.5 font-medium uppercase tracking-widest border border-white/25 text-white/85 hover:bg-white/10 transition-colors"
+            >
+              Выход
+            </button>
+          </div>
+        </div>
       )}
     </div>
   )
