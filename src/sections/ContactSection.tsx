@@ -169,7 +169,7 @@ export default function ContactSection() {
           <div className="flex w-max animate-marquee">
             {Array.from({ length: 2 }).map((_, blockIndex) => (
               <div key={blockIndex} className="flex shrink-0" aria-hidden={blockIndex === 1}>
-                {Array.from({ length: 6 }).map((_, i) => (
+                {Array.from({ length: 3 }).map((_, i) => (
                   <span
                     key={i}
                     className="hero-heading font-bold uppercase tracking-tight px-6 whitespace-nowrap inline-flex items-center gap-6"
