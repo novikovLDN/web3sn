@@ -13,7 +13,7 @@ const SOCIALS = [
   { label: 'Email', href: `mailto:${CONTACT_EMAIL}`, Icon: Mail },
 ]
 
-const MARQUEE_TEXT = 'СОЗДАЁМ БУДУЩЕЕ'
+const MARQUEE_TEXT = 'Давайте создадим что-то невероятное'
 
 export default function ContactSection() {
   const [form, setForm] = useState({ name: '', email: '', message: '' })
@@ -165,17 +165,18 @@ export default function ContactSection() {
         </FadeIn>
 
         {/* Бегущая строка */}
-        <div className="mt-20 sm:mt-24 md:mt-28 overflow-hidden">
+        <div className="mt-20 sm:mt-24 md:mt-28 overflow-hidden py-4 md:py-6">
           <div className="flex w-max animate-marquee">
             {Array.from({ length: 2 }).map((_, blockIndex) => (
               <div key={blockIndex} className="flex shrink-0" aria-hidden={blockIndex === 1}>
                 {Array.from({ length: 6 }).map((_, i) => (
                   <span
                     key={i}
-                    className="hero-heading font-bold uppercase tracking-tight px-6 whitespace-nowrap"
-                    style={{ fontSize: 'clamp(2rem, 6vw, 4.5rem)' }}
+                    className="hero-heading font-bold uppercase tracking-tight px-6 whitespace-nowrap inline-flex items-center gap-6"
+                    style={{ fontSize: 'clamp(2rem, 6vw, 4.25rem)', lineHeight: 1.15 }}
                   >
-                    {MARQUEE_TEXT} •
+                    {MARQUEE_TEXT}
+                    <span style={{ color: 'var(--accent)' }}>✦</span>
                   </span>
                 ))}
               </div>

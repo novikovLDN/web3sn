@@ -206,6 +206,46 @@ html {
   animation: blob-morph 16s ease-in-out infinite;
 }
 
+/* Заметная «живая» анимация летающих иконок в покое (вращение + пульс) */
+@keyframes icon-idle {
+  0%,
+  100% {
+    transform: rotate(-9deg) scale(0.94);
+  }
+  50% {
+    transform: rotate(9deg) scale(1.1);
+  }
+}
+.animate-icon-idle {
+  animation: icon-idle 4.5s ease-in-out infinite;
+}
+
+/* Вертикальные бегущие строки (по бокам блока «Услуги») */
+@keyframes marquee-y-up {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+@keyframes marquee-y-down {
+  from {
+    transform: translateY(-50%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+.animate-my-up {
+  animation: marquee-y-up 32s linear infinite;
+  will-change: transform;
+}
+.animate-my-down {
+  animation: marquee-y-down 32s linear infinite;
+  will-change: transform;
+}
+
 /* Бегущая строка футера */
 @keyframes marquee {
   0% {

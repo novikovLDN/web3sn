@@ -48,8 +48,8 @@ function FloatingIcons() {
     const setHome = (t: number) => {
       FLOATERS.forEach((c, i) => {
         const s = state[i]
-        s.home.x = c.x * rect.width + Math.sin(t * 0.0006 + s.phase) * 10
-        s.home.y = c.y * rect.height + Math.cos(t * 0.0005 + s.phase) * 14
+        s.home.x = c.x * rect.width + Math.sin(t * 0.0007 + s.phase) * 18
+        s.home.y = c.y * rect.height + Math.cos(t * 0.0006 + s.phase) * 22
       })
     }
 
@@ -124,9 +124,12 @@ function FloatingIcons() {
             nodes.current[i] = node
           }}
           className="absolute top-0 left-0"
-          style={{ width: c.size, height: c.size, opacity: 0.9 }}
+          style={{ width: c.size, height: c.size, opacity: 0.92 }}
         >
-          <StaticIcon name={c.icon} color="#ef4a23" />
+          {/* внутренний слой — заметная idle-анимация (вращение + пульс) */}
+          <div className="w-full h-full animate-icon-idle" style={{ animationDelay: `${i * 0.6}s` }}>
+            <StaticIcon name={c.icon} color="#ef4a23" />
+          </div>
         </div>
       ))}
     </div>
