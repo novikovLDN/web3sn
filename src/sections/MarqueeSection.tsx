@@ -1,42 +1,59 @@
 import { useEffect, useRef } from 'react'
+import StaticIcon from '../components/StaticIcon'
+import type { IconName } from '../data/projects'
 
-const IMAGES = [
-  'https://motionsites.ai/assets/hero-space-voyage-preview-eECLH3Yc.gif',
-  'https://motionsites.ai/assets/hero-codenest-preview-Cgppc2qV.gif',
-  'https://motionsites.ai/assets/hero-vex-ventures-preview-BczMFIiw.gif',
-  'https://motionsites.ai/assets/hero-stellar-ai-v2-preview-DjvxjG3C.gif',
-  'https://motionsites.ai/assets/hero-asme-preview-B_nGDnTP.gif',
-  'https://motionsites.ai/assets/hero-transform-data-preview-Cx5OU29N.gif',
-  'https://motionsites.ai/assets/hero-vitara-preview-Cjz2QYyU.gif',
-  'https://motionsites.ai/assets/hero-terra-preview-BFjrCr7T.gif',
-  'https://motionsites.ai/assets/hero-skyelite-preview-DHaZIgUv.gif',
-  'https://motionsites.ai/assets/hero-aethera-preview-DknSlcTa.gif',
-  'https://motionsites.ai/assets/hero-designpro-preview-D8c5_een.gif',
-  'https://motionsites.ai/assets/hero-stellar-ai-preview-D3HL6bw1.gif',
-  'https://motionsites.ai/assets/hero-xportfolio-preview-D4A8maiC.gif',
-  'https://motionsites.ai/assets/hero-orbit-web3-preview-BXt4OttD.gif',
-  'https://motionsites.ai/assets/hero-nexora-preview-cx5HmUgo.gif',
-  'https://motionsites.ai/assets/hero-evr-ventures-preview-DZxeVFEX.gif',
-  'https://motionsites.ai/assets/hero-planet-orbit-preview-DWAP8Z1P.gif',
-  'https://motionsites.ai/assets/hero-new-era-preview-CocuDUm9.gif',
-  'https://motionsites.ai/assets/hero-wealth-preview-B70idl_u.gif',
-  'https://motionsites.ai/assets/hero-luminex-preview-CxOP7ce6.gif',
-  'https://motionsites.ai/assets/hero-celestia-preview-0yO3jXO8.gif',
+type CardTheme = 'orange' | 'cream' | 'dark'
+type TileData = { word: string; icon: IconName; theme: CardTheme }
+
+const THEMES: Record<CardTheme, { bg: string; fg: string; accent: string }> = {
+  orange: { bg: '#ef4a23', fg: '#0c0b0a', accent: '#0c0b0a' },
+  cream: { bg: '#ece7db', fg: '#0c0b0a', accent: '#ef4a23' },
+  dark: { bg: '#151311', fg: '#ece7db', accent: '#ef4a23' },
+}
+
+// Уникальные плитки-заглушки (пока нет реальных превью).
+const TILES: TileData[] = [
+  { word: '3D-моделинг', icon: 'cube', theme: 'dark' },
+  { word: 'Рендер', icon: 'gyro', theme: 'orange' },
+  { word: 'Motion', icon: 'orbit', theme: 'cream' },
+  { word: 'Брендинг', icon: 'spark', theme: 'dark' },
+  { word: 'Веб-дизайн', icon: 'chip', theme: 'orange' },
+  { word: 'Анимация', icon: 'orbit', theme: 'cream' },
+  { word: 'Концепт', icon: 'spark', theme: 'dark' },
+  { word: 'Текстуры', icon: 'cube', theme: 'orange' },
+  { word: 'Свет и кадр', icon: 'gyro', theme: 'cream' },
+  { word: 'VFX', icon: 'chip', theme: 'dark' },
+  { word: 'Гейм-арт', icon: 'orbit', theme: 'orange' },
+  { word: 'Композитинг', icon: 'spark', theme: 'cream' },
 ]
 
-const ROW_ONE = [...IMAGES.slice(0, 11), ...IMAGES.slice(0, 11), ...IMAGES.slice(0, 11)]
-const ROW_TWO = [...IMAGES.slice(11), ...IMAGES.slice(11), ...IMAGES.slice(11)]
+const ROW_ONE = TILES.slice(0, 6)
+const ROW_TWO = TILES.slice(6)
+const triple = <T,>(a: T[]) => [...a, ...a, ...a]
 
-function Tile({ src }: { src: string }) {
+function Tile({ tile }: { tile: TileData }) {
+  const t = THEMES[tile.theme]
   return (
-    <img
-      src={src}
-      alt=""
-      loading="lazy"
-      draggable={false}
-      className="rounded-2xl object-cover shrink-0 select-none"
-      style={{ width: 420, height: 270 }}
-    />
+    <div
+      className="rounded-2xl shrink-0 p-6 flex flex-col justify-between select-none"
+      style={{ width: 420, height: 270, background: t.bg, color: t.fg }}
+    >
+      <div className="flex items-center justify-between">
+        <span
+          className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-medium uppercase tracking-widest"
+          style={{ border: `1.5px solid ${t.accent}`, color: t.accent }}
+        >
+          <span className="inline-flex rounded-full h-1.5 w-1.5" style={{ background: t.accent }} />
+          Скоро
+        </span>
+        <div className="w-12 h-12" style={{ opacity: 0.9 }}>
+          <StaticIcon name={tile.icon} color={t.accent} />
+        </div>
+      </div>
+      <h3 className="font-bold uppercase leading-none tracking-tight" style={{ fontSize: 'clamp(1.6rem, 2.4vw, 2.4rem)' }}>
+        {tile.word}
+      </h3>
+    </div>
   )
 }
 
@@ -53,23 +70,16 @@ export default function MarqueeSection() {
     const computeTarget = () => {
       const section = sectionRef.current
       if (!section) return
-      targetOffset.current =
-        (window.scrollY - section.offsetTop + window.innerHeight) * 0.3
+      targetOffset.current = (window.scrollY - section.offsetTop + window.innerHeight) * 0.3
       startLoop()
     }
 
     const render = () => {
-      // Плавное догоняющее сглаживание — движение остаётся мягким на любой частоте кадров.
       const diff = targetOffset.current - currentOffset.current
       currentOffset.current += diff * 0.12
-
       const off = currentOffset.current - 200
-      if (row1Ref.current)
-        row1Ref.current.style.transform = `translate3d(${off}px,0,0)`
-      if (row2Ref.current)
-        row2Ref.current.style.transform = `translate3d(${-off}px,0,0)`
-
-      // Останавливаем цикл, когда движение практически завершено — бережём батарею.
+      if (row1Ref.current) row1Ref.current.style.transform = `translate3d(${off}px,0,0)`
+      if (row2Ref.current) row2Ref.current.style.transform = `translate3d(${-off}px,0,0)`
       if (Math.abs(diff) > 0.3) {
         rafId.current = requestAnimationFrame(render)
       } else {
@@ -92,28 +102,16 @@ export default function MarqueeSection() {
   }, [])
 
   return (
-    <section
-      ref={sectionRef}
-      className="bg-[#0c0b0a] pt-24 sm:pt-32 md:pt-40 pb-10 overflow-hidden"
-    >
+    <section ref={sectionRef} className="bg-[#0c0b0a] pt-24 sm:pt-32 md:pt-40 pb-10 overflow-hidden">
       <div className="flex flex-col gap-3">
-        <div
-          ref={row1Ref}
-          className="flex gap-3"
-          style={{ willChange: 'transform', transform: 'translate3d(-200px,0,0)' }}
-        >
-          {ROW_ONE.map((src, i) => (
-            <Tile key={`r1-${i}`} src={src} />
+        <div ref={row1Ref} className="flex gap-3" style={{ willChange: 'transform', transform: 'translate3d(-200px,0,0)' }}>
+          {triple(ROW_ONE).map((tile, i) => (
+            <Tile key={`r1-${i}`} tile={tile} />
           ))}
         </div>
-
-        <div
-          ref={row2Ref}
-          className="flex gap-3"
-          style={{ willChange: 'transform', transform: 'translate3d(200px,0,0)' }}
-        >
-          {ROW_TWO.map((src, i) => (
-            <Tile key={`r2-${i}`} src={src} />
+        <div ref={row2Ref} className="flex gap-3" style={{ willChange: 'transform', transform: 'translate3d(200px,0,0)' }}>
+          {triple(ROW_TWO).map((tile, i) => (
+            <Tile key={`r2-${i}`} tile={tile} />
           ))}
         </div>
       </div>
