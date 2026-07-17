@@ -1,7 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 
-// Путь к аудиофайлу (лежит в public/audio/).
-const AUDIO_SRC = '/audio/aer216head-shizuka.mp3'
+// Авто-обнаружение всех треков из папки src/tracks (просто кидайте файлы туда).
+const modules = import.meta.glob('../tracks/*.{mp3,ogg,wav,m4a,flac}', {
+  eager: true,
+  query: '?url',
+  import: 'default',
+})
+const TRACKS: string[] = Object.entries(modules)
+  .sort(([a], [b]) => a.localeCompare(b))
+  .map(([, url]) => url as string)
+
 const BARS = [0, 0.18, 0.36, 0.12, 0.28]
 
 /** Яркость фона под элементом (0..255). */
@@ -24,32 +32,31 @@ function bgLuminance(el: Element | null): number {
 }
 
 /**
- * Ненавязчивый мини-плеер справа вверху. Автозапуск после загрузки (с фолбэком
- * на первый жест). Цвет подстраивается под фон: на светлых секциях становится
- * тёмным, на тёмных — светлым.
+ * Мини-плеер справа вверху: автозапуск после загрузки, переключение треков
+ * вперёд/назад, авто-переход к следующему по окончании. Цвет подстраивается
+ * под фон (тёмный на светлых секциях, светлый на тёмных).
  */
 export default function MiniPlayer({ start }: { start: boolean }) {
   const audioRef = useRef<HTMLAudioElement>(null)
   const pillRef = useRef<HTMLDivElement>(null)
+  const manual = useRef(false)
+  const [index, setIndex] = useState(0)
   const [playing, setPlaying] = useState(false)
-  const [ready, setReady] = useState(false)
   const [onLight, setOnLight] = useState(false)
+  const multi = TRACKS.length > 1
 
-  // Автозапуск + фолбэк на первый жест.
+  // Автозапуск после загрузки + фолбэк на первый жест.
   useEffect(() => {
-    if (!start) return
+    if (!start || TRACKS.length === 0) return
     const audio = audioRef.current
     if (!audio) return
     audio.volume = 0.45
     let cleaned = false
     const tryPlay = () =>
-      audio
-        .play()
-        .then(() => {
-          setPlaying(true)
-          removeGestures()
-        })
-        .catch(() => {})
+      audio.play().then(() => {
+        setPlaying(true)
+        removeGestures()
+      }).catch(() => {})
     const gestureOnce = () => tryPlay()
     const events = ['pointerdown', 'keydown', 'touchstart', 'wheel']
     const removeGestures = () => {
@@ -62,7 +69,18 @@ export default function MiniPlayer({ start }: { start: boolean }) {
     return removeGestures
   }, [start])
 
-  // Определение фона под плеером (для контраста).
+  // Смена трека — загрузить и (если играли/переключили вручную) продолжить.
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+    if (manual.current || playing) {
+      audio.play().then(() => setPlaying(true)).catch(() => {})
+    }
+    manual.current = false
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [index])
+
+  // Контраст под плеером.
   useEffect(() => {
     if (!start) return
     let raf = 0
@@ -102,34 +120,44 @@ export default function MiniPlayer({ start }: { start: boolean }) {
       audio.play().then(() => setPlaying(true)).catch(() => {})
     }
   }
+  const step = (dir: number) => {
+    if (!multi) return
+    manual.current = true
+    setIndex((i) => (i + dir + TRACKS.length) % TRACKS.length)
+  }
 
   const fg = onLight ? '#0c0b0a' : '#ece7db'
   const dim = onLight ? 'rgba(12,11,10,0.55)' : 'rgba(167,161,150,0.9)'
   const border = onLight ? 'rgba(12,11,10,0.25)' : 'rgba(236,231,219,0.15)'
   const bg = onLight ? 'rgba(236,231,219,0.6)' : 'rgba(12,11,10,0.4)'
 
+  if (TRACKS.length === 0) return null
+
   return (
     <>
       <audio
         ref={audioRef}
-        src={AUDIO_SRC}
-        loop
+        src={TRACKS[index]}
+        loop={!multi}
         preload="auto"
-        onCanPlay={() => setReady(true)}
         onPlay={() => setPlaying(true)}
         onPause={() => setPlaying(false)}
+        onEnded={() => step(1)}
       />
       <div
         ref={pillRef}
-        className="fixed top-16 sm:top-20 right-5 md:right-10 z-50 flex items-center gap-3 rounded-full px-3.5 py-2 backdrop-blur-md transition-[opacity,background-color,border-color] duration-300"
+        className="fixed top-16 sm:top-20 right-5 md:right-10 z-50 flex items-center gap-2 rounded-full px-3 py-2 backdrop-blur-md transition-[opacity,background-color,border-color] duration-300"
         style={{ background: bg, border: `1px solid ${border}`, opacity: start ? 1 : 0, pointerEvents: start ? 'auto' : 'none' }}
       >
-        <button
-          onClick={toggle}
-          aria-label={playing ? 'Пауза' : 'Играть'}
-          className="flex items-center justify-center w-6 h-6 transition-colors"
-          style={{ color: fg }}
-        >
+        {multi && (
+          <button onClick={() => step(-1)} aria-label="Предыдущий трек" className="flex items-center justify-center w-5 h-5 transition-colors" style={{ color: fg }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M6 5h2v14H6zM20 5v14L9 12z" />
+            </svg>
+          </button>
+        )}
+
+        <button onClick={toggle} aria-label={playing ? 'Пауза' : 'Играть'} className="flex items-center justify-center w-6 h-6 transition-colors" style={{ color: fg }}>
           {playing ? (
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
               <rect x="6" y="5" width="4" height="14" rx="1" />
@@ -142,8 +170,16 @@ export default function MiniPlayer({ start }: { start: boolean }) {
           )}
         </button>
 
-        {/* Эквалайзер (акцент виден на любом фоне) */}
-        <div className="flex items-end gap-[3px] h-4">
+        {multi && (
+          <button onClick={() => step(1)} aria-label="Следующий трек" className="flex items-center justify-center w-5 h-5 transition-colors" style={{ color: fg }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M16 5h2v14h-2zM4 5l11 7-11 7z" />
+            </svg>
+          </button>
+        )}
+
+        {/* Эквалайзер */}
+        <div className="flex items-end gap-[3px] h-4 ml-1">
           {BARS.map((delay, i) => (
             <span
               key={i}
@@ -161,8 +197,8 @@ export default function MiniPlayer({ start }: { start: boolean }) {
           ))}
         </div>
 
-        <span className="hidden sm:block text-[10px] uppercase tracking-[0.2em] pr-1" style={{ color: dim }}>
-          {ready ? (playing ? 'Играет' : 'Пауза') : 'Звук'}
+        <span className="hidden sm:block text-[10px] uppercase tracking-[0.2em] pr-1 tabular-nums" style={{ color: dim }}>
+          {multi ? `${index + 1}/${TRACKS.length}` : playing ? 'Играет' : 'Звук'}
         </span>
       </div>
     </>

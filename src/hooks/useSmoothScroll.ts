@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import Lenis from 'lenis'
+import { setLenis } from '../lib/scroll'
 
 /**
  * Плавная инерционная прокрутка всего сайта (чуть медленнее и мягче нативной).
@@ -18,6 +19,8 @@ export default function useSmoothScroll() {
       smoothWheel: true,
     })
 
+    setLenis(lenis)
+
     let raf = 0
     const loop = (time: number) => {
       lenis.raf(time)
@@ -27,6 +30,7 @@ export default function useSmoothScroll() {
 
     return () => {
       cancelAnimationFrame(raf)
+      setLenis(null)
       lenis.destroy()
     }
   }, [])

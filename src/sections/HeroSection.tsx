@@ -3,6 +3,7 @@ import FadeIn from '../components/FadeIn'
 import ContactButton from '../components/ContactButton'
 import StaticIcon from '../components/StaticIcon'
 import type { IconName } from '../data/projects'
+import { scrollToTarget } from '../lib/scroll'
 
 const NAV_LINKS: { label: string; href: string }[] = [
   { label: 'О себе', href: '#about' },
@@ -150,6 +151,10 @@ export default function HeroSection() {
           <a
             key={link.label}
             href={link.href}
+            onClick={(e) => {
+              e.preventDefault()
+              scrollToTarget(link.href)
+            }}
             className="text-[var(--cream)] font-medium uppercase tracking-wider text-sm md:text-lg lg:text-[1.4rem] transition-colors duration-200 hover:text-[var(--accent)]"
           >
             {link.label}

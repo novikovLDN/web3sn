@@ -3,6 +3,7 @@ import { AnimatePresence } from 'framer-motion'
 import LoadingScreen from './components/LoadingScreen'
 import CustomCursor from './components/CustomCursor'
 import MiniPlayer from './components/MiniPlayer'
+import ScrollTop from './components/ScrollTop'
 import useSmoothScroll from './hooks/useSmoothScroll'
 import HeroSection from './sections/HeroSection'
 import MarqueeSection from './sections/MarqueeSection'
@@ -25,6 +26,7 @@ export default function App() {
       </AnimatePresence>
 
       <MiniPlayer start={!isLoading} />
+      <ScrollTop />
 
       <main className="bg-[#0c0b0a]" style={{ overflowX: 'clip' }}>
         <HeroSection />
