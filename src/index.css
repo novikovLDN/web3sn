@@ -220,13 +220,16 @@ html {
   animation: icon-idle 4.5s ease-in-out infinite;
 }
 
-/* Тематические шрифты экрана «Разработка» (грузятся при открытии экрана) */
+/* Тематические шрифты (грузятся при открытии соответствующего экрана) */
 .font-pixel {
   font-family: 'Handjet', 'MTS Wide', monospace;
   letter-spacing: 0.01em;
 }
 .font-devmono {
   font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+}
+.font-tech {
+  font-family: 'Unbounded', 'MTS Wide', sans-serif;
 }
 
 /* Мигающая каретка терминала */

@@ -14,6 +14,7 @@ import ProjectsSection from './sections/ProjectsSection'
 import StatsSection from './sections/StatsSection'
 import ContactSection from './sections/ContactSection'
 import DevelopmentScreen from './screens/DevelopmentScreen'
+import Modeling3DScreen from './screens/Modeling3DScreen'
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(true)
@@ -44,6 +45,8 @@ export default function App() {
 
       {screen === 'development' ? (
         <DevelopmentScreen onClose={closeScreen} />
+      ) : screen === 'modeling' ? (
+        <Modeling3DScreen onClose={closeScreen} />
       ) : (
         <>
           <ScrollTop />
