@@ -84,7 +84,7 @@ function BrowserWindow({ pk }: { pk: PreviewKey }) {
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ duration: 0.6, ease: [0.22, 0.61, 0.36, 1] }}
       className="relative w-full rounded-2xl overflow-hidden"
-      style={{ border: `1px solid rgba(255,255,255,0.08)`, boxShadow: '0 50px 130px -35px rgba(74,222,128,0.28)' }}
+      style={{ border: `1px solid rgba(255,255,255,0.08)`, boxShadow: '0 40px 100px -35px rgba(0,0,0,0.5)' }}
     >
       {/* Тонкая полоса загрузки страницы */}
       <motion.div
@@ -178,7 +178,7 @@ function Terminal() {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.7, ease: [0.22, 0.61, 0.36, 1] }}
         className="rounded-xl overflow-hidden"
-        style={{ background: C.panel, border: `1px solid ${C.border}`, boxShadow: '0 40px 120px -30px rgba(74,222,128,0.25)' }}
+        style={{ background: C.panel, border: `1px solid ${C.border}`, boxShadow: '0 30px 80px -30px rgba(0,0,0,0.55)' }}
       >
         <div className="flex items-center gap-2 px-4 h-10 border-b" style={{ borderColor: C.border }}>
           <span className="w-3 h-3 rounded-full" style={{ background: '#ff5f56' }} />
@@ -282,18 +282,17 @@ const GLYPHS = [
 ]
 function FloatingGlyphs() {
   return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden hidden md:block">
+    <div className="fixed inset-0 pointer-events-none overflow-hidden hidden md:block">
       {GLYPHS.map((g, i) => (
         <span
           key={i}
-          className="absolute font-devmono font-bold animate-float-y"
+          className="absolute font-devmono font-medium animate-float-y"
           style={{
             left: g.x,
             top: g.y,
             fontSize: g.s,
-            color: C.greenDim,
-            opacity: 0.35,
-            textShadow: '0 0 18px rgba(74,222,128,0.4)',
+            color: 'rgba(120,150,135,0.9)',
+            opacity: 0.12,
             animationDelay: `${g.d}s`,
           }}
         >
@@ -443,14 +442,14 @@ export default function DevelopmentScreen({ onClose }: { onClose: () => void }) 
   }, [onClose])
 
   return (
-    <main className="animate-screen-in relative overflow-hidden" style={{ background: C.bg, color: C.green }}>
-      {/* Фон: тех-сетка + мягкое свечение */}
+    <main className="animate-screen-in relative" style={{ background: C.bg, color: C.green }}>
+      {/* Фон: тонкая тех-сетка + очень мягкое свечение (сдержанно, премиально) */}
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="fixed inset-0 pointer-events-none"
         style={{
           backgroundImage:
-            'radial-gradient(circle at 50% 12%, rgba(74,222,128,0.10), transparent 42%), radial-gradient(rgba(74,222,128,0.05) 1px, transparent 1px)',
-          backgroundSize: '100% 100%, 28px 28px',
+            'radial-gradient(circle at 50% 10%, rgba(74,222,128,0.05), transparent 46%), radial-gradient(rgba(120,150,135,0.045) 1px, transparent 1px)',
+          backgroundSize: '100% 100%, 34px 34px',
         }}
       />
       <FloatingGlyphs />
