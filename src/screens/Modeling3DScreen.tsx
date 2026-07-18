@@ -40,12 +40,12 @@ const BENTO = [
 
 /* ── Пайплайн — горизонтальная лента шагов (не sticky-стек) ─────── */
 const STEPS = [
-  { n: '01', t: 'Референсы' },
-  { n: '02', t: 'Блокинг' },
-  { n: '03', t: 'Скульпт' },
-  { n: '04', t: 'Ретопология' },
-  { n: '05', t: 'UV + Текстуры' },
-  { n: '06', t: 'Свет + Рендер' },
+  { n: '01', t: 'Референсы', d: 'Собираю рефы и задаю направление.' },
+  { n: '02', t: 'Блокинг', d: 'Грубая форма: пропорции и силуэт.' },
+  { n: '03', t: 'Скульпт', d: 'Детали, объём и характер.' },
+  { n: '04', t: 'Ретопология', d: 'Чистая сетка под анимацию.' },
+  { n: '05', t: 'UV + Текстуры', d: 'Развёртка и PBR-материалы.' },
+  { n: '06', t: 'Свет + Рендер', d: 'Постановка света и финал.' },
 ]
 
 export default function Modeling3DScreen({ onClose }: { onClose: () => void }) {
@@ -83,7 +83,7 @@ export default function Modeling3DScreen({ onClose }: { onClose: () => void }) {
           </FadeIn>
           <FadeIn delay={0.25} y={20} className="mt-8 flex flex-wrap gap-3">
             {['Персонажи', 'Продукты', 'Окружения'].map((t) => (
-              <span key={t} className="rounded-full px-4 py-2 text-sm" style={{ border: `1px solid ${C.clayDim}`, color: C.clay }}>
+              <span key={t} className="rounded-full px-4 py-2 text-sm transition-transform duration-300 hover:scale-105 cursor-default" style={{ border: `1px solid ${C.clayDim}`, color: C.clay }}>
                 {t}
               </span>
             ))}
@@ -108,7 +108,7 @@ export default function Modeling3DScreen({ onClose }: { onClose: () => void }) {
       {/* ── BENTO: что моделим ──────────────────────────────────── */}
       <section className="px-6 md:px-12 py-20 relative z-10">
         <FadeIn as="h2" delay={0} y={24} className="font-tech font-extrabold uppercase tracking-tight mb-10" style={{ fontSize: 'clamp(1.8rem,5vw,3.5rem)', color: C.cream }}>
-          Что я моделю
+          Что я создаю
         </FadeIn>
         <div className="grid grid-cols-1 md:grid-cols-4 auto-rows-[180px] gap-4 max-w-6xl">
           {BENTO.map((b, i) => (
@@ -116,7 +116,7 @@ export default function Modeling3DScreen({ onClose }: { onClose: () => void }) {
               key={b.t}
               delay={i * 0.06}
               y={28}
-              className={`group rounded-3xl p-6 flex flex-col justify-between transition-colors ${b.span}`}
+              className={`group rounded-3xl p-6 flex flex-col justify-between transition-transform duration-300 hover:scale-[1.03] hover:-translate-y-1 cursor-default ${b.span}`}
               style={{ background: b.big ? C.accent : C.panel, border: `1px solid ${b.big ? 'transparent' : C.border}`, color: b.big ? '#0c0b0a' : C.cream }}
             >
               <span className="text-4xl md:text-5xl font-tech font-extrabold" style={{ color: b.big ? '#0c0b0a' : C.clay }}>◆</span>
@@ -138,11 +138,12 @@ export default function Modeling3DScreen({ onClose }: { onClose: () => void }) {
           <div className="absolute left-0 right-0 top-8 h-px" style={{ background: C.border }} />
           <div className="flex gap-6 overflow-x-auto pb-4 -mx-6 px-6 md:mx-0 md:px-0" style={{ scrollbarWidth: 'none' }}>
             {STEPS.map((s, i) => (
-              <FadeIn key={s.n} delay={i * 0.08} y={24} className="relative shrink-0 w-[220px]">
-                <span className="relative z-10 flex items-center justify-center w-16 h-16 rounded-full font-tech font-bold text-lg" style={{ background: C.panel, border: `1px solid ${C.clayDim}`, color: C.clay }}>
+              <FadeIn key={s.n} delay={i * 0.08} y={24} className="group relative shrink-0 w-[240px]">
+                <span className="relative z-10 flex items-center justify-center w-16 h-16 rounded-full font-tech font-bold text-lg transition-transform duration-300 group-hover:scale-110" style={{ background: C.panel, border: `1px solid ${C.clayDim}`, color: C.clay }}>
                   {s.n}
                 </span>
-                <h3 className="font-tech font-bold uppercase text-lg mt-5" style={{ color: C.cream }}>{s.t}</h3>
+                <h3 className="font-tech font-bold uppercase text-lg mt-6 leading-tight" style={{ color: C.cream }}>{s.t}</h3>
+                <p className="text-sm font-light mt-2 pr-6" style={{ color: C.dim }}>{s.d}</p>
               </FadeIn>
             ))}
           </div>
@@ -151,7 +152,7 @@ export default function Modeling3DScreen({ onClose }: { onClose: () => void }) {
 
       {/* ── CTA ─────────────────────────────────────────────────── */}
       <section className="px-6 py-28 flex flex-col items-center text-center gap-8 relative z-10">
-        <motion.h2 initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="font-tech font-extrabold uppercase tracking-tight leading-[0.95]" style={{ fontSize: 'clamp(2rem,7vw,5rem)', color: C.cream }}>
+        <motion.h2 initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="font-tech font-extrabold uppercase tracking-tight" style={{ fontSize: 'clamp(2rem,7vw,5rem)', lineHeight: 1.08, color: C.cream }}>
           Оживим вашу
           <br />
           идею в объёме
