@@ -231,6 +231,9 @@ html {
 .font-tech {
   font-family: 'Unbounded', 'MTS Wide', sans-serif;
 }
+.font-onest {
+  font-family: 'Onest', 'MTS Wide', system-ui, sans-serif;
+}
 
 /* Мигающая каретка терминала */
 @keyframes caret-blink {
