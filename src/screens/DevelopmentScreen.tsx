@@ -77,28 +77,56 @@ function Preview({ k }: { k: PreviewKey }) {
 
 /** Окно браузера с результатом. */
 function BrowserWindow({ pk }: { pk: PreviewKey }) {
+  const navBtn = 'w-6 h-6 flex items-center justify-center rounded-md'
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.9, y: 20 }}
+      initial={{ opacity: 0, scale: 0.92, y: 22 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ duration: 0.6, ease: [0.22, 0.61, 0.36, 1] }}
-      className="w-full rounded-xl overflow-hidden shadow-2xl"
-      style={{ border: `1px solid ${C.border}`, boxShadow: '0 40px 120px -30px rgba(74,222,128,0.2)' }}
+      className="relative w-full rounded-2xl overflow-hidden"
+      style={{ border: `1px solid rgba(255,255,255,0.08)`, boxShadow: '0 50px 130px -35px rgba(74,222,128,0.28)' }}
     >
-      {/* Вкладка + адресная строка */}
-      <div style={{ background: '#e9e4d8' }}>
-        <div className="flex items-end gap-1 px-3 pt-2">
-          <div className="flex items-center gap-2 rounded-t-lg px-3 py-1.5 text-xs" style={{ background: '#fff', color: '#0c0b0a' }}>
-            <span className="w-3 h-3 rounded-full" style={{ background: '#ef4a23' }} />
-            localhost:3000
-          </div>
+      {/* Тонкая полоса загрузки страницы */}
+      <motion.div
+        initial={{ scaleX: 0, opacity: 1 }}
+        animate={{ scaleX: 1, opacity: 0 }}
+        transition={{ duration: 0.9, ease: [0.22, 0.61, 0.36, 1], opacity: { delay: 0.9, duration: 0.3 } }}
+        className="absolute top-0 left-0 right-0 h-[3px] origin-left z-20"
+        style={{ background: C.accent }}
+      />
+
+      {/* Панель браузера */}
+      <div className="flex items-center gap-3 px-3.5 py-2.5" style={{ background: '#eae5db' }}>
+        {/* навигация */}
+        <div className="flex items-center gap-0.5" style={{ color: '#9a948a' }}>
+          <span className={navBtn}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+          </span>
+          <span className={navBtn} style={{ color: '#c4bfb2' }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
+          </span>
+          <span className={navBtn}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 11-2.6-6.4M21 3v6h-6" /></svg>
+          </span>
         </div>
-        <div className="px-3 py-1.5 text-[11px] font-mono" style={{ background: '#fff', color: '#6b665c', borderTop: '1px solid #e2ddd0' }}>
-          🔒 localhost:3000
+
+        {/* адресная строка */}
+        <div className="flex-1 flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-devmono" style={{ background: '#fff', color: '#4a463f' }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3fae6a" strokeWidth="2.4"><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V7a4 4 0 018 0v4" /></svg>
+          novikov.dev
+          <span className="ml-auto text-[10px] uppercase tracking-widest" style={{ color: '#b8b2a5' }}>превью</span>
+        </div>
+
+        {/* меню */}
+        <div className="flex flex-col gap-[3px]" style={{ color: '#b8b2a5' }}>
+          {[0, 1, 2].map((i) => (
+            <span key={i} className="w-1 h-1 rounded-full" style={{ background: 'currentColor' }} />
+          ))}
         </div>
       </div>
+
       {/* Отрендеренная страница */}
-      <div className="flex items-center justify-center bg-white" style={{ minHeight: 220 }}>
+      <div className="flex items-center justify-center bg-white px-6 py-10" style={{ minHeight: 240 }}>
         <Preview k={pk} />
       </div>
     </motion.div>
@@ -415,7 +443,16 @@ export default function DevelopmentScreen({ onClose }: { onClose: () => void }) 
   }, [onClose])
 
   return (
-    <main className="animate-screen-in relative" style={{ background: C.bg, color: C.green }}>
+    <main className="animate-screen-in relative overflow-hidden" style={{ background: C.bg, color: C.green }}>
+      {/* Фон: тех-сетка + мягкое свечение */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage:
+            'radial-gradient(circle at 50% 12%, rgba(74,222,128,0.10), transparent 42%), radial-gradient(rgba(74,222,128,0.05) 1px, transparent 1px)',
+          backgroundSize: '100% 100%, 28px 28px',
+        }}
+      />
       <FloatingGlyphs />
 
       <button
@@ -432,7 +469,7 @@ export default function DevelopmentScreen({ onClose }: { onClose: () => void }) 
           Услуга · Разработка
         </FadeIn>
         <FadeIn as="h1" delay={0.05} y={30} className="font-pixel font-extrabold uppercase tracking-tight text-center leading-[0.9] mb-10" style={{ fontSize: 'clamp(2.5rem,10vw,8rem)', color: C.cream }}>
-          Разработка<span style={{ color: C.accent }}>_</span>
+          Разработка<span className="animate-caret" style={{ color: C.accent }}>_</span>
         </FadeIn>
 
         <Terminal />
