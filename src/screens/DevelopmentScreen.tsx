@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { motion, useScroll, useTransform } from 'framer-motion'
+import { motion, useScroll, useTransform, useMotionValueEvent, type MotionValue } from 'framer-motion'
 import FadeIn from '../components/FadeIn'
 
 /* ── Палитра терминального экрана ───────────────────────────────── */
@@ -14,64 +14,104 @@ const C = {
   cream: '#ece7db',
 }
 
-type Lang = { id: string; label: string; code: string }
-
-const LANGS: Lang[] = [
-  {
-    id: 'html',
-    label: 'HTML',
-    code: `<!DOCTYPE html>
-<html lang="ru">
-  <head>
-    <title>NOVIKOV — сайт</title>
-  </head>
-  <body>
-    <h1>Hello, world 👋</h1>
-  </body>
-</html>`,
-  },
-  {
-    id: 'js',
-    label: 'JavaScript',
-    code: `const hello = (name = "world") => {
-  console.log(\`Hello, \${name} 👋\`)
+/* ── Ленивая загрузка тематических шрифтов ──────────────────────── */
+function useDevFonts() {
+  useEffect(() => {
+    const id = 'dev-fonts'
+    if (document.getElementById(id)) return
+    const link = document.createElement('link')
+    link.id = id
+    link.rel = 'stylesheet'
+    link.href =
+      'https://fonts.googleapis.com/css2?family=Handjet:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap'
+    document.head.appendChild(link)
+  }, [])
 }
 
-hello("NOVIKOV")`,
-  },
-  {
-    id: 'react',
-    label: 'React',
-    code: `export default function App() {
-  return <h1>Hello, world 👋</h1>
-}`,
-  },
-  {
-    id: 'python',
-    label: 'Python',
-    code: `def hello(name: str = "world") -> None:
-    print(f"Hello, {name} 👋")
-
-hello("NOVIKOV")`,
-  },
-  {
-    id: 'go',
-    label: 'Go',
-    code: `package main
-
-import "fmt"
-
-func main() {
-    fmt.Println("Hello, world 👋")
-}`,
-  },
+/* ══════════════════════════════════════════════════════════════════
+   ИНТЕРАКТИВНЫЙ ТЕРМИНАЛ
+   ══════════════════════════════════════════════════════════════════ */
+type Lang = { id: string; label: string; code: string }
+const LANGS: Lang[] = [
+  { id: 'html', label: 'HTML', code: `<!DOCTYPE html>\n<html lang="ru">\n  <body>\n    <h1>Hello, world 👋</h1>\n  </body>\n</html>` },
+  { id: 'js', label: 'JavaScript', code: `const hello = (name = "world") => {\n  console.log(\`Hello, \${name} 👋\`)\n}\n\nhello("NOVIKOV")` },
+  { id: 'react', label: 'React', code: `export default function App() {\n  return <h1>Hello, world 👋</h1>\n}` },
+  { id: 'python', label: 'Python', code: `def hello(name="world"):\n    print(f"Hello, {name} 👋")\n\nhello("NOVIKOV")` },
+  { id: 'go', label: 'Go', code: `package main\nimport "fmt"\n\nfunc main() {\n  fmt.Println("Hello, world 👋")\n}` },
 ]
 
-/* ── Печатная машинка ───────────────────────────────────────────── */
-function useTypewriter(text: string, active: boolean, speed = 18) {
+/** Что можно «собрать» после приветствия. */
+type Template = { id: string; label: string; code: string; preview: PreviewKey }
+type PreviewKey = 'hello' | 'button' | 'card' | 'profile'
+const TEMPLATES: Template[] = [
+  { id: 'button', label: 'Кнопка', preview: 'button', code: `<button class="btn">\n  Нажми меня →\n</button>` },
+  { id: 'card', label: 'Карточка', preview: 'card', code: `<div class="card">\n  <h3>NOVIKOV</h3>\n  <p>3D · Web · Motion</p>\n</div>` },
+  { id: 'profile', label: 'Профиль', preview: 'profile', code: `<div class="profile">\n  <div class="avatar"/>\n  <b>NOVIKOV</b>\n</div>` },
+]
+
+function Preview({ k }: { k: PreviewKey }) {
+  if (k === 'button')
+    return (
+      <button className="rounded-full px-7 py-3.5 font-semibold" style={{ background: '#ef4a23', color: '#0c0b0a' }}>
+        Нажми меня →
+      </button>
+    )
+  if (k === 'card')
+    return (
+      <div className="rounded-2xl p-6 text-left shadow-lg" style={{ background: '#0c0b0a', color: '#ece7db', width: 240 }}>
+        <h3 className="text-2xl font-bold uppercase">NOVIKOV</h3>
+        <p className="mt-1 text-sm" style={{ color: '#9a948a' }}>3D · Web · Motion</p>
+        <div className="mt-4 h-1.5 w-16 rounded-full" style={{ background: '#ef4a23' }} />
+      </div>
+    )
+  if (k === 'profile')
+    return (
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-20 h-20 rounded-full" style={{ background: 'radial-gradient(circle at 35% 30%, #ff6a3d, #ef4a23 60%, #b8360f)' }} />
+        <b className="text-xl uppercase tracking-tight" style={{ color: '#0c0b0a' }}>NOVIKOV</b>
+        <span className="text-xs uppercase tracking-widest" style={{ color: '#6b665c' }}>3D-креатор</span>
+      </div>
+    )
+  return <h1 className="text-4xl md:text-5xl font-bold" style={{ color: '#0c0b0a' }}>Hello, world 👋</h1>
+}
+
+/** Окно браузера с результатом. */
+function BrowserWindow({ pk }: { pk: PreviewKey }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9, y: 20 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: [0.22, 0.61, 0.36, 1] }}
+      className="w-full rounded-xl overflow-hidden shadow-2xl"
+      style={{ border: `1px solid ${C.border}`, boxShadow: '0 40px 120px -30px rgba(74,222,128,0.2)' }}
+    >
+      {/* Вкладка + адресная строка */}
+      <div style={{ background: '#e9e4d8' }}>
+        <div className="flex items-end gap-1 px-3 pt-2">
+          <div className="flex items-center gap-2 rounded-t-lg px-3 py-1.5 text-xs" style={{ background: '#fff', color: '#0c0b0a' }}>
+            <span className="w-3 h-3 rounded-full" style={{ background: '#ef4a23' }} />
+            localhost:3000
+          </div>
+        </div>
+        <div className="px-3 py-1.5 text-[11px] font-mono" style={{ background: '#fff', color: '#6b665c', borderTop: '1px solid #e2ddd0' }}>
+          🔒 localhost:3000
+        </div>
+      </div>
+      {/* Отрендеренная страница */}
+      <div className="flex items-center justify-center bg-white" style={{ minHeight: 220 }}>
+        <Preview k={pk} />
+      </div>
+    </motion.div>
+  )
+}
+
+function useTypewriter(text: string, active: boolean, speed = 16) {
   const [n, setN] = useState(0)
   useEffect(() => {
-    if (!active) return
+    if (!active) {
+      setN(0)
+      return
+    }
     setN(0)
     let i = 0
     const id = window.setInterval(() => {
@@ -84,89 +124,162 @@ function useTypewriter(text: string, active: boolean, speed = 18) {
   return { shown: text.slice(0, n), done: n >= text.length }
 }
 
-/* ── Окно терминала в стиле macOS ───────────────────────────────── */
 function Terminal() {
-  const [lang, setLang] = useState<Lang | null>(null)
-  const { shown, done } = useTypewriter(lang?.code ?? '', !!lang)
+  const [sel, setSel] = useState<{ label: string; code: string; preview: PreviewKey } | null>(null)
+  const [showPreview, setShowPreview] = useState(false)
+  const { shown, done } = useTypewriter(sel?.code ?? '', !!sel)
+
+  // Через 2с после окончания печати «открываем» браузер.
+  useEffect(() => {
+    if (!sel || !done) return
+    setShowPreview(false)
+    const id = window.setTimeout(() => setShowPreview(true), 2000)
+    return () => window.clearTimeout(id)
+  }, [sel, done])
+
+  const pick = (label: string, code: string, preview: PreviewKey) => {
+    setShowPreview(false)
+    setSel({ label, code, preview })
+  }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.92, y: 24 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ duration: 0.7, ease: [0.22, 0.61, 0.36, 1] }}
-      className="w-full max-w-3xl rounded-xl overflow-hidden shadow-2xl"
-      style={{ background: C.panel, border: `1px solid ${C.border}`, boxShadow: '0 40px 120px -30px rgba(74,222,128,0.25)' }}
-    >
-      {/* Заголовок окна */}
-      <div className="flex items-center gap-2 px-4 h-10 border-b" style={{ borderColor: C.border, background: 'rgba(255,255,255,0.02)' }}>
-        <span className="w-3 h-3 rounded-full" style={{ background: '#ff5f56' }} />
-        <span className="w-3 h-3 rounded-full" style={{ background: '#ffbd2e' }} />
-        <span className="w-3 h-3 rounded-full" style={{ background: '#27c93f' }} />
-        <span className="flex-1 text-center text-xs tracking-wider" style={{ color: C.greenDim }}>
-          novikov@studio — ~/project
-        </span>
-      </div>
+    <div className="w-full max-w-5xl grid lg:grid-cols-2 gap-6 items-start">
+      {/* Терминал */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.94, y: 24 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.7, ease: [0.22, 0.61, 0.36, 1] }}
+        className="rounded-xl overflow-hidden"
+        style={{ background: C.panel, border: `1px solid ${C.border}`, boxShadow: '0 40px 120px -30px rgba(74,222,128,0.25)' }}
+      >
+        <div className="flex items-center gap-2 px-4 h-10 border-b" style={{ borderColor: C.border }}>
+          <span className="w-3 h-3 rounded-full" style={{ background: '#ff5f56' }} />
+          <span className="w-3 h-3 rounded-full" style={{ background: '#ffbd2e' }} />
+          <span className="w-3 h-3 rounded-full" style={{ background: '#27c93f' }} />
+          <span className="flex-1 text-center text-xs font-devmono" style={{ color: C.greenDim }}>novikov@studio — ~/project</span>
+        </div>
 
-      {/* Тело терминала */}
-      <div className="p-5 sm:p-7 font-mono text-sm sm:text-[15px] leading-relaxed min-h-[300px]" style={{ color: C.green }}>
-        <p style={{ color: C.greenDim }}>
-          <span style={{ color: C.accent }}>➜</span> ~/project <span style={{ color: C.greenBright }}>novikov init</span>
-        </p>
+        <div className="p-5 sm:p-6 font-devmono text-sm leading-relaxed min-h-[320px]" style={{ color: C.green }}>
+          <p style={{ color: C.greenDim }}>
+            <span style={{ color: C.accent }}>➜</span> ~/project <span style={{ color: C.greenBright }}>novikov init</span>
+          </p>
 
-        {!lang ? (
-          <div className="mt-5">
-            <p className="mb-4" style={{ color: C.greenBright }}>
-              # Выберите язык программирования:
-            </p>
-            <div className="flex flex-wrap gap-3">
-              {LANGS.map((l) => (
-                <button
-                  key={l.id}
-                  onClick={() => setLang(l)}
-                  className="rounded-md px-4 py-2 text-sm transition-colors"
-                  style={{ border: `1px solid ${C.greenDim}`, color: C.green }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(74,222,128,0.1)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-                >
-                  {l.label}
-                </button>
-              ))}
+          {!sel ? (
+            <div className="mt-5">
+              <p className="mb-4" style={{ color: C.greenBright }}># Выберите язык программирования:</p>
+              <div className="flex flex-wrap gap-2.5">
+                {LANGS.map((l) => (
+                  <button
+                    key={l.id}
+                    onClick={() => pick(l.label, l.code, 'hello')}
+                    className="rounded-md px-3.5 py-2 text-sm transition-colors hover:bg-[rgba(74,222,128,0.1)]"
+                    style={{ border: `1px solid ${C.greenDim}`, color: C.green }}
+                  >
+                    {l.label}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-4 animate-caret">▋</p>
             </div>
-            <p className="mt-4 animate-caret" style={{ color: C.green }}>
-              ▋
-            </p>
-          </div>
+          ) : (
+            <div className="mt-4">
+              <p className="mb-3" style={{ color: C.greenDim }}>
+                <span style={{ color: C.accent }}>➜</span> пишу код…
+              </p>
+              <pre className="whitespace-pre-wrap break-words">
+                {shown}
+                {!done && <span className="animate-caret">▋</span>}
+              </pre>
+
+              {done && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-4">
+                  <p style={{ color: C.greenBright }}>
+                    {showPreview ? '✓ Открыл результат в браузере →' : '› запускаю dev-сервер…'}
+                  </p>
+                  {showPreview && (
+                    <>
+                      <p className="mt-4 mb-2" style={{ color: C.greenBright }}># Что создадим дальше?</p>
+                      <div className="flex flex-wrap gap-2.5">
+                        {TEMPLATES.map((t) => (
+                          <button
+                            key={t.id}
+                            onClick={() => pick(t.label, t.code, t.preview)}
+                            className="rounded-md px-3.5 py-2 text-sm transition-colors hover:bg-[rgba(74,222,128,0.1)]"
+                            style={{ border: `1px solid ${C.greenDim}`, color: C.green }}
+                          >
+                            {t.label}
+                          </button>
+                        ))}
+                        <button
+                          onClick={() => setSel(null)}
+                          className="rounded-md px-3.5 py-2 text-sm transition-colors hover:bg-[rgba(239,74,35,0.12)]"
+                          style={{ border: `1px solid ${C.accent}`, color: C.accent }}
+                        >
+                          ↺ другой язык
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </motion.div>
+              )}
+            </div>
+          )}
+        </div>
+      </motion.div>
+
+      {/* Браузер с результатом */}
+      <div className="min-h-[300px] flex items-center justify-center">
+        {sel && showPreview ? (
+          <BrowserWindow key={sel.preview + sel.label} pk={sel.preview} />
         ) : (
-          <div className="mt-4">
-            <p className="mb-3" style={{ color: C.greenDim }}>
-              <span style={{ color: C.accent }}>➜</span> создаю стартовую страницу на{' '}
-              <span style={{ color: C.greenBright }}>{lang.label}</span>…
-            </p>
-            <pre className="whitespace-pre-wrap break-words">
-              {shown}
-              {!done && <span className="animate-caret">▋</span>}
-            </pre>
-            {done && (
-              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }} className="mt-4" style={{ color: C.greenBright }}>
-                ✓ Готово. Пролистайте ниже, чтобы увидеть этапы разработки ↓
-              </motion.p>
-            )}
-            <button
-              onClick={() => setLang(null)}
-              className="mt-4 text-xs underline"
-              style={{ color: C.greenDim }}
-            >
-              ← выбрать другой язык
-            </button>
+          <div className="font-devmono text-xs text-center px-6" style={{ color: C.greenDim }}>
+            {sel ? '// результат появится здесь…' : '// здесь откроется превью в браузере'}
           </div>
         )}
       </div>
-    </motion.div>
+    </div>
   )
 }
 
-/* ── Бегущая строка команд/терминов ─────────────────────────────── */
-const TERMS = ['git commit -m "feat"', 'npm run build', '<NOVIKOV/>', 'useState()', 'async / await', 'deploy →', 'console.log()', 'const', 'flexbox', 'API', 'CI/CD', 'refactor']
+/* ══════════════════════════════════════════════════════════════════
+   ЛЕВИТИРУЮЩИЕ DEV-ЭЛЕМЕНТЫ ПО БОКАМ
+   ══════════════════════════════════════════════════════════════════ */
+const GLYPHS = [
+  { t: '</>', x: '5%', y: '18%', s: 44, d: 0 },
+  { t: '{ }', x: '92%', y: '22%', s: 40, d: 0.6 },
+  { t: '( )', x: '8%', y: '70%', s: 34, d: 1.2 },
+  { t: ';', x: '94%', y: '66%', s: 48, d: 0.3 },
+  { t: '#', x: '3%', y: '45%', s: 30, d: 0.9 },
+  { t: 'git', x: '90%', y: '46%', s: 26, d: 1.5 },
+]
+function FloatingGlyphs() {
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden hidden md:block">
+      {GLYPHS.map((g, i) => (
+        <span
+          key={i}
+          className="absolute font-devmono font-bold animate-float-y"
+          style={{
+            left: g.x,
+            top: g.y,
+            fontSize: g.s,
+            color: C.greenDim,
+            opacity: 0.35,
+            textShadow: '0 0 18px rgba(74,222,128,0.4)',
+            animationDelay: `${g.d}s`,
+          }}
+        >
+          {g.t}
+        </span>
+      ))}
+    </div>
+  )
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   БЕГУЩАЯ СТРОКА
+   ══════════════════════════════════════════════════════════════════ */
+const TERMS = ['git commit -m "feat"', 'npm run build', '<NOVIKOV/>', 'useState()', 'async / await', 'deploy →', 'console.log()', 'const', 'API', 'CI/CD']
 function CodeMarquee() {
   const row = [...TERMS, ...TERMS]
   return (
@@ -175,7 +288,7 @@ function CodeMarquee() {
         {[0, 1].map((blk) => (
           <div key={blk} className="flex shrink-0" aria-hidden={blk === 1}>
             {row.map((t, i) => (
-              <span key={i} className="font-mono text-base sm:text-xl px-6 whitespace-nowrap" style={{ color: i % 3 === 0 ? C.accent : C.greenDim }}>
+              <span key={i} className="font-devmono text-base sm:text-lg px-6 whitespace-nowrap" style={{ color: i % 3 === 0 ? C.accent : C.greenDim }}>
                 {t}
                 <span style={{ color: C.green }} className="px-3">/</span>
               </span>
@@ -187,7 +300,9 @@ function CodeMarquee() {
   )
 }
 
-/* ── Этапы разработки (sticky-стек) ─────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════
+   ЭТАПЫ (sticky-стек)
+   ══════════════════════════════════════════════════════════════════ */
 const STAGES = [
   { n: '01', title: 'Бриф и идея', text: 'Разбираем задачу, цели и референсы. Фиксируем объём и результат.' },
   { n: '02', title: 'Дизайн и прототип', text: 'UI/UX, макеты и интерактивный прототип в фирменном стиле.' },
@@ -196,7 +311,6 @@ const STAGES = [
   { n: '05', title: 'Тесты и оптимизация', text: 'Скорость, доступность и стабильность на всех устройствах.' },
   { n: '06', title: 'Деплой', text: 'Запуск, CI/CD и мониторинг. Проект живёт и обновляется.' },
 ]
-
 function StageCard({ i, total, stage }: { i: number; total: number; stage: (typeof STAGES)[number] }) {
   const ref = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'start start'] })
@@ -208,15 +322,15 @@ function StageCard({ i, total, stage }: { i: number; total: number; stage: (type
         className="w-full max-w-4xl rounded-[32px] p-8 md:p-12 min-h-[62vh] flex flex-col"
       >
         <div className="flex items-center justify-between mb-8">
-          <span className="font-mono font-bold leading-none" style={{ fontSize: 'clamp(3rem,9vw,110px)', color: C.green }}>
+          <span className="font-pixel font-extrabold leading-none" style={{ fontSize: 'clamp(3rem,9vw,120px)', color: C.green }}>
             {stage.n}
           </span>
-          <span className="font-mono text-xs uppercase tracking-widest px-3 py-1.5 rounded-full" style={{ border: `1px solid ${C.greenDim}`, color: C.greenDim }}>
+          <span className="font-devmono text-xs uppercase tracking-widest px-3 py-1.5 rounded-full" style={{ border: `1px solid ${C.greenDim}`, color: C.greenDim }}>
             stage {stage.n}
           </span>
         </div>
         <div className="flex-1 flex flex-col justify-center">
-          <h3 className="font-bold uppercase leading-[0.95] tracking-tight mb-4" style={{ fontSize: 'clamp(2rem,5vw,4rem)', color: C.cream }}>
+          <h3 className="font-pixel font-bold uppercase leading-[0.95] tracking-tight mb-4" style={{ fontSize: 'clamp(2rem,5vw,4rem)', color: C.cream }}>
             {stage.title}
           </h3>
           <p className="font-light max-w-xl" style={{ fontSize: 'clamp(0.95rem,1.6vw,1.3rem)', color: 'rgba(236,231,219,0.75)' }}>
@@ -228,8 +342,72 @@ function StageCard({ i, total, stage }: { i: number; total: number; stage: (type
   )
 }
 
-/* ── Экран ──────────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════
+   КРУГОВАЯ СЕКЦИЯ (колесо технологий, pinned)
+   ══════════════════════════════════════════════════════════════════ */
+const TECH = ['React', 'Three.js', 'Rapier', 'WebGL', 'TypeScript', 'Vite', 'Node.js', 'GLSL', 'Framer', 'Tailwind']
+const RADIUS = 190
+const TAU = Math.PI * 2
+
+/** Позиционируется по окружности через translate — текст всегда вертикальный. */
+function CircleItem({ label, base, angle, active }: { label: string; base: number; angle: MotionValue<number>; active: boolean }) {
+  const x = useTransform(angle, (a) => Math.sin(base + a) * RADIUS)
+  const y = useTransform(angle, (a) => -Math.cos(base + a) * RADIUS)
+  return (
+    <div className="absolute inset-0 flex items-center justify-center">
+      <motion.span
+        style={{ x, y, color: active ? C.accent : C.greenDim, opacity: active ? 1 : 0.55, fontSize: active ? 26 : 19 }}
+        className="font-pixel font-bold whitespace-nowrap transition-colors duration-300"
+      >
+        {label}
+      </motion.span>
+    </div>
+  )
+}
+
+function CircularSection() {
+  const ref = useRef<HTMLDivElement>(null)
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] })
+  const angle = useTransform(scrollYProgress, [0, 1], [0, TAU])
+  const [active, setActive] = useState(0)
+  useMotionValueEvent(scrollYProgress, 'change', (v) => {
+    const n = TECH.length
+    setActive(((Math.round(-v * n) % n) + n) % n)
+  })
+  return (
+    <section ref={ref} className="relative" style={{ height: '320vh' }}>
+      <div className="sticky top-0 h-screen flex flex-col items-center justify-center overflow-hidden">
+        <span className="font-devmono text-xs uppercase tracking-[0.3em] mb-6" style={{ color: C.accent }}>
+          Наш стек
+        </span>
+        <div className="relative" style={{ width: RADIUS * 2 + 130, height: RADIUS * 2 + 130 }}>
+          <div className="absolute rounded-full" style={{ inset: 5, border: `1px dashed ${C.border}` }} />
+          <div className="absolute rounded-full" style={{ inset: 48, border: `1px solid rgba(74,222,128,0.08)` }} />
+          {TECH.map((t, i) => (
+            <CircleItem key={t} label={t} base={(i / TECH.length) * TAU} angle={angle} active={i === active} />
+          ))}
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+            <span className="font-pixel font-extrabold uppercase" style={{ fontSize: 'clamp(1.8rem,4vw,3rem)', color: C.cream }}>
+              {TECH[active]}
+            </span>
+            <span className="font-devmono text-[11px] mt-2" style={{ color: C.greenDim }}>
+              {String(active + 1).padStart(2, '0')} / {TECH.length}
+            </span>
+          </div>
+        </div>
+        <span className="font-devmono text-xs mt-6 animate-bob-down" style={{ color: C.greenDim }}>
+          крутите ↓
+        </span>
+      </div>
+    </section>
+  )
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   ЭКРАН
+   ══════════════════════════════════════════════════════════════════ */
 export default function DevelopmentScreen({ onClose }: { onClose: () => void }) {
+  useDevFonts()
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
     window.addEventListener('keydown', onKey)
@@ -237,11 +415,12 @@ export default function DevelopmentScreen({ onClose }: { onClose: () => void }) 
   }, [onClose])
 
   return (
-    <main className="animate-screen-in" style={{ background: C.bg, color: C.green }}>
-      {/* Кнопка назад (фиксированная, всегда доступна) */}
+    <main className="animate-screen-in relative" style={{ background: C.bg, color: C.green }}>
+      <FloatingGlyphs />
+
       <button
         onClick={onClose}
-        className="fixed top-5 left-5 z-50 flex items-center gap-2 rounded-full px-4 py-2 font-mono text-sm backdrop-blur transition-colors"
+        className="fixed top-5 left-5 z-50 flex items-center gap-2 rounded-full px-4 py-2 font-devmono text-sm backdrop-blur transition-colors"
         style={{ border: `1px solid ${C.greenDim}`, color: C.green, background: 'rgba(4,7,10,0.6)' }}
       >
         ← Назад
@@ -249,24 +428,17 @@ export default function DevelopmentScreen({ onClose }: { onClose: () => void }) 
 
       {/* 1. Терминал */}
       <section className="min-h-screen flex flex-col items-center justify-center px-5 py-24 relative">
-        <FadeIn as="span" delay={0} y={16} className="font-mono text-xs uppercase tracking-[0.3em] mb-4" style={{ color: C.greenDim }}>
+        <FadeIn as="span" delay={0} y={16} className="font-devmono text-xs uppercase tracking-[0.3em] mb-4" style={{ color: C.greenDim }}>
           Услуга · Разработка
         </FadeIn>
-        <FadeIn
-          as="h1"
-          delay={0.05}
-          y={30}
-          className="font-bold uppercase tracking-tight text-center leading-[0.9] mb-10"
-          style={{ fontSize: 'clamp(2.5rem,9vw,7rem)', color: C.cream }}
-        >
-          Разработка<span style={{ color: C.accent }}>.</span>
+        <FadeIn as="h1" delay={0.05} y={30} className="font-pixel font-extrabold uppercase tracking-tight text-center leading-[0.9] mb-10" style={{ fontSize: 'clamp(2.5rem,10vw,8rem)', color: C.cream }}>
+          Разработка<span style={{ color: C.accent }}>_</span>
         </FadeIn>
 
         <Terminal />
 
-        {/* Приглашающая стрелка */}
         <div className="mt-12 flex flex-col items-center gap-2 animate-bob-down" style={{ color: C.greenDim }}>
-          <span className="font-mono text-xs uppercase tracking-[0.3em]">Пролистайте вниз</span>
+          <span className="font-devmono text-xs uppercase tracking-[0.3em]">Пролистайте вниз</span>
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 5v14M5 12l7 7 7-7" />
           </svg>
@@ -275,12 +447,12 @@ export default function DevelopmentScreen({ onClose }: { onClose: () => void }) 
 
       <CodeMarquee />
 
-      {/* 2. Этапы разработки */}
-      <section className="px-5 sm:px-8 md:px-10 pt-24 pb-16">
-        <FadeIn as="span" delay={0} y={16} className="block text-center font-mono text-xs uppercase tracking-[0.3em] mb-4" style={{ color: C.accent }}>
+      {/* 2. Этапы */}
+      <section className="px-5 sm:px-8 md:px-10 pt-24 pb-16 relative">
+        <FadeIn as="span" delay={0} y={16} className="block text-center font-devmono text-xs uppercase tracking-[0.3em] mb-4" style={{ color: C.accent }}>
           Процесс
         </FadeIn>
-        <FadeIn as="h2" delay={0.05} y={30} className="font-bold uppercase tracking-tight text-center mb-10" style={{ fontSize: 'clamp(2.5rem,10vw,7rem)', color: C.cream }}>
+        <FadeIn as="h2" delay={0.05} y={30} className="font-pixel font-extrabold uppercase tracking-tight text-center mb-10" style={{ fontSize: 'clamp(2.5rem,10vw,7rem)', color: C.cream }}>
           Этапы
         </FadeIn>
         <div className="max-w-4xl mx-auto">
@@ -290,11 +462,14 @@ export default function DevelopmentScreen({ onClose }: { onClose: () => void }) 
         </div>
       </section>
 
+      {/* 3. Круговая секция */}
+      <CircularSection />
+
       <CodeMarquee />
 
-      {/* 3. Финал + возврат */}
-      <section className="px-5 py-28 flex flex-col items-center text-center gap-8">
-        <h2 className="font-bold uppercase tracking-tight leading-[0.95]" style={{ fontSize: 'clamp(2rem,7vw,5rem)', color: C.cream }}>
+      {/* 4. Финал + возврат */}
+      <section className="px-5 py-28 flex flex-col items-center text-center gap-8 relative">
+        <h2 className="font-pixel font-extrabold uppercase tracking-tight leading-[0.95]" style={{ fontSize: 'clamp(2rem,7vw,5rem)', color: C.cream }}>
           Готовы собрать
           <br />
           ваш проект
