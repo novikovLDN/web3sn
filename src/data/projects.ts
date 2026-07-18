@@ -7,6 +7,13 @@
 /** Цветовая тема карточки. */
 export type CardTheme = 'orange' | 'cream' | 'dark'
 
+/** Пресеты цветов тем (фон / текст / акцент). */
+export const CARD_THEMES: Record<CardTheme, { bg: string; fg: string; accent: string }> = {
+  orange: { bg: '#ef4a23', fg: '#0c0b0a', accent: '#0c0b0a' },
+  cream: { bg: '#ece7db', fg: '#0c0b0a', accent: '#ef4a23' },
+  dark: { bg: '#151311', fg: '#ece7db', accent: '#ef4a23' },
+}
+
 /** Анимированная иконка для карточки-заглушки (когда нет скриншота). */
 export type IconName = 'spark' | 'cube' | 'orbit' | 'chip' | 'gyro'
 

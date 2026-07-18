@@ -2,14 +2,7 @@ import { useRef, type ReactNode } from 'react'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import FadeIn from '../components/FadeIn'
 import StaticIcon from '../components/StaticIcon'
-import { PROJECTS, type ProjectCard as CardData, type CardTheme } from '../data/projects'
-
-/* Пресеты тем оформления карточки. */
-const THEMES: Record<CardTheme, { bg: string; fg: string; accent: string }> = {
-  orange: { bg: '#ef4a23', fg: '#0c0b0a', accent: '#0c0b0a' },
-  cream: { bg: '#ece7db', fg: '#0c0b0a', accent: '#ef4a23' },
-  dark: { bg: '#151311', fg: '#ece7db', accent: '#ef4a23' },
-}
+import { PROJECTS, CARD_THEMES, type ProjectCard as CardData } from '../data/projects'
 
 const RADIUS = 'rounded-[32px] sm:rounded-[44px] md:rounded-[56px]'
 
@@ -22,7 +15,7 @@ function ProjectCard({ card, index, total }: { card: CardData; index: number; to
   const targetScale = 1 - (total - 1 - index) * 0.03
   const scale = useTransform(scrollYProgress, [0, 1], [1, targetScale])
 
-  const theme = THEMES[card.theme]
+  const theme = CARD_THEMES[card.theme]
 
   const text: ReactNode = (
     <div className="flex-1">

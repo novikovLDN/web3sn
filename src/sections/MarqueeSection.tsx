@@ -1,15 +1,8 @@
 import { useEffect, useRef } from 'react'
 import StaticIcon from '../components/StaticIcon'
-import type { IconName } from '../data/projects'
+import { CARD_THEMES, type CardTheme, type IconName } from '../data/projects'
 
-type CardTheme = 'orange' | 'cream' | 'dark'
 type TileData = { word: string; icon: IconName; theme: CardTheme }
-
-const THEMES: Record<CardTheme, { bg: string; fg: string; accent: string }> = {
-  orange: { bg: '#ef4a23', fg: '#0c0b0a', accent: '#0c0b0a' },
-  cream: { bg: '#ece7db', fg: '#0c0b0a', accent: '#ef4a23' },
-  dark: { bg: '#151311', fg: '#ece7db', accent: '#ef4a23' },
-}
 
 // Уникальные плитки-заглушки (пока нет реальных превью).
 const TILES: TileData[] = [
@@ -32,7 +25,7 @@ const ROW_TWO = TILES.slice(6)
 const triple = <T,>(a: T[]) => [...a, ...a, ...a]
 
 function Tile({ tile }: { tile: TileData }) {
-  const t = THEMES[tile.theme]
+  const t = CARD_THEMES[tile.theme]
   return (
     <div
       className="rounded-2xl shrink-0 p-6 flex flex-col justify-between select-none"

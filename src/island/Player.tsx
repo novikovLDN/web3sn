@@ -21,7 +21,6 @@ export default function Player({
   keys,
   yaw,
   pitch,
-  controlCam = true,
   onSplash,
   onLand,
   onStep,
@@ -29,7 +28,6 @@ export default function Player({
   keys: Keys
   yaw: MutableRefObject<number>
   pitch: MutableRefObject<number>
-  controlCam?: boolean
   onSplash?: (x: number, z: number, power: number) => void
   onLand?: (x: number, y: number, z: number, power: number) => void
   onStep?: (x: number, y: number, z: number) => void
@@ -54,7 +52,6 @@ export default function Player({
   const walkPhase = useRef(0)
   const land = useRef(0)
   const wasInWater = useRef(false)
-  const stepPhase = useRef(0)
   const camPos = useRef(new THREE.Vector3(0, 8, 14))
   const tmp = useRef(new THREE.Vector3())
 
@@ -89,19 +86,17 @@ export default function Player({
 
     // ── Камера (экспоненциальное сглаживание, orbit вокруг игрока) ──
     const p = world.player
-    if (controlCam) {
-      const cp = Math.cos(pitch.current)
-      const dist = TUNE.camDist
-      tmp.current.set(
-        p.x - sin * dist * cp,
-        p.y + TUNE.camHeight + Math.sin(pitch.current) * dist,
-        p.z - cos * dist * cp
-      )
-      const camA = 1 - Math.exp(-TUNE.camLerp * dt)
-      camPos.current.lerp(tmp.current, camA)
-      camera.position.copy(camPos.current)
-      camera.lookAt(p.x, p.y + 1.1, p.z)
-    }
+    const cp = Math.cos(pitch.current)
+    const dist = TUNE.camDist
+    tmp.current.set(
+      p.x - sin * dist * cp,
+      p.y + TUNE.camHeight + Math.sin(pitch.current) * dist,
+      p.z - cos * dist * cp
+    )
+    const camA = 1 - Math.exp(-TUNE.camLerp * dt)
+    camPos.current.lerp(tmp.current, camA)
+    camera.position.copy(camPos.current)
+    camera.lookAt(p.x, p.y + 1.1, p.z)
 
     if (!world.active) return
 
@@ -210,8 +205,7 @@ export default function Player({
     if (nowG && hSpeed > 0.5) {
       const prev = walkPhase.current
       walkPhase.current += dt * (2.4 + gait * 6)
-      // шаги (для пыли) — на нижней точке цикла
-      stepPhase.current += dt * (2.4 + gait * 6)
+      // шаг (пыль) — при переходе фазы шага
       if (Math.floor(prev / Math.PI) !== Math.floor(walkPhase.current / Math.PI)) {
         onStep?.(nx, ny - 1, nz)
       }

@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { useEffect, useRef, useState } from 'react'
+import { Canvas } from '@react-three/fiber'
 import { Physics } from '@react-three/rapier'
 import { Sky } from '@react-three/drei'
 import { EffectComposer, Bloom, Vignette, SMAA } from '@react-three/postprocessing'
@@ -17,17 +17,6 @@ import { PAL, SUN_POS, SEA_LEVEL, TUNE } from './config'
 import { QUALITY } from './quality'
 
 type Phase = 'menu' | 'playing' | 'paused'
-
-/** Отладочный облёт острова сверху (URL ?over) — для проверки сцены. */
-function OverCam() {
-  const { camera } = useThree()
-  useFrame((state) => {
-    const t = state.clock.elapsedTime * 0.1
-    camera.position.set(Math.sin(t) * 95, 70, Math.cos(t) * 95)
-    camera.lookAt(0, 0, 0)
-  })
-  return null
-}
 
 function useInput() {
   const keys = useRef<Record<string, boolean>>({})
@@ -70,12 +59,6 @@ export default function Game({ onExit }: { onExit?: () => void }) {
   const canvasEl = useRef<HTMLCanvasElement | null>(null)
   const rootRef = useRef<HTMLDivElement>(null)
 
-  const params = useMemo(
-    () => (typeof location !== 'undefined' ? new URLSearchParams(location.search) : new URLSearchParams()),
-    []
-  )
-  const over = params.has('over')
-  const noOcean = params.has('noocean')
   const [phase, setPhase] = useState<Phase>('menu')
   const phaseRef = useRef<Phase>('menu')
   phaseRef.current = phase
@@ -172,7 +155,7 @@ export default function Game({ onExit }: { onExit?: () => void }) {
     }
   }, [])
 
-  const started = useMemo(() => phase === 'playing', [phase])
+  const started = phase === 'playing'
 
   // Пауза рендера, когда canvas вне экрана — иначе WebGL молотит впустую (тормоза).
   const [onScreen, setOnScreen] = useState(true)
@@ -221,15 +204,13 @@ export default function Game({ onExit }: { onExit?: () => void }) {
             keys={keys}
             yaw={yaw}
             pitch={pitch}
-            controlCam={!over}
             onSplash={(x, z, p) => particles.current?.burst(x, SEA_LEVEL + 0.1, z, PAL.waterFoam, p)}
             onLand={(x, y, z, p) => particles.current?.burst(x, y, z, '#cbb98a', p)}
             onStep={(x, y, z) => particles.current?.burst(x, y, z, '#cbb98a', 0.25)}
           />
         </Physics>
 
-        {over && <OverCam />}
-        {!noOcean && <Ocean />}
+        <Ocean />
         <Vegetation />
         <Structures />
         <Collectibles />

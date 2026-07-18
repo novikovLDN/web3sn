@@ -1,26 +1,8 @@
 import { useEffect, useRef } from 'react'
+import { bgLuminance } from '../lib/color'
 
 const INK = '#0c0b0a'
 const ACCENT = '#ef4a23'
-
-/** Яркость фона под элементом (0..255) — чтобы подобрать контрастный цвет курсора. */
-function bgLuminance(el: Element | null): number {
-  let node: Element | null = el
-  let hops = 0
-  while (node && hops < 12) {
-    const c = getComputedStyle(node).backgroundColor
-    if (c && c !== 'transparent' && !c.startsWith('rgba(0, 0, 0, 0')) {
-      const m = c.match(/rgba?\(([^)]+)\)/)
-      if (m) {
-        const [r, g, b] = m[1].split(',').map((n) => parseFloat(n))
-        return 0.299 * r + 0.587 * g + 0.114 * b
-      }
-    }
-    node = node.parentElement
-    hops++
-  }
-  return 0
-}
 
 /**
  * Кастомный курсор: плавно следующий кружок, цвет которого подстраивается под

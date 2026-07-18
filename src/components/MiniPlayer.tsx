@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { bgLuminance } from '../lib/color'
 
 // Авто-обнаружение всех треков из папки src/tracks (просто кидайте файлы туда).
 const modules = import.meta.glob('../tracks/*.{mp3,ogg,wav,m4a,flac}', {
@@ -11,25 +12,6 @@ const TRACKS: string[] = Object.entries(modules)
   .map(([, url]) => url as string)
 
 const BARS = [0, 0.18, 0.36, 0.12, 0.28]
-
-/** Яркость фона под элементом (0..255). */
-function bgLuminance(el: Element | null): number {
-  let node: Element | null = el
-  let hops = 0
-  while (node && hops < 12) {
-    const c = getComputedStyle(node).backgroundColor
-    if (c && c !== 'transparent' && !c.startsWith('rgba(0, 0, 0, 0')) {
-      const m = c.match(/rgba?\(([^)]+)\)/)
-      if (m) {
-        const [r, g, b] = m[1].split(',').map((n) => parseFloat(n))
-        return 0.299 * r + 0.587 * g + 0.114 * b
-      }
-    }
-    node = node.parentElement
-    hops++
-  }
-  return 0
-}
 
 /**
  * Мини-плеер справа вверху: автозапуск после загрузки, переключение треков
