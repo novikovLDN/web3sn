@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import LoadingScreen from './components/LoadingScreen'
 import CustomCursor from './components/CustomCursor'
 import MiniPlayer from './components/MiniPlayer'
 import ScrollTop from './components/ScrollTop'
 import useSmoothScroll from './hooks/useSmoothScroll'
+import { jumpToTarget } from './lib/scroll'
 import HeroSection from './sections/HeroSection'
 import MarqueeSection from './sections/MarqueeSection'
 import AboutSection from './sections/AboutSection'
@@ -12,10 +13,24 @@ import ServicesSection from './sections/ServicesSection'
 import ProjectsSection from './sections/ProjectsSection'
 import StatsSection from './sections/StatsSection'
 import ContactSection from './sections/ContactSection'
+import DevelopmentScreen from './screens/DevelopmentScreen'
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(true)
+  const [screen, setScreen] = useState<string | null>(null)
+  const returnTo = useRef<string>('#price')
   useSmoothScroll()
+
+  const openScreen = (id: string) => {
+    returnTo.current = '#price'
+    setScreen(id)
+    requestAnimationFrame(() => jumpToTarget(0))
+  }
+  const closeScreen = () => {
+    setScreen(null)
+    // вернуть к блоку услуг после восстановления секций
+    requestAnimationFrame(() => requestAnimationFrame(() => jumpToTarget(returnTo.current)))
+  }
 
   return (
     <>
@@ -26,17 +41,23 @@ export default function App() {
       </AnimatePresence>
 
       <MiniPlayer start={!isLoading} />
-      <ScrollTop />
 
-      <main className="bg-[#0c0b0a]" style={{ overflowX: 'clip' }}>
-        <HeroSection />
-        <MarqueeSection />
-        <AboutSection />
-        <ServicesSection />
-        <ProjectsSection />
-        <StatsSection />
-        <ContactSection />
-      </main>
+      {screen === 'development' ? (
+        <DevelopmentScreen onClose={closeScreen} />
+      ) : (
+        <>
+          <ScrollTop />
+          <main className="bg-[#0c0b0a]" style={{ overflowX: 'clip' }}>
+            <HeroSection />
+            <MarqueeSection />
+            <AboutSection />
+            <ServicesSection onOpenScreen={openScreen} />
+            <ProjectsSection />
+            <StatsSection />
+            <ContactSection />
+          </main>
+        </>
+      )}
     </>
   )
 }
