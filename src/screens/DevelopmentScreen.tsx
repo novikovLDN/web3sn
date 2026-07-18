@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { motion, useScroll, useTransform, useMotionValueEvent, type MotionValue } from 'framer-motion'
+import { AnimatePresence, motion, useScroll, useTransform, useMotionValueEvent, type MotionValue } from 'framer-motion'
 import FadeIn from '../components/FadeIn'
 
 /* ── Палитра терминального экрана ───────────────────────────────── */
@@ -79,10 +79,7 @@ function Preview({ k }: { k: PreviewKey }) {
 function BrowserWindow({ pk }: { pk: PreviewKey }) {
   const navBtn = 'w-6 h-6 flex items-center justify-center rounded-md'
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.92, y: 22 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: [0.22, 0.61, 0.36, 1] }}
+    <div
       className="relative w-full rounded-2xl overflow-hidden"
       style={{ border: `1px solid rgba(255,255,255,0.08)`, boxShadow: '0 40px 100px -35px rgba(0,0,0,0.5)' }}
     >
@@ -129,7 +126,7 @@ function BrowserWindow({ pk }: { pk: PreviewKey }) {
       <div className="flex items-center justify-center bg-white px-6 py-10" style={{ minHeight: 240 }}>
         <Preview k={pk} />
       </div>
-    </motion.div>
+    </div>
   )
 }
 
@@ -171,13 +168,14 @@ function Terminal() {
   }
 
   return (
-    <div className="w-full max-w-5xl grid lg:grid-cols-2 gap-6 items-start">
-      {/* Терминал */}
+    <div className="w-full max-w-5xl flex flex-col lg:flex-row justify-center items-start gap-6">
+      {/* Терминал (плавно уезжает влево, когда появляется браузер) */}
       <motion.div
+        layout
         initial={{ opacity: 0, scale: 0.94, y: 24 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.7, ease: [0.22, 0.61, 0.36, 1] }}
-        className="rounded-xl overflow-hidden"
+        transition={{ opacity: { duration: 0.7 }, layout: { duration: 0.6, ease: [0.22, 0.61, 0.36, 1] } }}
+        className="w-full lg:w-[520px] lg:shrink-0 rounded-xl overflow-hidden"
         style={{ background: C.panel, border: `1px solid ${C.border}`, boxShadow: '0 30px 80px -30px rgba(0,0,0,0.55)' }}
       >
         <div className="flex items-center gap-2 px-4 h-10 border-b" style={{ borderColor: C.border }}>
@@ -255,16 +253,22 @@ function Terminal() {
         </div>
       </motion.div>
 
-      {/* Браузер с результатом */}
-      <div className="min-h-[300px] flex items-center justify-center">
-        {sel && showPreview ? (
-          <BrowserWindow key={sel.preview + sel.label} pk={sel.preview} />
-        ) : (
-          <div className="font-devmono text-xs text-center px-6" style={{ color: C.greenDim }}>
-            {sel ? '// результат появится здесь…' : '// здесь откроется превью в браузере'}
-          </div>
+      {/* Браузер с результатом — выезжает справа */}
+      <AnimatePresence mode="popLayout">
+        {sel && showPreview && (
+          <motion.div
+            key={sel.preview + sel.label}
+            layout
+            initial={{ opacity: 0, x: 70, scale: 0.96 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 70, scale: 0.96 }}
+            transition={{ duration: 0.55, ease: [0.22, 0.61, 0.36, 1] }}
+            className="w-full lg:w-[460px] lg:shrink-0"
+          >
+            <BrowserWindow pk={sel.preview} />
+          </motion.div>
         )}
-      </div>
+      </AnimatePresence>
     </div>
   )
 }
