@@ -73,34 +73,29 @@ const SERVICES: Service[] = [
   },
 ]
 
-/**
- * Строка услуги: прокрутка ненадолго «закрепляет» её по центру (sticky) и
- * заметно приближает — эффект лупы. Быстрее, чем стек «Проектов».
- */
+/** Строка услуги: при прокрутке плавно «приближается» в фокусе (эффект лупы). */
 function ServiceRow({ service, onOpenScreen }: { service: Service; onOpenScreen?: (id: string) => void }) {
   const clickable = !!(service.screen && onOpenScreen)
   const ref = useRef<HTMLDivElement>(null)
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] })
-  // плато в центре 0.35–0.65 → услуга держится крупной, пока «пришпилена»
-  const scale = useTransform(scrollYProgress, [0, 0.35, 0.65, 1], [0.82, 1.14, 1.14, 0.82])
-  const opacity = useTransform(scrollYProgress, [0, 0.32, 0.68, 1], [0.22, 1, 1, 0.22])
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start 0.9', 'end 0.1'] })
+  const scale = useTransform(scrollYProgress, [0, 0.5, 1], [0.92, 1.06, 0.92])
+  const opacity = useTransform(scrollYProgress, [0, 0.5, 1], [0.38, 1, 0.38])
 
   return (
-    <div ref={ref} className="relative" style={{ height: '62vh' }}>
-      <motion.div
-        style={{ scale, opacity, y: '-50%', transformOrigin: 'left center', willChange: 'transform' }}
-        className="sticky top-1/2"
+    <motion.div
+      ref={ref}
+      style={{ scale, opacity, transformOrigin: 'left center', borderTop: '1px solid rgba(12,12,12,0.15)', willChange: 'transform' }}
+    >
+      <div
+        role={clickable ? 'button' : undefined}
+        tabIndex={clickable ? 0 : undefined}
+        onClick={clickable ? () => onOpenScreen!(service.screen!) : undefined}
+        onKeyDown={clickable ? (e) => (e.key === 'Enter' || e.key === ' ') && onOpenScreen!(service.screen!) : undefined}
+        className={
+          'group flex items-start gap-6 sm:gap-8 md:gap-12 py-8 sm:py-10 md:py-12 transition-colors ' +
+          (clickable ? 'cursor-pointer hover:bg-black/[0.03] rounded-2xl px-2 -mx-2' : '')
+        }
       >
-        <div
-          role={clickable ? 'button' : undefined}
-          tabIndex={clickable ? 0 : undefined}
-          onClick={clickable ? () => onOpenScreen!(service.screen!) : undefined}
-          onKeyDown={clickable ? (e) => (e.key === 'Enter' || e.key === ' ') && onOpenScreen!(service.screen!) : undefined}
-          className={
-            'group flex items-start gap-6 sm:gap-8 md:gap-12 transition-colors ' +
-            (clickable ? 'cursor-pointer rounded-2xl' : '')
-          }
-        >
         <span
           className="text-[#0c0b0a] font-bold leading-none shrink-0 transition-colors group-hover:text-[color:var(--accent)]"
           style={{ fontSize: 'clamp(3rem, 10vw, 140px)' }}
@@ -124,9 +119,8 @@ function ServiceRow({ service, onOpenScreen }: { service: Service; onOpenScreen?
             {service.description}
           </p>
         </div>
-        </div>
-      </motion.div>
-    </div>
+      </div>
+    </motion.div>
   )
 }
 
@@ -134,7 +128,7 @@ export default function ServicesSection({ onOpenScreen }: { onOpenScreen?: (id: 
   return (
     <section
       id="price"
-      className="relative bg-white rounded-t-[40px] sm:rounded-t-[50px] md:rounded-t-[60px] px-5 sm:px-8 md:px-10 py-20 sm:py-24 md:py-32"
+      className="relative overflow-hidden bg-white rounded-t-[40px] sm:rounded-t-[50px] md:rounded-t-[60px] px-5 sm:px-8 md:px-10 py-20 sm:py-24 md:py-32"
     >
       {/* Боковые вертикальные бегущие строки */}
       <SideMarquee dir="up" className="left-0 w-[130px] xl:w-[180px]" />
