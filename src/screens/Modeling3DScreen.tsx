@@ -110,19 +110,19 @@ export default function Modeling3DScreen({ onClose }: { onClose: () => void }) {
         <FadeIn as="h2" delay={0} y={24} className="font-tech font-extrabold uppercase tracking-tight mb-10" style={{ fontSize: 'clamp(1.8rem,5vw,3.5rem)', color: C.cream }}>
           Что я создаю
         </FadeIn>
-        <div className="grid grid-cols-1 md:grid-cols-4 auto-rows-[180px] gap-4 max-w-6xl">
+        <div className="grid grid-cols-1 md:grid-cols-4 auto-rows-[190px] gap-4 max-w-6xl">
           {BENTO.map((b, i) => (
             <FadeIn
               key={b.t}
               delay={i * 0.06}
               y={28}
-              className={`group rounded-3xl p-6 flex flex-col justify-between transition-transform duration-300 hover:scale-[1.03] hover:-translate-y-1 cursor-default ${b.span}`}
+              className={`group rounded-3xl overflow-hidden p-5 md:p-6 flex flex-col justify-between transition-transform duration-300 hover:scale-[1.03] hover:-translate-y-1 cursor-default ${b.span}`}
               style={{ background: b.big ? C.accent : C.panel, border: `1px solid ${b.big ? 'transparent' : C.border}`, color: b.big ? '#0c0b0a' : C.cream }}
             >
-              <span className="text-4xl md:text-5xl font-tech font-extrabold" style={{ color: b.big ? '#0c0b0a' : C.clay }}>◆</span>
-              <div>
-                <h3 className="font-tech font-bold uppercase text-xl md:text-2xl mb-1">{b.t}</h3>
-                <p className="text-sm font-light" style={{ opacity: 0.75 }}>{b.d}</p>
+              <span className={`font-tech font-extrabold leading-none ${b.big ? 'text-5xl' : 'text-2xl'}`} style={{ color: b.big ? '#0c0b0a' : C.clay }}>◆</span>
+              <div className="min-w-0">
+                <h3 className={`font-tech font-bold uppercase mb-1.5 leading-tight ${b.big ? 'text-2xl md:text-3xl' : 'text-base md:text-lg'}`}>{b.t}</h3>
+                <p className={`font-light leading-snug ${b.big ? 'text-sm md:text-base' : 'text-xs sm:text-[13px]'}`} style={{ opacity: 0.75 }}>{b.d}</p>
               </div>
             </FadeIn>
           ))}
