@@ -83,7 +83,7 @@ export default function Modeling3DScreen({ onClose }: { onClose: () => void }) {
           </FadeIn>
           <FadeIn delay={0.25} y={20} className="mt-8 flex flex-wrap gap-3">
             {['Персонажи', 'Продукты', 'Окружения'].map((t) => (
-              <span key={t} className="rounded-full px-4 py-2 text-sm transition-transform duration-300 hover:scale-105 cursor-default" style={{ border: `1px solid ${C.clayDim}`, color: C.clay }}>
+              <span key={t} className="rounded-full px-4 py-2 text-sm transition-transform duration-[500ms] ease-[cubic-bezier(0.22,0.61,0.36,1)] hover:scale-110 cursor-default" style={{ border: `1px solid ${C.clayDim}`, color: C.clay }}>
                 {t}
               </span>
             ))}
@@ -116,7 +116,7 @@ export default function Modeling3DScreen({ onClose }: { onClose: () => void }) {
               key={b.t}
               delay={i * 0.06}
               y={28}
-              className={`group rounded-3xl overflow-hidden p-5 md:p-6 flex flex-col justify-between transition-transform duration-300 hover:scale-[1.03] hover:-translate-y-1 cursor-default ${b.span}`}
+              className={`group rounded-3xl overflow-hidden p-5 md:p-6 flex flex-col justify-between transition-transform duration-[600ms] ease-[cubic-bezier(0.22,0.61,0.36,1)] hover:scale-[1.04] hover:-translate-y-1.5 cursor-default ${b.span}`}
               style={{ background: b.big ? C.accent : C.panel, border: `1px solid ${b.big ? 'transparent' : C.border}`, color: b.big ? '#0c0b0a' : C.cream }}
             >
               <span className={`font-tech font-extrabold leading-none ${b.big ? 'text-5xl' : 'text-2xl'}`} style={{ color: b.big ? '#0c0b0a' : C.clay }}>◆</span>
@@ -135,11 +135,11 @@ export default function Modeling3DScreen({ onClose }: { onClose: () => void }) {
           Как я работаю
         </FadeIn>
         <div className="relative">
-          <div className="absolute left-0 right-0 top-8 h-px" style={{ background: C.border }} />
-          <div className="flex gap-6 overflow-x-auto pb-4 -mx-6 px-6 md:mx-0 md:px-0" style={{ scrollbarWidth: 'none' }}>
+          <div className="absolute left-0 right-0 top-14 h-px" style={{ background: C.border }} />
+          <div className="flex gap-6 overflow-x-auto overflow-y-visible pt-6 pb-4 -mx-6 px-6 md:mx-0 md:px-0" style={{ scrollbarWidth: 'none' }}>
             {STEPS.map((s, i) => (
               <FadeIn key={s.n} delay={i * 0.08} y={24} className="group relative shrink-0 w-[240px]">
-                <span className="relative z-10 flex items-center justify-center w-16 h-16 rounded-full font-tech font-bold text-lg transition-transform duration-300 group-hover:scale-110" style={{ background: C.panel, border: `1px solid ${C.clayDim}`, color: C.clay }}>
+                <span className="relative z-10 flex items-center justify-center w-16 h-16 rounded-full font-tech font-bold text-lg transition-transform duration-[500ms] ease-[cubic-bezier(0.22,0.61,0.36,1)] origin-center group-hover:scale-110" style={{ background: C.panel, border: `1px solid ${C.clayDim}`, color: C.clay }}>
                   {s.n}
                 </span>
                 <h3 className="font-tech font-bold uppercase text-lg mt-6 leading-tight" style={{ color: C.cream }}>{s.t}</h3>
