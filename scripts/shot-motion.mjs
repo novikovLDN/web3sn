@@ -53,37 +53,69 @@ await p.screenshot({ path: `${OUT}/motion_hero${suffix}.png` })
 
 // Scroll by anchor, not by a hardcoded viewport fraction: section order changes
 // between tasks and a stale fraction silently produces a shot of the wrong section.
-for (const [name, anchor, frac] of [['easing', '#m-easing', 1.05], ['dope', '#m-dope', 2.4]]) {
-  const found = await p.evaluate(
-    ([a, f]) => {
-      const el = document.querySelector(a)
-      if (!el) {
-        window.scrollTo(0, window.innerHeight * f)
-        return false
-      }
-      window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 40)
-      return true
-    },
-    [anchor, frac]
-  )
-  if (!found) console.warn(`warn: ${anchor} not found — fell back to fraction ${frac}`)
+// No fallback: a missing anchor means the section moved/renamed and the shot would
+// be of the wrong content, so we fail loudly instead of quietly photographing garbage —
+// same contract as the unreachable-Motion-screen check above.
+const SETTLE_TIMEOUT_MS = 8000
+
+for (const [name, anchor] of [
+  ['easing', '#m-easing'],
+  ['dope', '#m-dope'],
+]) {
+  const found = await p.evaluate((a) => {
+    const el = document.querySelector(a)
+    if (!el) return false
+    window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 40)
+    return true
+  }, anchor)
+  if (!found) {
+    console.error(
+      `FATAL: anchor "${anchor}" (section "${name}") not found — refusing to screenshot (would be misleading).`
+    )
+    await b.close()
+    process.exit(1)
+  }
+
   // Lenis keeps gliding past any fixed wait: poll until scrollY actually stops.
-  await p.evaluate(
-    () =>
-      new Promise((res) => {
-        let last = -1
-        let still = 0
-        const t = () => {
-          const y = Math.round(window.scrollY)
-          still = y === last ? still + 1 : 0
-          last = y
-          still > 8 ? res() : requestAnimationFrame(t)
-        }
-        requestAnimationFrame(t)
-      })
-  )
+  // Bounded so a stuck scroll fails the gate instead of hanging it forever
+  // (page.evaluate has no built-in timeout of its own).
+  try {
+    await p.evaluate(
+      (timeoutMs) =>
+        new Promise((resolve, reject) => {
+          const start = performance.now()
+          let last = -1
+          let still = 0
+          const t = () => {
+            if (performance.now() - start > timeoutMs) {
+              reject(new Error(`scrollY did not settle within ${timeoutMs}ms`))
+              return
+            }
+            const y = Math.round(window.scrollY)
+            still = y === last ? still + 1 : 0
+            last = y
+            still > 8 ? resolve(undefined) : requestAnimationFrame(t)
+          }
+          requestAnimationFrame(t)
+        }),
+      SETTLE_TIMEOUT_MS
+    )
+  } catch (e) {
+    console.error(`FATAL: scroll settle failed for section "${name}" (${anchor}): ${e.message}`)
+    await b.close()
+    process.exit(1)
+  }
+
   await p.waitForTimeout(1600)
-  await p.screenshot({ path: `${OUT}/motion_${name}${suffix}.png` })
+  if (name === 'easing') {
+    // The easing grid (6 cards) is taller than the 900px viewport, so a plain
+    // viewport screenshot crops the bottom row and hides half the cubic-bezier
+    // values. Element screenshots aren't viewport-bound, so capture the section
+    // itself. Other sections keep the plain viewport capture.
+    await p.locator(anchor).screenshot({ path: `${OUT}/motion_${name}${suffix}.png` })
+  } else {
+    await p.screenshot({ path: `${OUT}/motion_${name}${suffix}.png` })
+  }
 }
 
 console.log('pageerrors:', errs.length ? errs.slice(0, 3).join(' | ') : 'none')
