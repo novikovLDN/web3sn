@@ -4,6 +4,7 @@ import LoadingScreen from './components/LoadingScreen'
 import CustomCursor from './components/CustomCursor'
 import MiniPlayer from './components/MiniPlayer'
 import ScrollTop from './components/ScrollTop'
+import ScrollBot from './components/ScrollBot'
 import useSmoothScroll from './hooks/useSmoothScroll'
 import { jumpToTarget } from './lib/scroll'
 import HeroSection from './sections/HeroSection'
@@ -43,6 +44,7 @@ export default function App() {
       </AnimatePresence>
 
       <MiniPlayer start={!isLoading} />
+      <ScrollBot />
 
       {screen === 'development' ? (
         <DevelopmentScreen onClose={closeScreen} />

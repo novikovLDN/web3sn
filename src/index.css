@@ -291,6 +291,20 @@ html {
 }
 .animate-wobble { animation: wobble 6s ease-in-out infinite; }
 
+/* Робот-компаньон на скролле: качание как на подвесе */
+@keyframes bot-sway {
+  0%, 100% { transform: rotate(-10deg); }
+  50% { transform: rotate(10deg); }
+}
+.animate-bot-sway {
+  animation: bot-sway 2.6s ease-in-out infinite;
+  transform-origin: top center;
+}
+@keyframes bot-legs {
+  0%, 100% { transform: rotate(8deg); }
+  50% { transform: rotate(-8deg); }
+}
+
 /* Мигающая каретка терминала */
 @keyframes caret-blink {
   0%,
