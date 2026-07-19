@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { AnimatePresence, motion, useInView, useMotionTemplate, useMotionValue, useScroll, useTransform, type MotionValue } from 'framer-motion'
+import { AnimatePresence, motion, useInView, useMotionTemplate, useMotionValue, useScroll, useTransform, useVelocity, type MotionValue } from 'framer-motion'
 
 /* Вибрантная «кинетическая» палитра. */
 const C = {
@@ -164,24 +164,6 @@ function Timeline() {
     </div>
   )
 }
-function CompositionPreview() {
-  return (
-    <div className="relative rounded-2xl overflow-hidden flex items-center justify-center" style={{ background: C.panel, border: `1px solid ${C.border}`, minHeight: 260 }}>
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{ backgroundImage: 'linear-gradient(rgba(160,107,255,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(160,107,255,0.06) 1px,transparent 1px)', backgroundSize: '28px 28px' }}
-      />
-      <motion.div
-        animate={{ x: [-60, 60, 60, -60], scale: [1, 1.5, 0.8, 1], rotate: [0, 0, 200, 360], borderRadius: ['22%', '50%', '22%', '22%'] }}
-        transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
-        className="w-20 h-20"
-        style={{ background: `linear-gradient(135deg, ${C.accent}, ${C.violet})` }}
-      />
-      <span className="absolute top-3 left-4 text-[11px] uppercase tracking-widest font-mono" style={{ color: C.violetDim }}>comp 01 · preview</span>
-    </div>
-  )
-}
-
 /* ── Горизонтальная галерея форматов ────────────────────────────── */
 const FORMATS = [
   { t: 'Explainer', c: '#ef4a23' },
@@ -265,6 +247,94 @@ function ZoomPortal() {
   )
 }
 
+/* ── Магнитная кнопка (тянется к курсору) ───────────────────────── */
+function Magnetic({ children, className, style, onClick }: { children: React.ReactNode; className?: string; style?: React.CSSProperties; onClick?: () => void }) {
+  const ref = useRef<HTMLButtonElement>(null)
+  const x = useMotionValue(0)
+  const y = useMotionValue(0)
+  return (
+    <motion.button
+      ref={ref}
+      onClick={onClick}
+      onMouseMove={(e) => {
+        const r = ref.current!.getBoundingClientRect()
+        x.set((e.clientX - (r.left + r.width / 2)) * 0.4)
+        y.set((e.clientY - (r.top + r.height / 2)) * 0.4)
+      }}
+      onMouseLeave={() => {
+        x.set(0)
+        y.set(0)
+      }}
+      style={{ x, y, ...style }}
+      transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+      whileTap={{ scale: 0.96 }}
+      className={className}
+    >
+      {children}
+    </motion.button>
+  )
+}
+
+/* ── Рабочее пространство After Effects (мок) ───────────────────── */
+const LAYERS = [
+  { n: 'Заголовок', c: '#ef4a23' },
+  { n: 'Логотип', c: '#a06bff' },
+  { n: 'Фигуры', c: '#ff4d8d' },
+  { n: 'Камера', c: '#3fb6ff' },
+  { n: 'Null · контроллер', c: '#f5b400' },
+  { n: 'Аудио', c: '#4ade80' },
+]
+function AEWorkspace() {
+  return (
+    <div className="rounded-2xl overflow-hidden" style={{ background: C.panel, border: `1px solid ${C.border}` }}>
+      {/* верхняя панель */}
+      <div className="flex items-center gap-2 px-4 h-9 border-b text-[11px] font-mono" style={{ borderColor: C.border, color: C.violetDim }}>
+        <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#ff5f56' }} />
+        <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#ffbd2e' }} />
+        <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#27c93f' }} />
+        <span className="ml-3">composition · 1920×1080 · 24 fps</span>
+      </div>
+
+      <div className="grid md:grid-cols-[230px_1fr]">
+        {/* панель слоёв */}
+        <div className="border-b md:border-b-0 md:border-r py-2" style={{ borderColor: C.border }}>
+          <div className="px-4 py-1.5 text-[10px] uppercase tracking-widest" style={{ color: C.violetDim }}>Слои</div>
+          {LAYERS.map((l, i) => (
+            <div key={l.n} className="group flex items-center gap-2.5 px-4 py-2 cursor-default transition-colors hover:bg-white/5">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.violetDim} strokeWidth="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" /><circle cx="12" cy="12" r="3" /></svg>
+              <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: l.c }} />
+              <span className="text-sm truncate transition-colors group-hover:text-white" style={{ color: C.dim }}>{l.n}</span>
+              <span className="ml-auto w-2 h-2 rotate-45 shrink-0" style={{ background: l.c, animation: `kf-pulse 2.4s ease-in-out ${i * 0.25}s infinite` }} />
+            </div>
+          ))}
+        </div>
+
+        {/* превью композиции */}
+        <div className="relative flex items-center justify-center" style={{ minHeight: 240 }}>
+          <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(160,107,255,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(160,107,255,0.05) 1px,transparent 1px)', backgroundSize: '28px 28px' }} />
+          <motion.div
+            animate={{ x: [-70, 70, 70, -70], y: [0, -20, 20, 0], scale: [1, 1.4, 0.85, 1], rotate: [0, 90, 220, 360], borderRadius: ['24%', '50%', '24%', '24%'] }}
+            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+            className="w-20 h-20"
+            style={{ background: `linear-gradient(135deg,${C.accent},${C.violet})` }}
+          />
+          <motion.span
+            className="absolute w-14 h-14 rounded-full border-2"
+            style={{ borderColor: C.violet }}
+            animate={{ scale: [1, 2.2], opacity: [0.6, 0] }}
+            transition={{ duration: 2.4, repeat: Infinity, ease: 'easeOut' }}
+          />
+        </div>
+      </div>
+
+      {/* таймлайн снизу */}
+      <div className="border-t" style={{ borderColor: C.border }}>
+        <Timeline />
+      </div>
+    </div>
+  )
+}
+
 /* ── Данные ─────────────────────────────────────────────────────── */
 const STATS = [
   { to: 140, suf: '+', l: 'проектов' },
@@ -291,6 +361,9 @@ export default function MotionScreen({ onClose }: { onClose: () => void }) {
   const gx = useMotionValue(720)
   const gy = useMotionValue(320)
   const glow = useMotionTemplate`radial-gradient(520px circle at ${gx}px ${gy}px, rgba(160,107,255,0.22), transparent 60%)`
+  const { scrollY } = useScroll()
+  const scrollVel = useVelocity(scrollY)
+  const bandSkew = useTransform(scrollVel, [-2500, 0, 2500], [-6, 0, 6], { clamp: true })
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
     window.addEventListener('keydown', onKey)
@@ -338,10 +411,10 @@ export default function MotionScreen({ onClose }: { onClose: () => void }) {
         </div>
       </section>
 
-      {/* 2 · Полоса тегов */}
-      <div className="py-3 border-y" style={{ borderColor: C.border }}>
+      {/* 2 · Полоса тегов (наклоняется от скорости скролла) */}
+      <motion.div className="py-3 border-y" style={{ borderColor: C.border, skewX: bandSkew }}>
         <Kinetic text="AFTER EFFECTS · CINEMA 4D · SPLINE · RIVE · LOTTIE · BLENDER" dir="l" color={C.violetDim} size="clamp(0.9rem,2vw,1.4rem)" op={0.9} />
-      </div>
+      </motion.div>
 
       {/* 3 · Заявление с пословным появлением */}
       <section className="px-6 md:px-12 py-28 max-w-5xl">
@@ -391,13 +464,11 @@ export default function MotionScreen({ onClose }: { onClose: () => void }) {
         </motion.div>
       </section>
 
-      {/* 7 · Таймлайн + превью */}
+      {/* 7 · Рабочее пространство After Effects */}
       <section className="px-6 md:px-12 py-24">
-        <Reveal><h2 className="font-bold uppercase tracking-tight mb-10" style={{ fontSize: 'clamp(1.8rem,5vw,3.5rem)', color: C.cream, ...MTS }}>Покадрово</h2></Reveal>
-        <div className="grid md:grid-cols-2 gap-4 max-w-6xl">
-          <Reveal><Timeline /></Reveal>
-          <Reveal delay={0.1}><CompositionPreview /></Reveal>
-        </div>
+        <Reveal><h2 className="font-bold uppercase tracking-tight mb-3" style={{ fontSize: 'clamp(1.8rem,5vw,3.5rem)', color: C.cream, ...MTS }}>Рабочий процесс</h2></Reveal>
+        <Reveal delay={0.05}><p className="mb-10 max-w-xl font-light" style={{ color: C.dim }}>Слои, композиция и таймлайн — здесь рождается движение. Наведите на слой.</p></Reveal>
+        <Reveal delay={0.1}><div className="max-w-6xl"><AEWorkspace /></div></Reveal>
       </section>
 
       {/* 8 · Принципы */}
@@ -430,9 +501,9 @@ export default function MotionScreen({ onClose }: { onClose: () => void }) {
           <br />
           бренд двигаться
         </motion.h2>
-        <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} onClick={onClose} className="rounded-full px-10 py-4 font-medium uppercase tracking-widest" style={{ background: C.accent, color: '#0c0b0a', boxShadow: '0 10px 30px -8px rgba(239,74,35,0.55)' }}>
+        <Magnetic onClick={onClose} className="rounded-full px-10 py-4 font-medium uppercase tracking-widest" style={{ background: C.accent, color: '#0c0b0a', boxShadow: '0 10px 30px -8px rgba(239,74,35,0.55)' }}>
           ← Вернуться к услугам
-        </motion.button>
+        </Magnetic>
       </section>
     </main>
   )

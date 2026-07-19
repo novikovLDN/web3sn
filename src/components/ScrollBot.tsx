@@ -28,29 +28,18 @@ export default function ScrollBot() {
   }, [])
 
   return (
-    <div className="fixed top-0 right-2 md:right-3 z-[90] pointer-events-none h-full w-16 hidden md:block">
-      {/* рельс */}
+    <div className="fixed top-0 right-0 z-[90] pointer-events-none h-full hidden md:block">
+      {/* робот «висит» вплотную к системному скроллбару — без отдельной линии */}
       <div
-        className="absolute right-[26px] top-3 bottom-3 w-px transition-opacity duration-500"
-        style={{ background: 'linear-gradient(var(--accent), rgba(239,74,35,0.15))', opacity: active ? 0.5 : 0 }}
-      />
-      {/* робот на подвесе */}
-      <div
-        className="absolute right-1 transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.22,0.61,0.36,1)]"
+        className="absolute right-0 transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.22,0.61,0.36,1)]"
         style={{
-          top: `calc(${p} * (100vh - 96px) + 8px)`,
+          top: `calc(${p} * (100vh - 84px) + 6px)`,
           opacity: active ? 1 : 0,
-          transform: active ? 'scale(1)' : 'scale(0.6)',
+          transform: active ? 'scale(1)' : 'scale(0.55)',
         }}
       >
-        {/* верхний «крюк» на рельсе */}
-        <div className="relative flex flex-col items-center">
-          <span className="w-2.5 h-2.5 rounded-full" style={{ background: 'var(--accent)', boxShadow: '0 0 10px rgba(239,74,35,0.7)' }} />
-          <span className="w-px h-2" style={{ background: 'var(--accent)' }} />
-          {/* тело качается на подвесе */}
-          <div className="animate-bot-sway">
-            <Bot />
-          </div>
+        <div className="animate-bot-sway">
+          <Bot />
         </div>
       </div>
     </div>
