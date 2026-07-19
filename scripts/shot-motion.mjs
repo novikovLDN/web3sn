@@ -24,13 +24,31 @@ const y = await p.evaluate(() => document.querySelector('#price').getBoundingCli
 await p.evaluate((yy) => window.scrollTo(0, yy + window.innerHeight * 1.6), y)
 await p.waitForTimeout(800)
 
+// Short click timeouts so a broken selector fails fast (seconds), not a 30-45s hang.
+const CLICK_TIMEOUT = 3000
+const NAV_ASSERT_TIMEOUT = 5000
+const MOTION_MARKER = 'main[data-screen="motion"]' // stable marker: survives redesign of copy/palette/fonts
+
 const btns = p.locator('#price [role="button"]')
-await btns.nth(2).click().catch(async () => {
-  await p.locator('text=Motion-дизайн').first().click().catch(() => {})
+await btns.nth(2).click({ timeout: CLICK_TIMEOUT }).catch(async () => {
+  await p.locator('text=Motion-дизайн').first().click({ timeout: CLICK_TIMEOUT }).catch(() => {})
 })
+
+// Positive assertion: don't screenshot until we've actually landed on the Motion screen.
+const landed = await p.waitForSelector(MOTION_MARKER, { timeout: NAV_ASSERT_TIMEOUT }).catch(() => null)
+if (!landed) {
+  console.error(
+    `FATAL: navigation to Motion screen failed — "${MOTION_MARKER}" not found after clicking ` +
+      `#price [role="button"] (index 2) and the "text=Motion-дизайн" fallback. ` +
+      `Refusing to screenshot (would be misleading).`
+  )
+  await b.close()
+  process.exit(1)
+}
+
 await p.waitForTimeout(3500)
 
-const suffix = REDUCED ? '_reduced' : NOWEBGL ? '_nowebgl' : ''
+const suffix = `${REDUCED ? '_reduced' : ''}${NOWEBGL ? '_nowebgl' : ''}`
 await p.screenshot({ path: `${OUT}/motion_hero${suffix}.png` })
 
 for (const [name, frac] of [['easing', 1.05], ['dope', 2.4]]) {
@@ -41,3 +59,4 @@ for (const [name, frac] of [['easing', 1.05], ['dope', 2.4]]) {
 
 console.log('pageerrors:', errs.length ? errs.slice(0, 3).join(' | ') : 'none')
 await b.close()
+if (errs.length > 0) process.exit(1)

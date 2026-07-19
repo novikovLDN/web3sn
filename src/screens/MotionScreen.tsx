@@ -371,7 +371,7 @@ export default function MotionScreen({ onClose }: { onClose: () => void }) {
   }, [onClose])
 
   return (
-    <main className="animate-screen-in relative font-onest" style={{ background: C.bg, color: C.cream }}>
+    <main data-screen="motion" className="animate-screen-in relative font-onest" style={{ background: C.bg, color: C.cream }}>
       <div className="fixed inset-0 pointer-events-none" style={{ background: 'radial-gradient(55% 45% at 50% 15%, rgba(160,107,255,0.14), transparent 70%), radial-gradient(45% 40% at 85% 85%, rgba(239,74,35,0.10), transparent 70%)' }} />
 
       <button onClick={onClose} className="fixed top-5 left-5 z-50 flex items-center gap-2 rounded-full px-4 py-2 text-sm backdrop-blur transition-transform hover:scale-105" style={{ border: `1px solid ${C.violetDim}`, color: C.violet, background: 'rgba(10,8,18,0.6)' }}>
