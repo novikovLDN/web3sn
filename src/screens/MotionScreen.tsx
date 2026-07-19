@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { AnimatePresence, motion, useInView, useScroll, useTransform } from 'framer-motion'
+import { AnimatePresence, motion, useInView, useMotionTemplate, useMotionValue, useScroll, useTransform, type MotionValue } from 'framer-motion'
 
 /* Вибрантная «кинетическая» палитра. */
 const C = {
@@ -236,6 +236,35 @@ function BigScrollWord() {
   )
 }
 
+/* ── Портал «влёта в пространство» ──────────────────────────────── */
+const RING_COLORS = ['#ef4a23', '#a06bff', '#ff4d8d', '#3fb6ff', '#f5b400', '#4ade80']
+function PortalRing({ p, i }: { p: MotionValue<number>; i: number }) {
+  const scale = useTransform(p, [0, 1], [0.12 + i * 0.06, 2.6 + i * 1.5])
+  const opacity = useTransform(p, [0, 0.15, 0.8, 1], [0, 0.6, 0.6, 0])
+  return <motion.div style={{ scale, opacity, borderColor: RING_COLORS[i % RING_COLORS.length] }} className="absolute w-[300px] h-[300px] rounded-full border-2" />
+}
+function ZoomPortal() {
+  const ref = useRef<HTMLDivElement>(null)
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] })
+  const textOpacity = useTransform(scrollYProgress, [0.25, 0.5, 0.82], [0, 1, 0])
+  const textScale = useTransform(scrollYProgress, [0.25, 0.6], [0.7, 1.05])
+  return (
+    <section ref={ref} className="relative" style={{ height: '260vh' }}>
+      <div className="sticky top-0 h-screen flex items-center justify-center overflow-hidden">
+        {[0, 1, 2, 3, 4, 5].map((i) => (
+          <PortalRing key={i} p={scrollYProgress} i={i} />
+        ))}
+        <motion.div style={{ opacity: textOpacity, scale: textScale }} className="relative z-10 text-center px-6">
+          <h2 className="font-bold uppercase leading-[0.95] bg-clip-text text-transparent animate-grad" style={{ backgroundImage: `linear-gradient(90deg,${C.accent},${C.violet},${C.accent})`, fontSize: 'clamp(2.2rem,7vw,5rem)', ...MTS }}>
+            Внутри движения
+          </h2>
+          <p className="mt-4 font-light max-w-md mx-auto" style={{ color: C.dim }}>Каждый кадр — шаг в пространство истории.</p>
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+
 /* ── Данные ─────────────────────────────────────────────────────── */
 const STATS = [
   { to: 140, suf: '+', l: 'проектов' },
@@ -259,6 +288,9 @@ const PRINCIPLES = [
 
 export default function MotionScreen({ onClose }: { onClose: () => void }) {
   useFonts()
+  const gx = useMotionValue(720)
+  const gy = useMotionValue(320)
+  const glow = useMotionTemplate`radial-gradient(520px circle at ${gx}px ${gy}px, rgba(160,107,255,0.22), transparent 60%)`
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
     window.addEventListener('keydown', onKey)
@@ -274,7 +306,15 @@ export default function MotionScreen({ onClose }: { onClose: () => void }) {
       </button>
 
       {/* 1 · Кинетический герой */}
-      <section className="relative min-h-screen flex flex-col justify-center py-24 overflow-hidden">
+      <section
+        className="relative min-h-screen flex flex-col justify-center py-24 overflow-hidden"
+        onMouseMove={(e) => {
+          const r = e.currentTarget.getBoundingClientRect()
+          gx.set(e.clientX - r.left)
+          gy.set(e.clientY - r.top)
+        }}
+      >
+        <motion.div className="absolute inset-0 pointer-events-none z-0" style={{ background: glow }} />
         <FloatingShapes />
         <div className="relative z-0 opacity-[0.13]">
           <Kinetic text="ДВИЖЕНИЕ" dir="l" color={C.cream} />
@@ -377,7 +417,10 @@ export default function MotionScreen({ onClose }: { onClose: () => void }) {
       {/* 9 · Горизонтальная галерея */}
       <HGallery />
 
-      {/* 10 · Большое слово на скролле */}
+      {/* 10 · Портал: влёт в пространство */}
+      <ZoomPortal />
+
+      {/* 11 · Большое слово на скролле */}
       <BigScrollWord />
 
       {/* 11 · CTA */}
