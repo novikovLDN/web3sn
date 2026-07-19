@@ -33,43 +33,102 @@ const FRAMES: Frame[] = [
 ]
 const BY_INDEX = new Map(FRAMES.map((f) => [f.i, f]))
 
+/** Единственный кадр-призыв: только он имеет право на ember. */
+const CTA_INDEX = 116
+
+/**
+ * Метки удержания (hold) классического экспозиционного листа: линия тянется
+ * от экспонированного кадра через кадры, которые он занимает, — до следующей
+ * экспозиции в том же слое или до конца строки. Чистая декорация: не кнопки,
+ * не фокусируются, aria-hidden. Даёт листу плотность документа.
+ */
+const HOLD = (() => {
+  const s = new Set<number>()
+  for (const f of FRAMES) {
+    const rowEnd = (Math.floor(f.i / COLS) + 1) * COLS - 1
+    for (let j = f.i + 1; j <= rowEnd; j++) {
+      if (BY_INDEX.has(j)) break
+      s.add(j)
+    }
+  }
+  return s
+})()
+
 /** Детерминированные параметры фазы: чистая функция индекса. */
 const durFor = (i: number) => 1200 + ((i * 137) % 900)
 const phaseFor = (i: number) => -((i * 61) % 800)
 
-/* ── Пять процедурных микроанимаций, ротация по index % 5 ───────── */
-function Shape({ i }: { i: number }) {
+/* ── Пять процедурных микроанимаций, ротация по index % 5 ─────────
+   Ни один мотив не содержит вращения: спека прямо запрещает
+   «ключевые ромбы», а любой поворот на steps() рано или поздно
+   замирает на 45°. Вместо этого — вайп, масштаб, проход и рост. */
+function Shape({ i, color }: { i: number; color: string }) {
   const anim: React.CSSProperties = {
     animationName: ['ds-a', 'ds-b', 'ds-c', 'ds-d', 'ds-e'][i % 5],
     animationDuration: `${durFor(i)}ms`,
     animationDelay: `${phaseFor(i)}ms`,
   }
   switch (i % 5) {
-    case 0: // вращающийся квадрат
-      return <span className="ds-shape block" style={{ ...anim, width: '42%', height: '42%', background: C.seaGlass }} />
+    case 0: // ступенчатый вайп полосы слева направо
+      return <span className="ds-shape block" style={{ ...anim, width: '74%', height: '26%', background: color }} />
     case 1: // пульсирующее кольцо
       return (
         <svg viewBox="0 0 20 20" className="ds-shape" style={{ ...anim, width: '68%', height: '68%' }}>
-          <circle cx="10" cy="10" r="8" fill="none" stroke={C.seaGlass} strokeWidth="2" />
+          <circle cx="10" cy="10" r="8" fill="none" stroke={color} strokeWidth="2" />
         </svg>
       )
     case 2: // сдвигающиеся полосы
       return (
         <span className="ds-shape flex items-end justify-center gap-[2px]" style={{ ...anim, width: '60%', height: '52%' }}>
-          <i className="block w-[3px] h-[55%]" style={{ background: C.seaGlass }} />
-          <i className="block w-[3px] h-full" style={{ background: C.seaGlass }} />
-          <i className="block w-[3px] h-[70%]" style={{ background: C.seaGlass }} />
+          <i className="block w-[3px] h-[55%]" style={{ background: color }} />
+          <i className="block w-[3px] h-full" style={{ background: color }} />
+          <i className="block w-[3px] h-[70%]" style={{ background: color }} />
         </span>
       )
-    case 3: // морфящийся border-radius
-      return <span className="ds-shape block" style={{ ...anim, width: '46%', height: '46%', border: `2px solid ${C.ember}` }} />
-    default: // орбитальная точка (пятая заготовка)
+    case 3: // ступенчатый рост по одной оси
+      return (
+        <span
+          className="ds-shape block"
+          style={{ ...anim, width: '32%', height: '64%', background: color, transformOrigin: 'bottom center' }}
+        />
+      )
+    default: // точка по периметру рамки
       return (
         <span className="relative block" style={{ width: '52%', height: '52%', border: `1px solid rgba(127,178,174,0.35)` }}>
-          <i className="ds-shape absolute left-1/2 top-1/2 block w-[5px] h-[5px] -ml-[2.5px] -mt-[2.5px] rounded-full" style={{ ...anim, background: C.ember }} />
+          <i
+            className="ds-shape ds-shape--e absolute left-1/2 top-1/2 block w-[5px] h-[5px] -ml-[2.5px] -mt-[2.5px] rounded-full"
+            style={{ ...anim, background: color }}
+          />
         </span>
       )
   }
+}
+
+/**
+ * Наведение = скраб фазы ячейки, как в брифе: позиция курсора по ширине
+ * кадра отображается в currentTime анимации (пауза + перемотка), а не
+ * ускорение воспроизведения, которое выдавало бы себя за скраб.
+ */
+function scrubTo(host: HTMLElement, clientX: number) {
+  const el = host.querySelector('.ds-shape')
+  if (!el || typeof el.getAnimations !== 'function') return
+  const r = host.getBoundingClientRect()
+  if (!r.width) return
+  const f = Math.min(1, Math.max(0, (clientX - r.left) / r.width))
+  for (const a of el.getAnimations()) {
+    const t = a.effect?.getTiming()
+    const d = t?.duration
+    if (typeof d !== 'number' || d <= 0) continue
+    a.pause()
+    // Компенсируем отрицательную фазовую задержку, иначе скраб «перематывал»
+    // бы цикл не с начала: слева направо = прогресс 0 → 1.
+    a.currentTime = (t?.delay ?? 0) + f * d
+  }
+}
+function releaseScrub(host: HTMLElement) {
+  const el = host.querySelector('.ds-shape')
+  if (!el || typeof el.getAnimations !== 'function') return
+  for (const a of el.getAnimations()) a.play()
 }
 
 export default function DopeSheet({ onJump }: { onJump: (anchor: string) => void }) {
@@ -133,18 +192,37 @@ export default function DopeSheet({ onJump }: { onJump: (anchor: string) => void
                     ) : null
 
                     if (!frame) {
-                      return <div key={i} className="ds-cell relative" style={{ aspectRatio: '1', ...wave }}>{flash}</div>
+                      // Метка удержания: линия по оси времени, перекрывающая
+                      // 3px-зазор, чтобы держание читалось как одна черта.
+                      const hold = HOLD.has(i) ? (
+                        <span
+                          aria-hidden="true"
+                          className="ds-hold absolute top-1/2 -left-[3px] -right-[3px] h-px"
+                          style={{ background: `${C.seaGlass}4D`, transitionDelay: wave.transitionDelay }}
+                        />
+                      ) : null
+                      return (
+                        <div key={i} className="ds-cell relative" style={{ aspectRatio: '1', ...wave }}>
+                          {hold}
+                          {flash}
+                        </div>
+                      )
                     }
+                    const isCta = i === CTA_INDEX
                     return (
                       <button
                         key={i}
                         type="button"
                         onClick={() => onJump(frame.anchor)}
+                        onPointerMove={(e) => scrubTo(e.currentTarget, e.clientX)}
+                        onPointerLeave={(e) => releaseScrub(e.currentTarget)}
+                        onPointerCancel={(e) => releaseScrub(e.currentTarget)}
+                        onBlur={(e) => releaseScrub(e.currentTarget)}
                         aria-label={`Кадр ${String(i + 1).padStart(3, '0')} — ${frame.title}, ${frame.year}. Перейти к ${frame.to}.`}
                         className="ds-cell ds-cell--active relative flex items-center justify-center cursor-pointer transition-transform hover:scale-[1.18] focus-visible:scale-[1.18] focus:outline-none"
-                        style={{ aspectRatio: '1', boxShadow: `inset 0 0 0 1px ${C.seaGlass}55`, ...wave }}
+                        style={{ aspectRatio: '1', boxShadow: `inset 0 0 0 1px ${isCta ? C.ember : C.seaGlass}55`, ...wave }}
                       >
-                        <Shape i={i} />
+                        <Shape i={i} color={isCta ? C.ember : C.seaGlass} />
                         {flash}
                       </button>
                     )

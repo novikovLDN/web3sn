@@ -539,16 +539,25 @@ html {
   animation-timing-function: steps(8);
   animation-iteration-count: infinite;
 }
-.ds-cell--active:hover .ds-shape,
-.ds-cell--active:focus-visible .ds-shape {
-  animation-duration: 420ms !important;
+/* ds-e — единственный мотив с 4 интервалами; steps(2) на интервал даёт
+   те же 8 состояний за цикл, что и двухкадровые мотивы со steps(8). */
+.ds-shape--e {
+  animation-timing-function: steps(2);
 }
 
+/* Словарь форм: ни одного поворота — ни один мотив не может
+   остановиться в позе ромба (45°), что прямо запрещено спекой. */
+
+/* a — ступенчатая заливка полосы слева направо. */
 @keyframes ds-a {
-  to {
-    transform: rotate(360deg);
+  0% {
+    clip-path: inset(0 100% 0 0);
+  }
+  100% {
+    clip-path: inset(0 0 0 0);
   }
 }
+/* b — пульсирующее кольцо: масштаб + затухание. */
 @keyframes ds-b {
   0% {
     transform: scale(0.3);
@@ -559,31 +568,25 @@ html {
     opacity: 0;
   }
 }
+/* c — горизонтальный проход полос. */
 @keyframes ds-c {
   0% {
     transform: translateX(-55%);
   }
-  50% {
+  100% {
     transform: translateX(55%);
   }
-  100% {
-    transform: translateX(-55%);
-  }
 }
+/* d — ступенчатый рост по одной оси (scaleY от основания). */
 @keyframes ds-d {
   0% {
-    border-radius: 1px;
-    transform: rotate(0deg);
-  }
-  50% {
-    border-radius: 50%;
-    transform: rotate(90deg);
+    transform: scaleY(0.2);
   }
   100% {
-    border-radius: 1px;
-    transform: rotate(180deg);
+    transform: scaleY(1);
   }
 }
+/* e — точка по периметру рамки, 8 удержанных позиций. */
 @keyframes ds-e {
   0% {
     transform: translate(-30%, -30%);
@@ -600,6 +603,19 @@ html {
   100% {
     transform: translate(-30%, -30%);
   }
+}
+
+/* Метки удержания (x-sheet hold): чистая декорация, не фокусируется. */
+.ds-hold {
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 420ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.ds-on .ds-hold {
+  opacity: 1;
+}
+.ds-reduced .ds-hold {
+  transition: none;
 }
 
 /* Плейхед: 2px, один проход слева направо за 700 мс линейно. */
