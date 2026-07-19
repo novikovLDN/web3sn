@@ -1,30 +1,13 @@
-import { useEffect, useRef, useState } from 'react'
-import { AnimatePresence, motion, useMotionTemplate, useMotionValue, useScroll, useTransform, useVelocity, type MotionValue } from 'framer-motion'
+import { useEffect, useRef } from 'react'
+import { motion, useScroll, useTransform, useVelocity, type MotionValue } from 'framer-motion'
 import { C, EASE, DISPLAY } from './motion/palette'
 import { useMotionFonts } from './motion/useMotionFonts'
 import { Reveal, WordReveal, CountUp, Kinetic, Magnetic } from './motion/primitives'
+import MotionHero from './motion/MotionHero'
 
 /* ── Универсальные хелперы анимации ─────────────────────────────── */
 const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.07 } } }
 const rise = { hidden: { opacity: 0, y: 26 }, show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: EASE } } }
-
-const ROT = ['интро', 'титры', 'логотипы', 'UI-моушн', 'рекламу', 'соцсети']
-function WordRotator() {
-  const [i, setI] = useState(0)
-  useEffect(() => {
-    const id = window.setInterval(() => setI((n) => (n + 1) % ROT.length), 1800)
-    return () => window.clearInterval(id)
-  }, [])
-  return (
-    <span className="relative inline-flex overflow-hidden align-bottom" style={{ minWidth: '6ch', height: '1.2em' }}>
-      <AnimatePresence mode="wait">
-        <motion.span key={i} initial={{ y: '110%' }} animate={{ y: 0 }} exit={{ y: '-110%' }} transition={{ duration: 0.5, ease: EASE }} className="font-semibold" style={{ color: C.ember }}>
-          {ROT[i]}
-        </motion.span>
-      </AnimatePresence>
-    </span>
-  )
-}
 
 /* ── Горизонтальная галерея форматов ────────────────────────────── */
 const FORMATS = [
@@ -132,9 +115,6 @@ const PRINCIPLES = [
 
 export default function MotionScreen({ onClose }: { onClose: () => void }) {
   useMotionFonts()
-  const gx = useMotionValue(720)
-  const gy = useMotionValue(320)
-  const glow = useMotionTemplate`radial-gradient(520px circle at ${gx}px ${gy}px, rgba(31,92,99,0.35), transparent 60%)`
   const { scrollY } = useScroll()
   const scrollVel = useVelocity(scrollY)
   const bandSkew = useTransform(scrollVel, [-2500, 0, 2500], [-6, 0, 6], { clamp: true })
@@ -152,37 +132,8 @@ export default function MotionScreen({ onClose }: { onClose: () => void }) {
         ← Назад
       </button>
 
-      {/* 1 · Кинетический герой */}
-      <section
-        className="relative min-h-screen flex flex-col justify-center py-24 overflow-hidden"
-        onMouseMove={(e) => {
-          const r = e.currentTarget.getBoundingClientRect()
-          gx.set(e.clientX - r.left)
-          gy.set(e.clientY - r.top)
-        }}
-      >
-        <motion.div className="absolute inset-0 pointer-events-none z-0" style={{ background: glow }} />
-        <div className="relative z-0 opacity-[0.13]">
-          <Kinetic text="ДВИЖЕНИЕ" dir="l" color={C.chalk} />
-          <Kinetic text="MOTION" dir="r" color={C.seaGlass} />
-        </div>
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 z-20">
-          <motion.span initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="text-xs uppercase tracking-[0.35em] mb-5" style={{ color: C.seaGlass }}>
-            Услуга 03 · Motion-дизайн
-          </motion.span>
-          <motion.h1 initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8, ease: EASE }} className="font-bold uppercase leading-[0.9] tracking-tight" style={{ fontSize: 'clamp(3rem,10vw,8rem)', ...DISPLAY }}>
-            <span style={{ color: C.chalk }}>Motion</span>
-            <span style={{ color: C.ember }}>.</span>
-          </motion.h1>
-          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }} className="mt-6 max-w-xl text-lg md:text-2xl font-light flex flex-wrap items-baseline justify-center gap-x-2" style={{ color: C.dim }}>
-            Анимирую <WordRotator /> — красиво и по делу.
-          </motion.p>
-        </div>
-        <div className="absolute left-1/2 -translate-x-1/2 bottom-6 flex flex-col items-center gap-2 animate-bob-down z-20" style={{ color: C.petrol }}>
-          <span className="text-[11px] uppercase tracking-[0.3em]">Ниже</span>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
-        </div>
-      </section>
+      {/* 1 · Герой */}
+      <MotionHero onClose={onClose} />
 
       {/* 2 · Полоса тегов (наклоняется от скорости скролла) */}
       <motion.div className="py-3 border-y" style={{ borderColor: C.border, skewX: bandSkew }}>

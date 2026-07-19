@@ -184,7 +184,7 @@ class StaticGrainEffect extends Effect {
 
 const StaticGrain = wrapEffect(StaticGrainEffect, {
   blendFunction: BlendFunction.SOFT_LIGHT,
-  opacity: 0.04,
+  opacity: 0.12,
 })
 
 /* ───────────────────── Слой 11: хроматическая аберрация ─────────────────────
@@ -198,6 +198,22 @@ const CA_CORNER_GAIN = Math.SQRT2 - CA_MODULATION_OFFSET
 /** Целевой сдвиг В УГЛУ, px: покой → пик скорости скролла. Потолок 3px. */
 const CA_CORNER_PX_REST = 1.5
 const CA_CORNER_PX_PEAK = 3.0
+
+/* ── Кадронезависимый лерп ───────────────────────────────────────────────
+ * Голый `a += (b-a)*k` привязан к частоте кадров: на 120 Гц он сходится
+ * вдвое быстрее, чем на 60 Гц, и «ощущение» отклика различается между
+ * ноутбуком и ProMotion-дисплеем. Экспоненциальное сглаживание убирает эту
+ * зависимость: доля = 1 - e^(-λ·dt), где λ подобрана так, чтобы при dt=1/60
+ * доля равнялась прежнему коэффициенту (λ = -ln(1-k)·60).
+ * ---------------------------------------------------------------------- */
+const rate = (k60: number) => -Math.log(1 - k60) * 60
+/** λ для прежних 0.05 (сила бугра) и 0.06 (обе оси доворота, наезд камеры). */
+const LAMBDA_STRENGTH = rate(0.05)
+const LAMBDA_ROT = rate(0.06)
+const LAMBDA_CAM = rate(0.05)
+/** dt клампится: после фонового таба приходит огромный dt, и без клампа
+ *  значение прыгает к цели одним кадром. */
+const damp = (lambda: number, dt: number) => 1 - Math.exp(-lambda * Math.min(dt, 0.1))
 
 function Blob({ pointer, velocity }: { pointer: React.RefObject<{ x: number; y: number }>; velocity: React.RefObject<number> }) {
   const mesh = useRef<THREE.Mesh>(null)
@@ -228,9 +244,10 @@ function Blob({ pointer, velocity }: { pointer: React.RefObject<{ x: number; y: 
     const px = p?.x ?? 0
     const py = p?.y ?? 0
 
-    // Слой 6: инерционное доворачивание за курсором, lerp 0.06
-    m.rotation.y += ((px * 0.6) - m.rotation.y) * 0.06
-    m.rotation.x += ((-py * 0.4) - m.rotation.x) * 0.06
+    // Слой 6: инерционное доворачивание за курсором (0.06 @60Гц, dt-нормализовано)
+    const kRot = damp(LAMBDA_ROT, dt)
+    m.rotation.y += ((px * 0.6) - m.rotation.y) * kRot
+    m.rotation.x += ((-py * 0.4) - m.rotation.x) * kRot
     // Слой 13: быстрый скролл подкручивает форму
     m.rotation.z += dt * (0.06 + Math.min(Math.abs(velocity.current ?? 0) / 3000, 0.5))
 
@@ -239,7 +256,7 @@ function Blob({ pointer, velocity }: { pointer: React.RefObject<{ x: number; y: 
     m.getWorldQuaternion(invQuat).invert()
     uniforms.uPointerDir.value.set(px, py, 1).normalize().applyQuaternion(invQuat)
 
-    strength.current += ((active ? 1 : 0) - strength.current) * 0.05
+    strength.current += ((active ? 1 : 0) - strength.current) * damp(LAMBDA_STRENGTH, dt)
     uniforms.uPointer.value = strength.current
   })
 
@@ -251,11 +268,14 @@ function Blob({ pointer, velocity }: { pointer: React.RefObject<{ x: number; y: 
   )
 }
 
+/** Позиция камеры по Z в покое (scrollY === 0). Кадрирование героя. */
+const CAM_REST_Z = 5.6
+
 function Rig() {
-  useFrame((state) => {
+  useFrame((state, dt) => {
     // Слой 10: камера отъезжает при выходе из героя
-    const target = 4.2 + Math.min((window.scrollY / window.innerHeight) * 3.5, 4)
-    state.camera.position.z += (target - state.camera.position.z) * 0.05
+    const target = CAM_REST_Z + Math.min((window.scrollY / window.innerHeight) * 3.5, 4)
+    state.camera.position.z += (target - state.camera.position.z) * damp(LAMBDA_CAM, dt)
   })
   return null
 }
