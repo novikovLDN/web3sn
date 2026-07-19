@@ -263,6 +263,33 @@ html {
     opacity: 1;
   }
 }
+/* Анимированный градиент (текст/фон) */
+@keyframes grad-pan {
+  to {
+    background-position: 200% center;
+  }
+}
+.animate-grad {
+  background-size: 200% auto;
+  animation: grad-pan 5s linear infinite;
+}
+/* Плавающие декоративные фигуры */
+@keyframes float-a {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  50% { transform: translate(16px, -22px) rotate(10deg); }
+}
+@keyframes float-b {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  50% { transform: translate(-18px, 16px) rotate(-12deg); }
+}
+.animate-float-a { animation: float-a 8s ease-in-out infinite; }
+.animate-float-b { animation: float-b 10s ease-in-out infinite; }
+/* Медленное покачивание */
+@keyframes wobble {
+  0%, 100% { transform: rotate(-7deg); }
+  50% { transform: rotate(7deg); }
+}
+.animate-wobble { animation: wobble 6s ease-in-out infinite; }
 
 /* Мигающая каретка терминала */
 @keyframes caret-blink {
