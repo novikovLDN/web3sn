@@ -51,9 +51,38 @@ await p.waitForTimeout(3500)
 const suffix = `${REDUCED ? '_reduced' : ''}${NOWEBGL ? '_nowebgl' : ''}`
 await p.screenshot({ path: `${OUT}/motion_hero${suffix}.png` })
 
-for (const [name, frac] of [['easing', 1.05], ['dope', 2.4]]) {
-  await p.evaluate((f) => window.scrollTo(0, window.innerHeight * f), frac)
-  await p.waitForTimeout(1200)
+// Scroll by anchor, not by a hardcoded viewport fraction: section order changes
+// between tasks and a stale fraction silently produces a shot of the wrong section.
+for (const [name, anchor, frac] of [['easing', '#m-easing', 1.05], ['dope', '#m-dope', 2.4]]) {
+  const found = await p.evaluate(
+    ([a, f]) => {
+      const el = document.querySelector(a)
+      if (!el) {
+        window.scrollTo(0, window.innerHeight * f)
+        return false
+      }
+      window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 40)
+      return true
+    },
+    [anchor, frac]
+  )
+  if (!found) console.warn(`warn: ${anchor} not found — fell back to fraction ${frac}`)
+  // Lenis keeps gliding past any fixed wait: poll until scrollY actually stops.
+  await p.evaluate(
+    () =>
+      new Promise((res) => {
+        let last = -1
+        let still = 0
+        const t = () => {
+          const y = Math.round(window.scrollY)
+          still = y === last ? still + 1 : 0
+          last = y
+          still > 8 ? res() : requestAnimationFrame(t)
+        }
+        requestAnimationFrame(t)
+      })
+  )
+  await p.waitForTimeout(1600)
   await p.screenshot({ path: `${OUT}/motion_${name}${suffix}.png` })
 }
 

@@ -76,14 +76,6 @@ export function Kinetic({ text, dir, color, size = 'clamp(3rem,11vw,9rem)', op =
   )
 }
 
-/* ── Easing ─────────────────────────────────────────────────────── */
-export const EASES = [
-  { name: 'Linear', css: 'linear', path: 'M0 60 L120 0' },
-  { name: 'Ease-out', css: 'cubic-bezier(0.16,1,0.3,1)', path: 'M0 60 C20 0 40 0 120 0' },
-  { name: 'Ease-in-out', css: 'cubic-bezier(0.65,0,0.35,1)', path: 'M0 60 C60 60 60 0 120 0' },
-  { name: 'Spring', css: 'cubic-bezier(0.34,1.56,0.64,1)', path: 'M0 60 C40 60 55 -18 120 0' },
-]
-
 /* ── Магнитная кнопка (тянется к курсору) ───────────────────────── */
 export function Magnetic({ children, className, style, onClick }: { children: React.ReactNode; className?: string; style?: React.CSSProperties; onClick?: () => void }) {
   const ref = useRef<HTMLButtonElement>(null)

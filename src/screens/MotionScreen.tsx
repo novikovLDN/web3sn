@@ -5,6 +5,7 @@ import { useMotionFonts } from './motion/useMotionFonts'
 import { Reveal, WordReveal, CountUp, Kinetic, Magnetic } from './motion/primitives'
 import MotionHero from './motion/MotionHero'
 import DopeSheet from './motion/DopeSheet'
+import EasingLab from './motion/EasingLab'
 import { scrollToTarget } from '../lib/scroll'
 
 /* ── Универсальные хелперы анимации ─────────────────────────────── */
@@ -164,6 +165,9 @@ export default function MotionScreen({ onClose }: { onClose: () => void }) {
           ))}
         </motion.div>
       </section>
+
+      {/* 5 · Easing-лаборатория */}
+      <EasingLab />
 
       {/* 6 · Услуги */}
       <section id="m-services" className="px-6 md:px-12 py-24">
