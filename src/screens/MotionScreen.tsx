@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, useInView, useMotionTemplate, useMotionValue, useScroll, useTransform, useVelocity, type MotionValue } from 'framer-motion'
-import { C, EASE, DISPLAY } from './motion/palette'
+import { C, EASE, DISPLAY, MONO } from './motion/palette'
 import { useMotionFonts } from './motion/useMotionFonts'
 
 /* ── Универсальные хелперы анимации ─────────────────────────────── */
@@ -264,7 +264,7 @@ function AEWorkspace() {
   return (
     <div className="rounded-2xl overflow-hidden" style={{ background: C.panel, border: `1px solid ${C.border}` }}>
       {/* верхняя панель */}
-      <div className="flex items-center gap-2 px-4 h-9 border-b text-[11px] font-mono" style={{ borderColor: C.border, color: C.petrol }}>
+      <div className="flex items-center gap-2 px-4 h-9 border-b text-[11px] font-mono" style={{ borderColor: C.border, color: C.petrol, ...MONO }}>
         <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#ff5f56' }} />
         <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#ffbd2e' }} />
         <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#27c93f' }} />
