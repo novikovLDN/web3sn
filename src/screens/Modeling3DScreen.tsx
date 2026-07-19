@@ -60,7 +60,7 @@ export default function Modeling3DScreen({ onClose }: { onClose: () => void }) {
   }, [onClose])
 
   return (
-    <main className="animate-screen-in relative font-onest" style={{ background: C.bg, color: C.cream }}>
+    <main data-screen="modeling" className="animate-screen-in relative font-onest" style={{ background: C.bg, color: C.cream }}>
       {/* тёплое студийное свечение */}
       <div
         className="fixed inset-0 pointer-events-none"

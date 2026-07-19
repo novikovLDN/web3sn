@@ -17,6 +17,7 @@ import ContactSection from './sections/ContactSection'
 import DevelopmentScreen from './screens/DevelopmentScreen'
 import Modeling3DScreen from './screens/Modeling3DScreen'
 import MotionScreen from './screens/MotionScreen'
+import BrandingScreen from './screens/BrandingScreen'
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(true)
@@ -52,6 +53,8 @@ export default function App() {
         <Modeling3DScreen onClose={closeScreen} />
       ) : screen === 'motion' ? (
         <MotionScreen onClose={closeScreen} />
+      ) : screen === 'branding' ? (
+        <BrandingScreen onClose={closeScreen} />
       ) : (
         <>
           <ScrollTop />

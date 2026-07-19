@@ -446,7 +446,7 @@ export default function DevelopmentScreen({ onClose }: { onClose: () => void }) 
   }, [onClose])
 
   return (
-    <main className="animate-screen-in relative" style={{ background: C.bg, color: C.green }}>
+    <main data-screen="development" className="animate-screen-in relative" style={{ background: C.bg, color: C.green }}>
       {/* Фон: тонкая тех-сетка + очень мягкое свечение (сдержанно, премиально) */}
       <div
         className="fixed inset-0 pointer-events-none"
