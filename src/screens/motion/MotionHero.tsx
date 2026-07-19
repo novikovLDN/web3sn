@@ -9,21 +9,23 @@
 // выполненным сразу — иначе прелоадер завис бы навсегда.
 //
 // ── ПОЧЕМУ ВХОДНАЯ ПОСЛЕДОВАТЕЛЬНОСТЬ НА CSS, А НЕ НА FRAMER ───────────────
-// Измерено: пока r3f рендерит цепочку постобработки, rAF на программном
-// растеризаторе падает до ~3.4 к/с, и JS-цикл framer-motion перестаёт
-// перепланироваться — анимации clip-path и motion-значений НЕ доходят до
-// конца (заголовок остаётся под маской inset(100%), ось wdth стоит на 75).
-// Уцелели ровно те, что framer отдаёт в WAAPI: opacity и transform занавеса.
-// Поэтому весь вход — нативные CSS-анимации: их тикает собственный
-// анимационный движок браузера, он не зависит от загруженности rAF-очереди.
-// framer здесь остаётся только на интерактиве (пружины указателя, параллакс
-// скролла), где подтормаживание при простое безвредно.
+// Наблюдение: под headless SwiftShader со смонтированным холстом входная
+// последовательность на framer-motion не доигрывала (заголовок оставался под
+// маской inset(100%), ось wdth — на 75). Первопричину выделить не удалось:
+// ранние гипотезы про остановку document.timeline и про недостаточную частоту
+// rAF при перепроверке НЕ подтвердились. На реальном GPU (Apple M5 Max/Metal)
+// оба подхода отрабатывают одинаково, framer укладывается в 2 с.
+// CSS выбран потому, что нативные анимации тикает собственный движок браузера:
+// их нельзя заморить нагрузкой на главный поток, и раскрытие заголовка вообще
+// не зависит от JS. Это расходится с остальным проектом, где анимации сделаны
+// на framer-motion; framer здесь оставлен на интерактиве (пружины указателя,
+// параллакс скролла).
 //
 // ── КОНТРАКТ pointer ───────────────────────────────────────────────────────
 // pointer.current === null означает «указателя нет». Обязателен сброс в null
 // на pointerleave и полный отказ от записи на coarse-устройствах, иначе
 // бугор под курсором в шейдере залипает навсегда (см. шапку MotionShader).
-import { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react'
+import { Component, Suspense, lazy, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { motion, useMotionValue, useScroll, useSpring, useTransform, useVelocity, type MotionValue } from 'framer-motion'
 import { C, DISPLAY, MONO } from './palette'
 import { Magnetic, usePrefersReducedMotion } from './primitives'
@@ -52,8 +54,9 @@ const T_CTA = 1.45
 const T_AMBIENT = 1.75
 
 /* ── CSS входной последовательности ───────────────────────────────────────
- * Всё, что должно доиграть при задушенном rAF, живёт здесь. Селекторы
- * привязаны к [data-hero]; анимации включаются атрибутом data-started. */
+ * Всё, что обязано доиграть независимо от загрузки главного потока, живёт
+ * здесь (см. шапку файла). Селекторы привязаны к [data-hero]; анимации
+ * включаются атрибутом data-started. */
 const EXPO_CSS = 'cubic-bezier(0.16,1,0.3,1)'
 const EASE_CSS = 'cubic-bezier(0.22,0.61,0.36,1)'
 const HERO_CSS = `
@@ -114,7 +117,7 @@ const PARTICLES: Particle[] = Array.from({ length: 40 }, (_, i) => {
 type PV = MotionValue<number>
 
 /* Частица: CSS отвечает за проявление, framer — за параллакс от указателя.
- * Разделение намеренное: проявление обязано доиграть даже при душном rAF. */
+ * Разделение намеренное: проявление обязано доиграть независимо от JS-цикла. */
 function ParticleDot({ p, i, px, py }: { p: Particle; i: number; px: PV; py: PV }) {
   const x = useTransform(px, (v) => -v * 26 * p.depth)
   const y = useTransform(py, (v) => v * 26 * p.depth)
@@ -151,6 +154,33 @@ function HeadLine({ text, i, px, py }: { text: string; i: number; px: PV; py: PV
       </span>
     </motion.span>
   )
+}
+
+/* ── Граница ошибок вокруг ленивого холста ────────────────────────────────
+ * Без неё отклонённый динамический import('./MotionShader') (устаревший
+ * деплой, срезанный CDN, блокировщик) пробивает <Suspense> насквозь и
+ * размонтирует всё дерево React — страница становится пустой целиком, а не
+ * только герой. Здесь падение локализуется: рисуем тот же CSS-градиентный
+ * фолбэк, что и в ветке без WebGL, и сообщаем наверх о готовности, иначе
+ * вход навсегда останется ждать onReady() от несуществующего холста.
+ * Класс — единственная форма, в которой React отдаёт границу ошибок.
+ * Запрет спецификации на setTimeout — это запрет ФАЛЬШИВОГО прогресса;
+ * показ содержимого по факту сбоя загрузки под него не попадает. */
+class ShaderBoundary extends Component<
+  { children: ReactNode; fallback: ReactNode; onFail: () => void },
+  { failed: boolean }
+> {
+  state = { failed: false }
+  static getDerivedStateFromError() {
+    return { failed: true }
+  }
+  componentDidCatch(error: Error) {
+    console.warn('[MotionHero] холст не загрузился, показываю фолбэк:', error)
+    this.props.onFail()
+  }
+  render() {
+    return this.state.failed ? this.props.fallback : this.props.children
+  }
 }
 
 /* ── Слой 8: кольцо курсора ───────────────────────────────────────────── */
@@ -240,6 +270,8 @@ export default function MotionHero({ onClose }: { onClose: () => void }) {
 
   /* ── Честная готовность ── */
   const [glReady, setGlReady] = useState(!useCanvas)
+  /** Чанк холста не загрузился → на экране тот же фолбэк, что и без WebGL. */
+  const [shaderFailed, setShaderFailed] = useState(false)
   const [fontsReady, setFontsReady] = useState(false)
   useEffect(() => {
     let live = true
@@ -319,11 +351,12 @@ export default function MotionHero({ onClose }: { onClose: () => void }) {
     return (
       <section
         ref={sectionRef}
-        className="relative min-h-screen flex flex-col justify-center items-center text-center px-6 overflow-hidden"
+        className="relative min-h-screen flex flex-col justify-center px-6 md:px-12 overflow-hidden"
       >
         <style>{HERO_CSS}</style>
         <div className="absolute inset-0 pointer-events-none">{fallback}</div>
-        <div data-hero-reduced className="relative z-20 flex flex-col items-center gap-6">
+        {/* Выключка влево — как в основном герое (см. ветку ниже). */}
+        <div data-hero-reduced className="relative z-20 flex flex-col items-start gap-6">
           <span className="text-[11px] uppercase" style={{ letterSpacing: '0.08em', color: C.dim, ...MONO }}>
             {META}
           </span>
@@ -342,7 +375,7 @@ export default function MotionHero({ onClose }: { onClose: () => void }) {
               </span>
             ))}
           </h1>
-          <div className="flex flex-wrap items-center justify-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
             <Magnetic
               onClick={() => window.scrollTo({ top: window.innerHeight })}
               className="rounded-full px-9 py-4 text-sm font-medium uppercase tracking-widest"
@@ -375,14 +408,43 @@ export default function MotionHero({ onClose }: { onClose: () => void }) {
       <motion.div className="absolute inset-0 z-0" style={{ y: canvasY }}>
         {useCanvas ? (
           <div className="absolute inset-0 mh-canvas">
-            <Suspense fallback={null}>
-              <MotionShader pointer={pointer} velocity={velocity} onReady={() => setGlReady(true)} />
-            </Suspense>
+            <ShaderBoundary
+              fallback={fallback}
+              onFail={() => {
+                setShaderFailed(true)
+                setGlReady(true)
+              }}
+            >
+              <Suspense fallback={null}>
+                <MotionShader pointer={pointer} velocity={velocity} onReady={() => setGlReady(true)} />
+              </Suspense>
+            </ShaderBoundary>
           </div>
         ) : (
           fallback
         )}
       </motion.div>
+
+      {/* ── Скрим под заголовком ──────────────────────────────────────────
+             Блики блума и френеля в местах пересечения с глифами роняли
+             контраст до 1.3–1.9:1 при пороге WCAG AA 3:1 для крупного текста
+             (112 px / вес 800). После скрима худший пиксель на форме — 4.26:1,
+             ниже 3:1 не опускается ни один; замеры в task-4-report.md §6.4.
+             Только для ветки с холстом: фолбэки (--no-webgl / --reduced) и так
+             равномерно тёмные, их затемнять нечем и незачем. Градиент гасится
+             к правому краю, чтобы правый бок и ободок формы остались светлыми
+             и она продолжала читаться как освещённый объект. Если чанк холста
+             упал, на экране тот же ровный фолбэк — скрим снимаем вместе с ним. */}
+      {useCanvas && !shaderFailed && (
+        <div
+          aria-hidden
+          className="absolute inset-0 z-10 pointer-events-none"
+          style={{
+            background:
+              'linear-gradient(100deg, rgba(7,19,22,0.72) 0%, rgba(7,19,22,0.55) 38%, rgba(7,19,22,0.18) 62%, transparent 78%)',
+          }}
+        />
+      )}
 
       {/* ── Слой 14: поле частиц, три глубины ── */}
       <div aria-hidden className="absolute inset-0 z-10 pointer-events-none">
