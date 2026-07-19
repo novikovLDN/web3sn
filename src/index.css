@@ -514,6 +514,128 @@ html {
   }
 }
 
+/* ── Motion: экспозиционный лист (dope sheet) ────────────────────
+   Волна появления — один CSS-переход с diagonal delay, без JS.
+   Активные ячейки анимируются с steps(8): намеренные ~8fps
+   против 60fps героя. Это сигнал ремесла, а не баг. */
+.ds-cell {
+  background: #0e2226;
+  transition: background-color 420ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.ds-on .ds-cell {
+  background: #232b2e;
+}
+.ds-on .ds-cell--active {
+  background: #17383b;
+}
+.ds-reduced .ds-cell {
+  transition: none;
+}
+.ds-reduced .ds-shape {
+  animation: none !important;
+}
+
+.ds-shape {
+  animation-timing-function: steps(8);
+  animation-iteration-count: infinite;
+}
+.ds-cell--active:hover .ds-shape,
+.ds-cell--active:focus-visible .ds-shape {
+  animation-duration: 420ms !important;
+}
+
+@keyframes ds-a {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes ds-b {
+  0% {
+    transform: scale(0.3);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.15);
+    opacity: 0;
+  }
+}
+@keyframes ds-c {
+  0% {
+    transform: translateX(-55%);
+  }
+  50% {
+    transform: translateX(55%);
+  }
+  100% {
+    transform: translateX(-55%);
+  }
+}
+@keyframes ds-d {
+  0% {
+    border-radius: 1px;
+    transform: rotate(0deg);
+  }
+  50% {
+    border-radius: 50%;
+    transform: rotate(90deg);
+  }
+  100% {
+    border-radius: 1px;
+    transform: rotate(180deg);
+  }
+}
+@keyframes ds-e {
+  0% {
+    transform: translate(-30%, -30%);
+  }
+  25% {
+    transform: translate(30%, -30%);
+  }
+  50% {
+    transform: translate(30%, 30%);
+  }
+  75% {
+    transform: translate(-30%, 30%);
+  }
+  100% {
+    transform: translate(-30%, -30%);
+  }
+}
+
+/* Плейхед: 2px, один проход слева направо за 700 мс линейно. */
+@keyframes ds-sweep {
+  0% {
+    left: 0%;
+    opacity: 1;
+  }
+  92% {
+    opacity: 1;
+  }
+  100% {
+    left: 100%;
+    opacity: 0;
+  }
+}
+.ds-playhead {
+  animation: ds-sweep 700ms linear 1 both;
+}
+/* Вспышка пересечённой ячейки ≈16 мс (2.3% от 700 мс). */
+@keyframes ds-flash {
+  0% {
+    opacity: 1;
+  }
+  2.3% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.ds-flash {
+  opacity: 0;
+  animation: ds-flash 700ms linear 1 both;
+}
+
 /* При системной «меньше движения» отключаем только авто-скролл,
    но оставляем фирменные декоративные анимации — они часть дизайна. */
 @media (prefers-reduced-motion: reduce) {

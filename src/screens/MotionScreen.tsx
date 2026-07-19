@@ -4,6 +4,8 @@ import { C, EASE, DISPLAY } from './motion/palette'
 import { useMotionFonts } from './motion/useMotionFonts'
 import { Reveal, WordReveal, CountUp, Kinetic, Magnetic } from './motion/primitives'
 import MotionHero from './motion/MotionHero'
+import DopeSheet from './motion/DopeSheet'
+import { scrollToTarget } from '../lib/scroll'
 
 /* ── Универсальные хелперы анимации ─────────────────────────────── */
 const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.07 } } }
@@ -23,7 +25,7 @@ function HGallery() {
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] })
   const x = useTransform(scrollYProgress, [0, 1], ['3%', '-64%'])
   return (
-    <section ref={ref} className="relative" style={{ height: '260vh' }}>
+    <section id="m-formats" ref={ref} className="relative" style={{ height: '260vh' }}>
       <div className="sticky top-0 h-screen flex flex-col justify-center overflow-hidden">
         <h2 className="px-6 md:px-12 mb-10 font-bold uppercase tracking-tight" style={{ fontSize: 'clamp(1.8rem,5vw,3.5rem)', color: C.chalk, ...DISPLAY }}>
           Форматы
@@ -52,7 +54,7 @@ function BigScrollWord() {
   const rotate = useTransform(scrollYProgress, [0, 1], [-6, 6])
   const opacity = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0, 1, 1, 0])
   return (
-    <section ref={ref} className="py-40 overflow-hidden flex items-center justify-center">
+    <section id="m-word" ref={ref} className="py-40 overflow-hidden flex items-center justify-center">
       <motion.h2 style={{ scale, rotate, opacity }} className="text-center font-bold uppercase leading-[0.9]" >
         <span className="block" style={{ color: C.seaGlass, fontSize: 'clamp(2.5rem,11vw,9rem)', ...DISPLAY }}>
           Анимация
@@ -76,7 +78,7 @@ function ZoomPortal() {
   const textOpacity = useTransform(scrollYProgress, [0.25, 0.5, 0.82], [0, 1, 0])
   const textScale = useTransform(scrollYProgress, [0.25, 0.6], [0.7, 1.05])
   return (
-    <section ref={ref} className="relative" style={{ height: '260vh' }}>
+    <section id="m-portal" ref={ref} className="relative" style={{ height: '260vh' }}>
       <div className="sticky top-0 h-screen flex items-center justify-center overflow-hidden">
         {[0, 1, 2, 3, 4, 5].map((i) => (
           <PortalRing key={i} p={scrollYProgress} i={i} />
@@ -141,7 +143,7 @@ export default function MotionScreen({ onClose }: { onClose: () => void }) {
       </motion.div>
 
       {/* 3 · Заявление с пословным появлением */}
-      <section className="px-6 md:px-12 py-28 max-w-5xl">
+      <section id="m-statement" className="px-6 md:px-12 py-28 max-w-5xl">
         <WordReveal
           text="Хорошая анимация невидима — её не замечаешь, но чувствуешь. Она ведёт взгляд, задаёт настроение и превращает интерфейс в историю."
           className="font-bold uppercase leading-[1.05] tracking-tight"
@@ -150,7 +152,7 @@ export default function MotionScreen({ onClose }: { onClose: () => void }) {
       </section>
 
       {/* 4 · Статистика (счётчики) */}
-      <section className="px-6 md:px-12 py-16 border-y" style={{ borderColor: C.border }}>
+      <section id="m-stats" className="px-6 md:px-12 py-16 border-y" style={{ borderColor: C.border }}>
         <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.4 }} className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-6xl">
           {STATS.map((s) => (
             <motion.div key={s.l} variants={rise}>
@@ -164,7 +166,7 @@ export default function MotionScreen({ onClose }: { onClose: () => void }) {
       </section>
 
       {/* 6 · Услуги */}
-      <section className="px-6 md:px-12 py-24">
+      <section id="m-services" className="px-6 md:px-12 py-24">
         <Reveal><h2 className="font-bold uppercase tracking-tight mb-10" style={{ fontSize: 'clamp(1.8rem,5vw,3.5rem)', color: C.chalk, ...DISPLAY }}>Что я анимирую</h2></Reveal>
         <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.2 }} className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-6xl">
           {SERVICES.map((s, i) => (
@@ -177,8 +179,11 @@ export default function MotionScreen({ onClose }: { onClose: () => void }) {
         </motion.div>
       </section>
 
+      {/* 7 · Экспозиционный лист — навигация по кадрам */}
+      <DopeSheet onJump={(a) => scrollToTarget(a)} />
+
       {/* 8 · Принципы */}
-      <section className="px-6 md:px-12 py-24">
+      <section id="m-principles" className="px-6 md:px-12 py-24">
         <Reveal><h2 className="font-bold uppercase tracking-tight mb-12" style={{ fontSize: 'clamp(1.8rem,5vw,3.5rem)', color: C.chalk, ...DISPLAY }}>Принципы</h2></Reveal>
         <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.3 }} className="grid md:grid-cols-3 gap-6 max-w-6xl">
           {PRINCIPLES.map((p) => (
@@ -201,7 +206,7 @@ export default function MotionScreen({ onClose }: { onClose: () => void }) {
       <BigScrollWord />
 
       {/* 11 · CTA */}
-      <section className="px-6 py-32 flex flex-col items-center text-center gap-8 relative z-10">
+      <section id="m-cta" className="px-6 py-32 flex flex-col items-center text-center gap-8 relative z-10">
         <motion.h2 initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, ease: EASE }} className="font-bold uppercase tracking-tight" style={{ fontSize: 'clamp(2rem,7vw,5rem)', lineHeight: 1.08, color: C.chalk, ...DISPLAY }}>
           Заставим ваш
           <br />
