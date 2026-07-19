@@ -1,6 +1,8 @@
-import { Suspense, lazy, useEffect } from 'react'
+import { Suspense, lazy, useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import FadeIn from '../components/FadeIn'
+
+const EASE = [0.22, 0.61, 0.36, 1] as const
 
 const Model3D = lazy(() => import('./Model3D'))
 
@@ -50,6 +52,7 @@ const STEPS = [
 
 export default function Modeling3DScreen({ onClose }: { onClose: () => void }) {
   useFonts()
+  const [hovered, setHovered] = useState<number | null>(null)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
     window.addEventListener('keydown', onKey)
@@ -111,21 +114,35 @@ export default function Modeling3DScreen({ onClose }: { onClose: () => void }) {
           Что я создаю
         </FadeIn>
         <div className="grid grid-cols-1 md:grid-cols-4 auto-rows-[190px] gap-4 max-w-6xl">
-          {BENTO.map((b, i) => (
-            <FadeIn
-              key={b.t}
-              delay={i * 0.06}
-              y={28}
-              className={`group rounded-3xl overflow-hidden p-5 md:p-6 flex flex-col justify-between transition-transform duration-[600ms] ease-[cubic-bezier(0.22,0.61,0.36,1)] hover:scale-[1.04] hover:-translate-y-1.5 cursor-default ${b.span}`}
-              style={{ background: b.big ? C.accent : C.panel, border: `1px solid ${b.big ? 'transparent' : C.border}`, color: b.big ? '#0c0b0a' : C.cream }}
-            >
-              <span className={`font-tech font-extrabold leading-none ${b.big ? 'text-5xl' : 'text-2xl'}`} style={{ color: b.big ? '#0c0b0a' : C.clay }}>◆</span>
-              <div className="min-w-0">
-                <h3 className={`font-tech font-bold uppercase mb-1.5 leading-tight ${b.big ? 'text-2xl md:text-3xl' : 'text-base md:text-lg'}`}>{b.t}</h3>
-                <p className={`font-light leading-snug ${b.big ? 'text-sm md:text-base' : 'text-xs sm:text-[13px]'}`} style={{ opacity: 0.75 }}>{b.d}</p>
-              </div>
-            </FadeIn>
-          ))}
+          {BENTO.map((b, i) => {
+            const isH = hovered === i
+            const other = hovered !== null && !isH
+            return (
+              <FadeIn key={b.t} delay={i * 0.06} y={28} className={b.span}>
+                <motion.div
+                  onMouseEnter={() => setHovered(i)}
+                  onMouseLeave={() => setHovered(null)}
+                  animate={{ scale: isH ? 1.07 : other ? 0.94 : 1, opacity: other ? 0.55 : 1 }}
+                  transition={{ duration: 0.5, ease: EASE }}
+                  className="rounded-3xl overflow-hidden p-5 md:p-6 flex flex-col justify-between h-full cursor-default"
+                  style={{
+                    background: b.big ? C.accent : C.panel,
+                    border: `1px solid ${b.big ? 'transparent' : C.border}`,
+                    color: b.big ? '#0c0b0a' : C.cream,
+                    zIndex: isH ? 20 : 1,
+                    boxShadow: isH ? '0 30px 70px -20px rgba(0,0,0,0.6)' : 'none',
+                    position: 'relative',
+                  }}
+                >
+                  <span className={`font-tech font-extrabold leading-none ${b.big ? 'text-5xl' : 'text-2xl'}`} style={{ color: b.big ? '#0c0b0a' : C.clay }}>◆</span>
+                  <div className="min-w-0">
+                    <h3 className={`font-tech font-bold uppercase mb-1.5 leading-tight ${b.big ? 'text-2xl md:text-3xl' : 'text-base md:text-lg'}`}>{b.t}</h3>
+                    <p className={`font-light leading-snug ${b.big ? 'text-sm md:text-base' : 'text-xs sm:text-[13px]'}`} style={{ opacity: 0.75 }}>{b.d}</p>
+                  </div>
+                </motion.div>
+              </FadeIn>
+            )
+          })}
         </div>
       </section>
 
@@ -138,12 +155,14 @@ export default function Modeling3DScreen({ onClose }: { onClose: () => void }) {
           <div className="absolute left-0 right-0 top-14 h-px" style={{ background: C.border }} />
           <div className="flex gap-6 overflow-x-auto overflow-y-visible pt-6 pb-4 -mx-6 px-6 md:mx-0 md:px-0" style={{ scrollbarWidth: 'none' }}>
             {STEPS.map((s, i) => (
-              <FadeIn key={s.n} delay={i * 0.08} y={24} className="group relative shrink-0 w-[240px]">
-                <span className="relative z-10 flex items-center justify-center w-16 h-16 rounded-full font-tech font-bold text-lg transition-transform duration-[500ms] ease-[cubic-bezier(0.22,0.61,0.36,1)] origin-center group-hover:scale-110" style={{ background: C.panel, border: `1px solid ${C.clayDim}`, color: C.clay }}>
-                  {s.n}
-                </span>
-                <h3 className="font-tech font-bold uppercase text-lg mt-6 leading-tight" style={{ color: C.cream }}>{s.t}</h3>
-                <p className="text-sm font-light mt-2 pr-6" style={{ color: C.dim }}>{s.d}</p>
+              <FadeIn key={s.n} delay={i * 0.08} y={24} className="shrink-0 w-[240px]">
+                <div className="relative transition-transform duration-[500ms] ease-[cubic-bezier(0.22,0.61,0.36,1)] hover:scale-[1.08] cursor-default">
+                  <span className="relative z-10 flex items-center justify-center w-16 h-16 rounded-full font-tech font-bold text-lg" style={{ background: C.panel, border: `1px solid ${C.clayDim}`, color: C.clay }}>
+                    {s.n}
+                  </span>
+                  <h3 className="font-tech font-bold uppercase text-lg mt-6 leading-tight" style={{ color: C.cream }}>{s.t}</h3>
+                  <p className="text-sm font-light mt-2 pr-6" style={{ color: C.dim }}>{s.d}</p>
+                </div>
               </FadeIn>
             ))}
           </div>
