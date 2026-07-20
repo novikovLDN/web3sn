@@ -56,7 +56,11 @@ const SCREEN_VARS = {
   '--br-wall-ink': '#141210',
   '--br-wall-ink-70': 'rgba(20, 18, 15, 0.7)',
   '--br-wall-ink-50': 'rgba(20, 18, 15, 0.5)',
-  '--br-serif': "'Instrument Serif', Georgia, serif",
+  // Instrument Serif не имеет кириллицы (только latin/latin-ext) — на русских
+  // заголовках он молча деградировал в Georgia. Cormorant Infant — единственный
+  // свободный сериф с подтверждённой кириллицей, тянущий дисплейный кегль.
+  // Вес берём 600: тонкие штрихи 300–400 в крупном кегле выглядят рыхло.
+  '--br-serif': "'Cormorant Infant', Georgia, 'Times New Roman', serif",
   '--br-sans': "'Onest', 'MTS Wide', system-ui, sans-serif",
 } as unknown as CSSProperties
 
@@ -159,7 +163,7 @@ function useBrandingFonts() {
     l.id = id
     l.rel = 'stylesheet'
     l.href =
-      'https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Onest:wght@300;400;500;600;700&display=swap'
+      'https://fonts.googleapis.com/css2?family=Cormorant+Infant:ital,wght@0,500;0,600;0,700;1,600&family=Onest:wght@300;400;500;600;700&display=swap'
     document.head.appendChild(l)
   }, [])
 }
@@ -288,9 +292,10 @@ function SectionHead({ n, title, lead }: { n: string; title: string; lead?: stri
           <h2
             style={{
               fontFamily: 'var(--br-serif)',
+              fontWeight: 600,
               fontSize: 'clamp(1.9rem, 5vw, 3.6rem)',
-              // Трекинг на крупном кегле обязан быть отрицательным: у Instrument
-              // Serif широкие апроши, и без сжатия заголовок распадается.
+              // Трекинг на крупном кегле обязан быть отрицательным: у дисплейной
+              // антиквы широкие апроши, и без сжатия заголовок распадается.
               letterSpacing: '-0.03em',
               lineHeight: 1.04,
             }}
@@ -456,6 +461,7 @@ export default function BrandingScreen({ onClose }: { onClose: () => void }) {
               style={{
                 marginTop: 'var(--s-6)',
                 fontFamily: 'var(--br-serif)',
+                fontWeight: 600,
                 fontSize: 'clamp(3.2rem, 12vw, 9.5rem)',
                 letterSpacing: '-0.045em',
                 // 0.92, а не 0.86: в кириллице «б» и «д» выходят за прописную
@@ -663,11 +669,12 @@ export default function BrandingScreen({ onClose }: { onClose: () => void }) {
           <Sheet style={{ padding: 'clamp(1.5rem, 4vw, 2.5rem)' }}>
             <div className="flex items-baseline justify-between gap-4">
               <span style={{ ...mono, opacity: 0.5 }}>Заголовки</span>
-              <span style={{ ...mono, color: 'var(--br-accent)' }}>Instrument Serif</span>
+              <span style={{ ...mono, color: 'var(--br-accent)' }}>Cormorant Infant</span>
             </div>
             <p
               style={{
                 fontFamily: 'var(--br-serif)',
+                fontWeight: 600,
                 fontSize: 'clamp(3.2rem, 9vw, 5.5rem)',
                 letterSpacing: '-0.04em',
                 lineHeight: 1.02,
@@ -789,6 +796,7 @@ export default function BrandingScreen({ onClose }: { onClose: () => void }) {
               <span
                 style={{
                   fontFamily: 'var(--br-serif)',
+                  fontWeight: 600,
                   fontSize: 'clamp(1.4rem, 3vw, 2rem)',
                   letterSpacing: '-0.03em',
                   lineHeight: 1.05,
@@ -903,6 +911,7 @@ export default function BrandingScreen({ onClose }: { onClose: () => void }) {
                     marginTop: 'var(--s-4)',
                     marginBottom: 'var(--s-3)',
                     fontFamily: 'var(--br-serif)',
+                    fontWeight: 600,
                     fontSize: '1.6rem',
                     letterSpacing: '-0.025em',
                     lineHeight: 1.1,
@@ -930,6 +939,7 @@ export default function BrandingScreen({ onClose }: { onClose: () => void }) {
               className="optical-left"
               style={{
                 fontFamily: 'var(--br-serif)',
+                fontWeight: 600,
                 fontSize: 'clamp(2.2rem, 7vw, 5.2rem)',
                 letterSpacing: '-0.042em',
                 lineHeight: 1.0,
