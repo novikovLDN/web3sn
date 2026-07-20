@@ -164,43 +164,76 @@ export function SplitText({
     )
   }
 
+  /** Одна маскированная единица: шторка + уезжающий под неё слой. */
+  const renderUnit = (unit: string, i: number, trailingSpace: boolean) => (
+    <span
+      key={i}
+      aria-hidden
+      style={{
+        display: 'inline-block',
+        overflow: 'hidden',
+        // Свесы литер (у, р, д) обрезались бы маской по базовой линии —
+        // компенсируем вертикальным запасом и втягиваем его обратно.
+        paddingBottom: '0.14em',
+        marginBottom: '-0.14em',
+        verticalAlign: 'top',
+      }}
+    >
+      <motion.span
+        style={{
+          display: 'inline-block',
+          // Пробел внутри inline-block схлопывается, и при дроблении по
+          // буквам «Обо мне» превращалось в «Обомне». pre сохраняет его.
+          whiteSpace: 'pre',
+          willChange: 'transform',
+        }}
+        initial={{ y: '110%' }}
+        animate={visible ? { y: '0%' } : { y: '110%' }}
+        transition={{
+          duration: duration.slower,
+          delay: delay + i * gap,
+          ease: ease.entrance,
+        }}
+      >
+        {unit}
+        {trailingSpace ? ' ' : ''}
+      </motion.span>
+    </span>
+  )
+
+  // Дробление по буквам требует группировки по словам.
+  //
+  // Каждая буква — отдельный inline-block, то есть отдельная точка переноса.
+  // Без группировки строка рвётся между любыми двумя буквами: «3D-моделинг»
+  // ломался как «3D / МОД / ЕЛИН / Г», с одинокой «Г» на своей строке.
+  // Обёртка с white-space: nowrap возвращает слову целостность, оставляя
+  // переносы только там, где им и место — по пробелам.
+  if (by === 'char') {
+    let index = 0
+    const words = text.split(' ')
+    return (
+      <Tag ref={ref} className={className} style={style} aria-label={text}>
+        {words.map((word, w) => {
+          const chars = Array.from(word).map((ch) => renderUnit(ch, index++, false))
+          // Пробел рендерим отдельной единицей ВНЕ nowrap-обёртки: иначе
+          // перенос по нему станет невозможен и длинная фраза уйдёт за экран.
+          const space = w < words.length - 1 ? renderUnit(' ', index++, false) : null
+          return (
+            <span key={w} style={{ display: 'contents' }}>
+              <span style={{ display: 'inline-block', whiteSpace: 'nowrap', verticalAlign: 'top' }}>
+                {chars}
+              </span>
+              {space}
+            </span>
+          )
+        })}
+      </Tag>
+    )
+  }
+
   return (
     <Tag ref={ref} className={className} style={style} aria-label={text}>
-      {units.map((unit, i) => (
-        <span
-          key={i}
-          aria-hidden
-          style={{
-            display: 'inline-block',
-            overflow: 'hidden',
-            // Свесы литер (у, р, д) обрезались бы маской по базовой линии —
-            // компенсируем вертикальным запасом и втягиваем его обратно.
-            paddingBottom: '0.14em',
-            marginBottom: '-0.14em',
-            verticalAlign: 'top',
-          }}
-        >
-          <motion.span
-            style={{
-              display: 'inline-block',
-              // Пробел внутри inline-block схлопывается, и при дроблении по
-              // буквам «Обо мне» превращалось в «Обомне». pre сохраняет его.
-              whiteSpace: 'pre',
-              willChange: 'transform',
-            }}
-            initial={{ y: '110%' }}
-            animate={visible ? { y: '0%' } : { y: '110%' }}
-            transition={{
-              duration: duration.slower,
-              delay: delay + i * gap,
-              ease: ease.entrance,
-            }}
-          >
-            {unit}
-            {by === 'word' && i < units.length - 1 ? ' ' : ''}
-          </motion.span>
-        </span>
-      ))}
+      {units.map((unit, i) => renderUnit(unit, i, by === 'word' && i < units.length - 1))}
     </Tag>
   )
 }
