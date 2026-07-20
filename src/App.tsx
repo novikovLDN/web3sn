@@ -153,7 +153,7 @@ export default function App() {
                   одним куском. Плюс она гасит инверсию света — светлая
                   секция обязана уходить в полную темноту, иначе удар
                   тянется дальше, чем должен. */}
-              <Interlude {...INTERLUDES.afterProjects} />
+              <Interlude {...INTERLUDES.afterProjects} side="right" />
               <ServicesSection onOpenScreen={openScreen} />
               <AboutSection />
               <ProcessSection />
@@ -161,7 +161,7 @@ export default function App() {
               {/* Вторая пауза — перед просьбой написать. Пустой экран здесь
                   работает как молчание перед вопросом: снимает ощущение,
                   что тебя ведут по воронке. */}
-              <Interlude {...INTERLUDES.beforeContact} />
+              <Interlude {...INTERLUDES.beforeContact} side="left" />
               <FaqSection />
               <ContactSection />
             </main>
