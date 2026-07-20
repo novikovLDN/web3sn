@@ -7,6 +7,7 @@ import ScrollTop from './components/ScrollTop'
 import ScrollBot from './components/ScrollBot'
 import useSmoothScroll from './hooks/useSmoothScroll'
 import { jumpToTarget } from './lib/scroll'
+import { INTERLUDES } from './data/content'
 import { ease, duration, prefersReducedMotion } from './design/motion'
 import HeroSection from './sections/HeroSection'
 import MarqueeSection from './sections/MarqueeSection'
@@ -18,6 +19,7 @@ import ProcessSection from './sections/ProcessSection'
 import TestimonialsSection from './sections/TestimonialsSection'
 import FaqSection from './sections/FaqSection'
 import ContactSection from './sections/ContactSection'
+import Interlude from './sections/Interlude'
 import DevelopmentScreen from './screens/DevelopmentScreen'
 import Modeling3DScreen from './screens/Modeling3DScreen'
 import MotionScreen from './screens/MotionScreen'
@@ -118,12 +120,20 @@ export default function App() {
               <HeroSection />
               <MarqueeSection />
               <ProjectsSection />
+              {/* Пауза после работ: даёт им осесть, прежде чем начнётся
+                  разговор о себе. Без неё портфолио и профиль читаются
+                  одним куском. */}
+              <Interlude {...INTERLUDES.afterProjects} />
               <AboutSection />
               <StatsSection />
               <ServicesSection onOpenScreen={openScreen} />
               <ProcessSection />
               <TestimonialsSection />
               <FaqSection />
+              {/* Вторая пауза — перед просьбой написать. Пустой экран здесь
+                  работает как молчание перед вопросом: снимает ощущение,
+                  что тебя ведут по воронке. */}
+              <Interlude {...INTERLUDES.beforeContact} />
               <ContactSection />
             </main>
           </motion.div>
