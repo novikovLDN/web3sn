@@ -8,8 +8,8 @@
  *  • Ушли левитирующие иконки. Набор абстрактных 3D-значков читается как
  *    сток — ровно противоположно «дорого». Вместо них одна сигнатурная
  *    графика: сетка из тонких линий, реагирующая на курсор.
- *  • Навигация получила логотип и статус доступности. Строка ссылок,
- *    растянутая justify-between на всю ширину, выглядела как черновик.
+ *  • Навигация получила логотип. Строка ссылок, растянутая justify-between
+ *    на всю ширину, выглядела как черновик.
  *  • Имя больше не единственное сообщение. Рядом стоит строка, которая
  *    квалифицирует клиента — она и делает основную работу по продаже.
  */
@@ -143,24 +143,6 @@ function ReactiveGrid() {
   )
 }
 
-/** Индикатор доступности. Мелочь, которая снимает вопрос «а он вообще берёт заказы». */
-function AvailabilityPill() {
-  return (
-    <span className="inline-flex items-center gap-2.5 rounded-full border px-3.5 py-1.5"
-      style={{ borderColor: 'var(--border-strong)' }}
-    >
-      <span className="relative flex h-1.5 w-1.5">
-        <span className="absolute inline-flex h-full w-full rounded-full animate-soft-pulse"
-          style={{ background: 'var(--ok-bright)' }} />
-        <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: 'var(--ok)' }} />
-      </span>
-      <span className="t-mono" style={{ color: 'var(--text-muted)' }}>
-        Открыт для проектов
-      </span>
-    </span>
-  )
-}
-
 export default function HeroSection() {
   const reduce = prefersReducedMotion()
 
@@ -190,9 +172,8 @@ export default function HeroSection() {
           <span style={{ color: 'var(--a)' }}>.</span>
         </a>
 
-        {/* Ссылки компактной группой справа, а не враспор по всей ширине.
-            Правый верхний угол намеренно оставлен пустым: там живёт
-            мини-плеер, и плашка доступности с ним сталкивалась. */}
+        {/* Ссылки компактной группой справа, а не враспор по всей ширине:
+            растянутое меню читается как незаполненный шаблон. */}
         <div className="hidden md:flex items-center gap-8 mr-32 lg:mr-40">
           {NAV_LINKS.map((link) => (
             <a
@@ -243,29 +224,34 @@ export default function HeroSection() {
             </p>
           </Reveal>
 
-          {/* Плашка доступности стоит вплотную к кнопке, а не в навбаре:
-              сигнал «беру заказы» работает сильнее всего непосредственно
-              перед призывом к действию, а не в углу экрана. */}
-          <Reveal delay={0.85} y={20} className="flex flex-col items-start lg:items-end gap-5 shrink-0">
-            <AvailabilityPill />
-            {/* flex-wrap обязателен: на 390px две кнопки в строку не влезают
-                и вылезали за вьюпорт. Обрезка через overflow-x: clip на main
-                прятала это на странице, но кнопка оставалась недокликиваемой. */}
-            <div className="flex flex-wrap items-center gap-4">
-              <Button
-                variant="primary"
-                onClick={() => scrollToTarget('#contact')}
-                icon={<ArrowUpRight size={15} />}
-              >
-                {HERO.cta}
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={() => scrollToTarget('#projects')}
-              >
-                {HERO.ctaSecondary}
-              </Button>
-            </div>
+          {/*
+            Здесь была плашка «Открыт для проектов» и две кнопки. Убрано, и это
+            не упрощение, а смена сообщения.
+
+            «Открыт для проектов» — сигнал доступности: слоты есть, приходите.
+            Дорогой специалист сообщает обратное, причём структурно, а не
+            календарём: беру мало, потому что так работаю. Поэтому вместо
+            статуса — заявление об отборе.
+
+            Двух призывов тоже не осталось. Когда на первом экране две кнопки,
+            ни одна не главная, а сам факт двойного уговаривания читается как
+            заинтересованность в любом входящем. Одна сдержанная — и та ниже
+            заявления, а не над ним.
+          */}
+          <Reveal delay={0.85} y={20} className="flex flex-col items-start lg:items-end gap-6 shrink-0 lg:max-w-[34ch]">
+            <p
+              className="t-body lg:text-right"
+              style={{ color: 'var(--text-muted)' }}
+            >
+              {HERO.selectivity}
+            </p>
+            <Button
+              variant="ghost"
+              onClick={() => scrollToTarget('#contact')}
+              icon={<ArrowUpRight size={15} />}
+            >
+              {HERO.cta}
+            </Button>
           </Reveal>
         </div>
       </div>

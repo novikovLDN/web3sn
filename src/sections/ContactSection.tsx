@@ -27,7 +27,7 @@ import { motion } from 'framer-motion'
 import Button from '../components/Button'
 import { Reveal, SplitText } from '../design/primitives'
 import { ease, duration, prefersReducedMotion } from '../design/motion'
-import { CONTACT, IDENTITY } from '../data/content'
+import { HERO, CONTACT, IDENTITY } from '../data/content'
 import GameLazy from '../island/GameLazy'
 
 const CONTACT_EMAIL =
@@ -414,21 +414,14 @@ export default function ContactSection() {
           className="shell flex flex-col md:flex-row md:items-center md:justify-between"
           style={{ paddingBlock: 'var(--s-8)', gap: 'var(--s-6)' }}
         >
-          <div className="flex items-center" style={{ gap: 'var(--s-3)' }}>
-            <span className="relative flex h-1.5 w-1.5">
-              <span
-                className="absolute inline-flex h-full w-full rounded-full animate-soft-pulse"
-                style={{ background: 'var(--a)' }}
-              />
-              <span
-                className="relative inline-flex rounded-full h-1.5 w-1.5"
-                style={{ background: 'var(--a)' }}
-              />
-            </span>
-            <span className="t-mono" style={{ color: 'var(--text-muted)' }}>
-              {CONTACT.availability} {CONTACT.availableFrom}
-            </span>
-          </div>
+          {/* Здесь был пульсирующий индикатор «принимаю проекты с марта».
+              Убран вместе с датой: датированная доступность сообщает, что
+              слоты есть и вопрос лишь в календаре. Нужно обратное — что отбор
+              структурный, а не временный. Плюс дату пришлось бы обновлять
+              руками, а забытая дата хуже отсутствующей. */}
+          <p className="t-body" style={{ color: 'var(--text-muted)', maxWidth: '46ch' }}>
+            {HERO.selectivity}
+          </p>
 
           <div className="flex items-center" style={{ gap: 'var(--s-6)' }}>
             {SOCIALS.map(({ label, href, Icon }) => (
