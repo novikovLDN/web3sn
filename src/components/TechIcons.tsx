@@ -11,7 +11,7 @@ const Layer = ({ children, spin }: { children: React.ReactNode; spin?: string })
 )
 
 /** Гироскоп: три кольца в разных плоскостях + пульсирующее ядро. */
-export function IconGyro({ color = '#ef4a23', className = '' }: Props) {
+export function IconGyro({ color = 'var(--a)', className = '' }: Props) {
   return (
     <div className={`relative w-full h-full ${className}`}>
       <Layer spin="animate-spin-slow">

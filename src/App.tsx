@@ -10,14 +10,18 @@ import { jumpToTarget } from './lib/scroll'
 import HeroSection from './sections/HeroSection'
 import MarqueeSection from './sections/MarqueeSection'
 import AboutSection from './sections/AboutSection'
+import StatsSection from './sections/StatsSection'
 import ServicesSection from './sections/ServicesSection'
 import ProjectsSection from './sections/ProjectsSection'
-import StatsSection from './sections/StatsSection'
+import ProcessSection from './sections/ProcessSection'
+import TestimonialsSection from './sections/TestimonialsSection'
+import FaqSection from './sections/FaqSection'
 import ContactSection from './sections/ContactSection'
 import DevelopmentScreen from './screens/DevelopmentScreen'
 import Modeling3DScreen from './screens/Modeling3DScreen'
 import MotionScreen from './screens/MotionScreen'
 import BrandingScreen from './screens/BrandingScreen'
+import WebDesignScreen from './screens/WebDesignScreen'
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(true)
@@ -55,16 +59,33 @@ export default function App() {
         <MotionScreen onClose={closeScreen} />
       ) : screen === 'branding' ? (
         <BrandingScreen onClose={closeScreen} />
+      ) : screen === 'webdesign' ? (
+        <WebDesignScreen onClose={closeScreen} />
       ) : (
         <>
           <ScrollTop />
-          <main className="bg-[#0c0b0a]" style={{ overflowX: 'clip' }}>
+          {/*
+            Порядок секций — это воронка, а не список блоков.
+            Кто → чем занимаюсь → почему мне можно верить → что получите →
+            доказательство → как это устроено → что говорят → возражения → просьба.
+
+            Stats стоит сразу за About: заявление о позиции и цифры,
+            подтверждающие её, должны стоять рядом, иначе каждое работает вполсилы.
+            Process идёт после Projects: он снимает страх «а что будет дальше»
+            ровно в тот момент, когда работы уже произвели впечатление.
+            FAQ — последним перед контактом: он гасит последнее возражение
+            (цену) непосредственно перед просьбой написать.
+          */}
+          <main className="bg-[var(--surface)]" style={{ overflowX: 'clip' }}>
             <HeroSection />
             <MarqueeSection />
             <AboutSection />
+            <StatsSection />
             <ServicesSection onOpenScreen={openScreen} />
             <ProjectsSection />
-            <StatsSection />
+            <ProcessSection />
+            <TestimonialsSection />
+            <FaqSection />
             <ContactSection />
           </main>
         </>

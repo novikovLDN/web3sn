@@ -1,3 +1,8 @@
+/* Дизайн-токены: цвет, типографика, ритм, кривые. Единый источник правды.
+   Импорт первым — по спецификации CSS @import обязан предшествовать правилам.
+   Tailwind-утилиты идут следом и при конфликте выигрывают, как и задумано. */
+@import './design/tokens.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -36,14 +41,7 @@
   font-display: swap;
 }
 
-/* ── Палитра в духе monkeytalkie: почти-чёрный, кремовый, оранжево-красный ── */
-:root {
-  --ink: #0c0b0a;
-  --cream: #ece7db;
-  --cream-dim: #a7a196;
-  --accent: #ef4a23;
-  --accent-2: #ff6a3d;
-}
+/* Палитра переехала в design/tokens.css — здесь её больше нет намеренно. */
 
 * {
   box-sizing: border-box;
@@ -63,9 +61,46 @@ body,
   text-rendering: optimizeLegibility;
 }
 
-/* Плавный скролл + приоритет анимациям на композиторе */
+/* Скроллом управляет Lenis (см. hooks/useSmoothScroll).
+   Нативный scroll-behavior: smooth здесь ОБЯЗАН быть выключен — иначе два
+   алгоритма сглаживания борются за одну позицию и якорные переходы дёргаются.
+   Это же требование в документации Lenis. */
 html {
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
+}
+
+/* Скроллбар не должен выбиваться из палитры — на дорогих сайтах его либо
+   стилизуют, либо прячут. Прячем аккуратно, оставляя саму прокрутку. */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--n-300) transparent;
+}
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--n-300);
+  border-radius: var(--r-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--n-400);
+}
+
+/* Выделение текста — в акцентной температуре. Мелочь, которую замечают. */
+::selection {
+  background: var(--a);
+  color: var(--n-950);
+}
+
+/* Видимый фокус для клавиатуры — доступность не противоречит дорогому виду. */
+:focus-visible {
+  outline: 2px solid var(--a);
+  outline-offset: 3px;
+  border-radius: var(--r-sm);
 }
 
 .hero-heading {

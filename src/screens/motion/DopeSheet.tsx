@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useInView } from 'framer-motion'
-import { C, DISPLAY, MONO } from './palette'
+import { C, DISPLAY, MONO, T } from './palette'
 import { usePrefersReducedMotion } from './primitives'
 
 /* ── Геометрия листа ────────────────────────────────────────────── */
@@ -13,23 +13,28 @@ const LAYERS = ['СЦЕНА', 'ТИПО', 'ЛОГО', 'UI', '3D', 'ФИНАЛ']
  * 14 «экспонированных» кадров. Список ДЕТЕРМИНИРОВАННЫЙ — никакого
  * Math.random(): иначе сетка бы дёргалась между рендерами.
  * Каждый кадр — реальная навигационная цель на этом же экране.
+ *
+ * Прежняя версия подписывала кадры годами 2019—2026 и объявляла их «работами».
+ * Это было утверждение о портфолио, которого здесь нет, — убрано. Лист
+ * остался тем, чем он и был по факту: оглавлением экрана в форме
+ * экспозиционного листа.
  */
-type Frame = { i: number; anchor: string; title: string; year: string; to: string }
+type Frame = { i: number; anchor: string; title: string; to: string }
 const FRAMES: Frame[] = [
-  { i: 3, anchor: '#m-statement', title: 'Манифест', year: '2019', to: 'манифесту' },
-  { i: 9, anchor: '#m-stats', title: 'Цифры', year: '2019', to: 'статистике' },
-  { i: 16, anchor: '#m-services', title: 'Explainer-ролики', year: '2020', to: 'услугам' },
-  { i: 24, anchor: '#m-services', title: 'Логотип в движении', year: '2020', to: 'услугам' },
-  { i: 31, anchor: '#m-principles', title: 'Ритм', year: '2021', to: 'принципам' },
-  { i: 38, anchor: '#m-formats', title: 'Reels', year: '2021', to: 'форматам' },
-  { i: 45, anchor: '#m-formats', title: 'UI-моушн', year: '2022', to: 'форматам' },
-  { i: 52, anchor: '#m-principles', title: 'Характер', year: '2022', to: 'принципам' },
-  { i: 67, anchor: '#m-portal', title: 'Внутри движения', year: '2023', to: 'порталу' },
-  { i: 74, anchor: '#m-formats', title: '3D-моушн', year: '2023', to: 'форматам' },
-  { i: 81, anchor: '#m-word', title: 'Кинетика', year: '2024', to: 'кинетическому слову' },
-  { i: 95, anchor: '#m-services', title: 'Титры и графика', year: '2024', to: 'услугам' },
-  { i: 103, anchor: '#m-portal', title: 'Симуляции', year: '2025', to: 'порталу' },
-  { i: 116, anchor: '#m-cta', title: 'Связаться', year: '2026', to: 'контактам' },
+  { i: 3, anchor: '#m-statement', title: 'Заявление', to: 'заявлению' },
+  { i: 9, anchor: '#m-timing', title: '120 мс', to: 'шкале длительностей' },
+  { i: 16, anchor: '#m-timing', title: '1400 мс', to: 'шкале длительностей' },
+  { i: 24, anchor: '#m-easing', title: 'Ease-out', to: 'лаборатории кривых' },
+  { i: 31, anchor: '#m-easing', title: 'Back-out', to: 'лаборатории кривых' },
+  { i: 38, anchor: '#m-principles', title: 'Тайминг', to: 'принципам' },
+  { i: 45, anchor: '#m-principles', title: 'Функция', to: 'принципам' },
+  { i: 52, anchor: '#m-principles', title: 'Система', to: 'принципам' },
+  { i: 67, anchor: '#m-formats', title: 'Explainer', to: 'форматам' },
+  { i: 74, anchor: '#m-formats', title: 'UI-моушн', to: 'форматам' },
+  { i: 81, anchor: '#m-formats', title: '3D-моушн', to: 'форматам' },
+  { i: 95, anchor: '#m-word', title: 'Тайминг — решение', to: 'крупному кадру' },
+  { i: 103, anchor: '#m-formats', title: 'Титры', to: 'форматам' },
+  { i: 116, anchor: '#m-cta', title: 'Связаться', to: 'контактам' },
 ]
 const BY_INDEX = new Map(FRAMES.map((f) => [f.i, f]))
 
@@ -146,13 +151,13 @@ export default function DopeSheet({ onJump }: { onJump: (anchor: string) => void
   const playing = sweep > 0 && !reduced
 
   return (
-    <section id="m-dope" className="px-6 md:px-12 py-24">
+    <section id="m-dope" className="px-6 md:px-12" style={{ paddingBlock: 'var(--section-y)' }}>
       <div className="max-w-6xl">
-        <div className="flex flex-wrap items-baseline justify-between gap-4 mb-8">
-          <h2 className="font-bold uppercase tracking-tight" style={{ fontSize: 'clamp(1.8rem,5vw,3.5rem)', color: C.chalk, ...DISPLAY }}>
+        <div className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-3 mb-12">
+          <h2 className="font-bold uppercase" style={{ color: 'var(--m-chalk)', ...T.h2, ...DISPLAY }}>
             Экспозиционный лист
           </h2>
-          <p className="text-xs uppercase tracking-[0.2em]" style={{ color: C.dim, ...MONO }}>
+          <p className="text-[11px] uppercase tracking-[0.22em]" style={{ color: 'var(--m-dim)', ...MONO }}>
             Клик по кадру — переход к разделу
           </p>
         </div>
@@ -218,7 +223,7 @@ export default function DopeSheet({ onJump }: { onJump: (anchor: string) => void
                         onPointerLeave={(e) => releaseScrub(e.currentTarget)}
                         onPointerCancel={(e) => releaseScrub(e.currentTarget)}
                         onBlur={(e) => releaseScrub(e.currentTarget)}
-                        aria-label={`Кадр ${String(i + 1).padStart(3, '0')} — ${frame.title}, ${frame.year}. Перейти к ${frame.to}.`}
+                        aria-label={`Кадр ${String(i + 1).padStart(3, '0')} — ${frame.title}. Перейти к ${frame.to}.`}
                         className="ds-cell ds-cell--active relative flex items-center justify-center cursor-pointer transition-transform hover:scale-[1.18] focus-visible:scale-[1.18] focus:outline-none"
                         style={{ aspectRatio: '1', boxShadow: `inset 0 0 0 1px ${isCta ? C.ember : C.seaGlass}55`, ...wave }}
                       >
@@ -237,7 +242,9 @@ export default function DopeSheet({ onJump }: { onJump: (anchor: string) => void
           </div>
 
           <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2 text-[11px] tracking-[0.18em]" style={{ color: C.dim, ...MONO }}>
-            <span>120 КАДРОВ / 14 РАБОТ / 2019—2026</span>
+            {/* 8 fps здесь — не ограничение, а решение: ячейки анимированы
+                steps(8) против 60 fps героя. Разница между ними и есть тема. */}
+            <span>120 КАДРОВ · 6 СЛОЁВ · 8 FPS</span>
             {!reduced && (
               <button type="button" onClick={() => setSweep((s) => s + 1)} className="uppercase tracking-[0.18em] transition-colors" style={{ color: C.seaGlass, ...MONO }}>
                 ▶ Прогнать плейхед

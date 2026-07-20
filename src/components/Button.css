@@ -1,0 +1,74 @@
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: var(--r-full);
+  border: 1px solid var(--btn-border);
+  background: var(--btn-base);
+  color: var(--btn-text);
+  padding: 1rem 2.25rem;
+  font-size: var(--t-xs);
+  font-weight: 500;
+  letter-spacing: var(--tr-label);
+  text-transform: uppercase;
+  cursor: pointer;
+  /* Только transform — layout при наведении не пересчитывается. */
+  transition: transform var(--d-fast) var(--e-standard),
+              border-color var(--d-fast) var(--e-standard);
+}
+.btn:active { transform: scale(0.97); }
+
+.btn__fill {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--btn-fill);
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform var(--d-base) var(--e-standard);
+}
+.btn:hover .btn__fill { transform: scaleY(1); }
+
+.btn__label {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  /* Запас под свесы литер, чтобы маска не срезала «у» и «р». */
+  padding-block: 0.15em;
+  margin-block: -0.15em;
+}
+.btn__label-in,
+.btn__label-out {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  transition: transform var(--d-base) var(--e-standard),
+              color var(--d-fast) var(--e-standard);
+}
+.btn__label-out {
+  position: absolute;
+  inset: 0;
+  transform: translateY(100%);
+}
+.btn:hover .btn__label-in { transform: translateY(-100%); }
+.btn:hover .btn__label-out { transform: translateY(0); }
+
+/* Цвет подписи после заливки: на акценте — тёмный, на тёмном — светлый. */
+.btn--primary:hover { color: var(--n-50); }
+.btn--ghost:hover { color: var(--n-950); border-color: var(--a); }
+.btn--quiet:hover { color: var(--n-900); }
+
+.btn__icon {
+  display: inline-flex;
+  transition: transform var(--d-base) var(--e-standard);
+}
+.btn:hover .btn__icon { transform: translateX(3px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn, .btn__fill, .btn__label-in, .btn__label-out, .btn__icon {
+    transition-duration: 1ms;
+  }
+}

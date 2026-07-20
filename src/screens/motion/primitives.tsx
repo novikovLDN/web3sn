@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { motion, useInView, useMotionValue } from 'framer-motion'
-import { C, EASE, DISPLAY } from './palette'
+import { motion, useMotionValue, useSpring } from 'framer-motion'
+import { duration, ease, spring, stagger, inView as inViewCfg } from '../../design/motion'
+import { DISPLAY } from './palette'
 
 /** true, если пользователь просил уменьшить анимацию. Реактивен к смене настройки. */
 export function usePrefersReducedMotion() {
@@ -16,57 +17,134 @@ export function usePrefersReducedMotion() {
   return reduced
 }
 
-export function Reveal({ children, className, style, delay = 0 }: { children: React.ReactNode; className?: string; style?: React.CSSProperties; delay?: number }) {
+export function Reveal({
+  children,
+  className,
+  style,
+  delay = 0,
+  y = 24,
+}: {
+  children: React.ReactNode
+  className?: string
+  style?: React.CSSProperties
+  delay?: number
+  y?: number
+}) {
+  const reduced = usePrefersReducedMotion()
   return (
-    <motion.div className={className} style={style} initial={{ opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.3 }} transition={{ duration: 0.7, ease: EASE, delay }}>
+    <motion.div
+      className={className}
+      style={style}
+      initial={reduced ? false : { opacity: 0, y }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={inViewCfg}
+      transition={{ duration: reduced ? 0 : duration.slow, ease: ease.entrance, delay: reduced ? 0 : delay }}
+    >
       {children}
     </motion.div>
   )
 }
 
-export function WordReveal({ text, className, style }: { text: string; className?: string; style?: React.CSSProperties }) {
+/**
+ * Пословное появление крупного текста.
+ *
+ * Слово выезжает из-под маски: обёртка с overflow:hidden, движется вложенный
+ * span. Прежняя версия дополнительно анимировала filter: blur — от него
+ * отказались по двум причинам: blur заставляет браузер перерисовывать текст
+ * на каждом кадре (это не композиторское свойство), и он же размывает шрифт
+ * ровно в тот момент, когда читатель пытается его прочесть.
+ */
+export function WordReveal({
+  text,
+  className,
+  style,
+}: {
+  text: string
+  className?: string
+  style?: React.CSSProperties
+}) {
+  const reduced = usePrefersReducedMotion()
+
+  // При reduced-motion отдаём обычный текст: сотня лишних узлов в DOM
+  // не нужна тому, кто отключил движение.
+  if (reduced) {
+    return (
+      <p className={className} style={style}>
+        {text}
+      </p>
+    )
+  }
+
   return (
-    <motion.p className={className} style={style} variants={{ hidden: {}, show: { transition: { staggerChildren: 0.045 } } }} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.4 }}>
+    <motion.p
+      className={className}
+      style={style}
+      aria-label={text}
+      variants={{ hidden: {}, show: { transition: { staggerChildren: stagger.word } } }}
+      initial="hidden"
+      whileInView="show"
+      viewport={inViewCfg}
+    >
       {text.split(' ').map((w, i) => (
-        <motion.span key={i} className="inline-block mr-[0.26em]" variants={{ hidden: { opacity: 0, y: 22, filter: 'blur(6px)' }, show: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.6, ease: EASE } } }}>
-          {w}
-        </motion.span>
+        <span
+          key={i}
+          aria-hidden
+          className="inline-block overflow-hidden align-top mr-[0.26em]"
+          // Свесы литер (у, р, д) обрезались бы маской по базовой линии —
+          // компенсируем вертикальным запасом и втягиваем его обратно.
+          style={{ paddingBottom: '0.14em', marginBottom: '-0.14em' }}
+        >
+          <motion.span
+            className="inline-block"
+            variants={{
+              hidden: { y: '110%' },
+              show: { y: '0%', transition: { duration: duration.slower, ease: ease.entrance } },
+            }}
+          >
+            {w}
+          </motion.span>
+        </span>
       ))}
     </motion.p>
   )
 }
 
-export function CountUp({ to, suffix = '' }: { to: number; suffix?: string }) {
-  const ref = useRef<HTMLSpanElement>(null)
-  const inView = useInView(ref, { once: true, amount: 0.6 })
-  const [v, setV] = useState(0)
-  useEffect(() => {
-    if (!inView) return
-    let raf = 0
-    const t0 = performance.now()
-    const dur = 1500
-    const tick = (t: number) => {
-      const p = Math.min((t - t0) / dur, 1)
-      setV(Math.round((1 - Math.pow(1 - p, 3)) * to))
-      if (p < 1) raf = requestAnimationFrame(tick)
-    }
-    raf = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(raf)
-  }, [inView, to])
-  return <span ref={ref}>{v.toLocaleString('ru-RU')}{suffix}</span>
-}
+/* ── Кинетическая бегущая строка ──────────────────────────────────
+   Два одинаковых блока и сдвиг на -50% — единственный способ получить
+   бесшовный цикл без пересчёта ширины в JS.
 
-/* ── Кинетическая бегущая строка ────────────────────────────────── */
-export function Kinetic({ text, dir, color, size = 'clamp(3rem,11vw,9rem)', op = 1 }: { text: string; dir: 'l' | 'r'; color: string; size?: string; op?: number }) {
-  const row = Array.from({ length: 5 }, () => text)
+   ВАЖНО: суммарная ширина обязана оставаться в пределах ~12000px.
+   Выше начинается предел max texture size у GPU, и слой просто перестаёт
+   отрисовываться на реальных машинах. Отсюда всего три повтора в блоке. */
+export function Kinetic({
+  text,
+  dir,
+  color,
+  size = 'clamp(0.9rem, 2vw, 1.4rem)',
+  op = 1,
+}: {
+  text: string
+  dir: 'l' | 'r'
+  color: string
+  size?: string
+  op?: number
+}) {
+  const row = [0, 1, 2]
   return (
     <div className="overflow-hidden" style={{ opacity: op }}>
       <div className="flex w-max animate-marquee" style={dir === 'r' ? { animationDirection: 'reverse' } : undefined}>
         {[0, 1].map((blk) => (
           <div key={blk} className="flex shrink-0" aria-hidden={blk === 1}>
-            {row.map((t, i) => (
-              <span key={i} className="font-bold uppercase tracking-tight px-5 whitespace-nowrap" style={{ fontSize: size, color, lineHeight: 1, ...DISPLAY }}>
-                {t} <span style={{ color: C.ember }}>✦</span>
+            {row.map((i) => (
+              <span
+                key={i}
+                className="font-medium uppercase whitespace-nowrap px-6"
+                style={{ fontSize: size, color, lineHeight: 1, letterSpacing: '0.08em', ...DISPLAY }}
+              >
+                {text}
+                <span className="px-6" style={{ color: 'var(--m-ember)' }}>
+                  ·
+                </span>
               </span>
             ))}
           </div>
@@ -76,27 +154,50 @@ export function Kinetic({ text, dir, color, size = 'clamp(3rem,11vw,9rem)', op =
   )
 }
 
-/* ── Магнитная кнопка (тянется к курсору) ───────────────────────── */
-export function Magnetic({ children, className, style, onClick }: { children: React.ReactNode; className?: string; style?: React.CSSProperties; onClick?: () => void }) {
+/* ── Магнитная кнопка ─────────────────────────────────────────────
+   На пружине, а не на кривой: движение может быть прервано в любой момент,
+   и только пружина отрабатывает это без рывка. На тач-устройствах курсора
+   нет — там эффект отключён целиком. */
+export function Magnetic({
+  children,
+  className,
+  style,
+  onClick,
+}: {
+  children: React.ReactNode
+  className?: string
+  style?: React.CSSProperties
+  onClick?: () => void
+}) {
   const ref = useRef<HTMLButtonElement>(null)
+  const reduced = usePrefersReducedMotion()
+  const [enabled, setEnabled] = useState(false)
+  useEffect(() => {
+    setEnabled(window.matchMedia('(hover: hover) and (pointer: fine)').matches && !reduced)
+  }, [reduced])
+
   const x = useMotionValue(0)
   const y = useMotionValue(0)
+  const sx = useSpring(x, spring.snappy)
+  const sy = useSpring(y, spring.snappy)
+
   return (
     <motion.button
       ref={ref}
       onClick={onClick}
-      onMouseMove={(e) => {
-        const r = ref.current!.getBoundingClientRect()
-        x.set((e.clientX - (r.left + r.width / 2)) * 0.4)
-        y.set((e.clientY - (r.top + r.height / 2)) * 0.4)
+      onPointerMove={(e) => {
+        if (!enabled || !ref.current) return
+        const r = ref.current.getBoundingClientRect()
+        x.set((e.clientX - (r.left + r.width / 2)) * 0.35)
+        y.set((e.clientY - (r.top + r.height / 2)) * 0.35)
       }}
-      onMouseLeave={() => {
+      onPointerLeave={() => {
         x.set(0)
         y.set(0)
       }}
-      style={{ x, y, ...style }}
-      transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-      whileTap={{ scale: 0.96 }}
+      style={enabled ? { x: sx, y: sy, ...style } : style}
+      whileTap={{ scale: 0.97 }}
+      transition={{ duration: duration.fast, ease: ease.soft }}
       className={className}
     >
       {children}

@@ -1,112 +1,175 @@
+/**
+ * Переходная лента между первым экраном и профилем.
+ *
+ * Что было и почему это убрано: две ленты карточек-заглушек с бейджем «Скоро»
+ * и абстрактными иконками. Пустая карточка — самый дешёвый сигнал, который
+ * сайт может подать: она сообщает «здесь должна была быть работа, но её нет».
+ * Лучше не показывать ничего, чем показывать рамку от ненаписанного.
+ *
+ * Что вместо: чистое типографическое полотно — компетенции крупным кеглем,
+ * без плашек и иконок. Выбор в пользу типографики, а не «карточек получше»,
+ * сделан сознательно: этой секции нечего иллюстрировать, у неё роль связки
+ * и заявления. Крупный шрифт заявление держит, картинка — нет.
+ *
+ * Ритм собран из трёх скоростей: бесконечный CSS-марки (постоянное движение),
+ * смещение от скролла (лента реагирует на пользователя) и две строки в
+ * противоходе (даёт глубину без параллакса и без лишних слоёв).
+ *
+ * ⚠️ Ширина анимируемого трека держится намеренно небольшой. Full-bleed слой
+ * шире ~12000px превышает max texture size GPU на реальных машинах, и слой
+ * просто перестаёт отрисовываться. В проекте это уже случалось. Отсюда:
+ * ровно две копии списка, короткие списки и кегль, ограниченный --t-h2.
+ */
+
 import { useEffect, useRef } from 'react'
-import StaticIcon from '../components/StaticIcon'
-import { CARD_THEMES, type CardTheme, type IconName } from '../data/projects'
+import { Reveal } from '../design/primitives'
+import { prefersReducedMotion } from '../design/motion'
+import { IDENTITY } from '../data/content'
 
-type TileData = { word: string; icon: IconName; theme: CardTheme }
+/** Верхняя строка — что делаю. Нижняя — чем это становится у клиента. */
+const ROW_A = ['3D & Motion', 'Product Design', 'Creative Development', 'Brand Systems']
+const ROW_B = ['Интерфейс', 'Айдентика', 'Анимация', 'Продакшен']
 
-// Уникальные плитки-заглушки (пока нет реальных превью).
-const TILES: TileData[] = [
-  { word: '3D-моделинг', icon: 'cube', theme: 'dark' },
-  { word: 'Рендер', icon: 'gyro', theme: 'orange' },
-  { word: 'Motion', icon: 'orbit', theme: 'cream' },
-  { word: 'Брендинг', icon: 'spark', theme: 'dark' },
-  { word: 'Веб-дизайн', icon: 'chip', theme: 'orange' },
-  { word: 'Анимация', icon: 'orbit', theme: 'cream' },
-  { word: 'Концепт', icon: 'spark', theme: 'dark' },
-  { word: 'Текстуры', icon: 'cube', theme: 'orange' },
-  { word: 'Свет и кадр', icon: 'gyro', theme: 'cream' },
-  { word: 'VFX', icon: 'chip', theme: 'dark' },
-  { word: 'Гейм-арт', icon: 'orbit', theme: 'orange' },
-  { word: 'Композитинг', icon: 'spark', theme: 'cream' },
-]
-
-const ROW_ONE = TILES.slice(0, 6)
-const ROW_TWO = TILES.slice(6)
-const triple = <T,>(a: T[]) => [...a, ...a, ...a]
-
-function Tile({ tile }: { tile: TileData }) {
-  const t = CARD_THEMES[tile.theme]
+/** Разделитель между словами. Одна форма, один акцент — без зоопарка глифов. */
+function Sep() {
   return (
-    <div
-      className="rounded-2xl shrink-0 p-6 flex flex-col justify-between select-none"
-      style={{ width: 420, height: 270, background: t.bg, color: t.fg }}
+    <span
+      aria-hidden
+      className="shrink-0"
+      style={{
+        color: 'var(--a)',
+        fontSize: 'var(--t-h3)',
+        lineHeight: 1,
+        paddingInline: 'var(--s-8)',
+      }}
     >
-      <div className="flex items-center justify-between">
-        <span
-          className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-medium uppercase tracking-widest"
-          style={{ border: `1.5px solid ${t.accent}`, color: t.accent }}
+      /
+    </span>
+  )
+}
+
+/**
+ * Одна лента. Внутренний трек крутится CSS-анимацией (-50% за цикл — отсюда
+ * ровно две копии списка), внешняя обёртка смещается от скролла. Разделение
+ * на два слоя нужно, чтобы два источника движения не переписывали друг другу
+ * один и тот же transform.
+ */
+function Band({
+  words,
+  outlined,
+  reverse,
+  trackRef,
+}: {
+  words: string[]
+  /** Контурное начертание — вторая строка «отступает» на второй план. */
+  outlined: boolean
+  reverse: boolean
+  trackRef: React.RefObject<HTMLDivElement>
+}) {
+  const doubled = [...words, ...words]
+  const reduce = prefersReducedMotion()
+
+  return (
+    <div className="overflow-hidden" style={{ paddingBlock: 'var(--s-2)' }}>
+      <div ref={trackRef} style={{ willChange: 'transform' }}>
+        {/* Обратный ход — animation-direction, а не вторые кейфреймы:
+            в проекте уже есть .animate-marquee, дублировать его незачем. */}
+        <div
+          className={`flex items-center w-max ${reduce ? '' : 'animate-marquee'}`}
+          style={reverse ? { animationDirection: 'reverse' } : undefined}
         >
-          <span className="inline-flex rounded-full h-1.5 w-1.5" style={{ background: t.accent }} />
-          Скоро
-        </span>
-        <div className="w-12 h-12" style={{ opacity: 0.9 }}>
-          <StaticIcon name={tile.icon} color={t.accent} />
+          {doubled.map((w, i) => (
+            <span key={`${w}-${i}`} className="flex items-center shrink-0">
+              <span
+                className="t-h2 whitespace-nowrap select-none"
+                style={
+                  outlined
+                    ? {
+                        color: 'transparent',
+                        WebkitTextStroke: '1px var(--n-400)',
+                      }
+                    : { color: 'var(--n-900)' }
+                }
+              >
+                {w}
+              </span>
+              <Sep />
+            </span>
+          ))}
         </div>
       </div>
-      <h3 className="font-bold uppercase leading-none tracking-tight" style={{ fontSize: 'clamp(1.6rem, 2.4vw, 2.4rem)' }}>
-        {tile.word}
-      </h3>
     </div>
   )
 }
 
 export default function MarqueeSection() {
   const sectionRef = useRef<HTMLElement>(null)
-  const row1Ref = useRef<HTMLDivElement>(null)
-  const row2Ref = useRef<HTMLDivElement>(null)
-
-  const targetOffset = useRef(0)
-  const currentOffset = useRef(0)
-  const rafId = useRef<number | null>(null)
+  const trackA = useRef<HTMLDivElement>(null)
+  const trackB = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const computeTarget = () => {
-      const section = sectionRef.current
-      if (!section) return
-      targetOffset.current = (window.scrollY - section.offsetTop + window.innerHeight) * 0.3
-      startLoop()
-    }
+    if (prefersReducedMotion()) return
+
+    const target = { v: 0 }
+    const current = { v: 0 }
+    let raf: number | null = null
 
     const render = () => {
-      const diff = targetOffset.current - currentOffset.current
-      currentOffset.current += diff * 0.12
-      const off = currentOffset.current - 200
-      if (row1Ref.current) row1Ref.current.style.transform = `translate3d(${off}px,0,0)`
-      if (row2Ref.current) row2Ref.current.style.transform = `translate3d(${-off}px,0,0)`
-      if (Math.abs(diff) > 0.3) {
-        rafId.current = requestAnimationFrame(render)
-      } else {
-        rafId.current = null
-      }
+      const diff = target.v - current.v
+      current.v += diff * 0.1
+      // Амплитуда намеренно маленькая: скролл здесь — акцент поверх постоянного
+      // движения, а не второй марки. Большое смещение читается как рывок.
+      const off = current.v
+      if (trackA.current) trackA.current.style.transform = `translate3d(${off}px,0,0)`
+      if (trackB.current) trackB.current.style.transform = `translate3d(${-off}px,0,0)`
+      raf = Math.abs(diff) > 0.3 ? requestAnimationFrame(render) : null
     }
 
-    const startLoop = () => {
-      if (rafId.current == null) rafId.current = requestAnimationFrame(render)
+    const onScroll = () => {
+      const el = sectionRef.current
+      if (!el) return
+      const r = el.getBoundingClientRect()
+      // Прогресс прохода секции через экран: -1 … 1 от входа к выходу.
+      const p = (r.top + r.height / 2 - window.innerHeight / 2) / window.innerHeight
+      target.v = -p * 140
+      if (raf == null) raf = requestAnimationFrame(render)
     }
 
-    computeTarget()
-    window.addEventListener('scroll', computeTarget, { passive: true })
-    window.addEventListener('resize', computeTarget, { passive: true })
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll, { passive: true })
     return () => {
-      window.removeEventListener('scroll', computeTarget)
-      window.removeEventListener('resize', computeTarget)
-      if (rafId.current != null) cancelAnimationFrame(rafId.current)
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      if (raf != null) cancelAnimationFrame(raf)
     }
   }, [])
 
   return (
-    <section ref={sectionRef} className="bg-[#0c0b0a] pt-24 sm:pt-32 md:pt-40 pb-10 overflow-hidden">
-      <div className="flex flex-col gap-3">
-        <div ref={row1Ref} className="flex gap-3" style={{ willChange: 'transform', transform: 'translate3d(-200px,0,0)' }}>
-          {triple(ROW_ONE).map((tile, i) => (
-            <Tile key={`r1-${i}`} tile={tile} />
-          ))}
-        </div>
-        <div ref={row2Ref} className="flex gap-3" style={{ willChange: 'transform', transform: 'translate3d(200px,0,0)' }}>
-          {triple(ROW_TWO).map((tile, i) => (
-            <Tile key={`r2-${i}`} tile={tile} />
-          ))}
-        </div>
+    <section
+      ref={sectionRef}
+      className="relative overflow-hidden section-pad"
+      style={{ background: 'var(--n-50)' }}
+    >
+      {/* Заявление слева от ленты — оно задаёт, как её читать */}
+      <div className="shell" style={{ marginBottom: 'var(--s-12)' }}>
+        <Reveal y={16} className="flex flex-col">
+          <span className="t-mono" style={{ color: 'var(--a)' }}>
+            {IDENTITY.roleRu}
+          </span>
+          <p
+            className="t-lead"
+            style={{ color: 'var(--n-700)', maxWidth: '44ch', marginTop: 'var(--s-4)' }}
+          >
+            Одна голова на весь путь продукта — от позиционирования до кода
+            в продакшене. Ниже — то, что в этот путь входит.
+          </p>
+        </Reveal>
+      </div>
+
+      <div className="flex flex-col" style={{ gap: 'var(--s-2)' }}>
+        <Band words={ROW_A} outlined={false} reverse={false} trackRef={trackA} />
+        <Band words={ROW_B} outlined reverse trackRef={trackB} />
       </div>
     </section>
   )

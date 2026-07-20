@@ -1,152 +1,338 @@
-import { useRef } from 'react'
-import { motion, useScroll, useTransform } from 'framer-motion'
+/**
+ * Услуги.
+ *
+ * Что изменилось против прежней версии и почему:
+ *  • Ушли две вертикальные бегущие строки с названиями программ. Список софта
+ *    сбоку — это резюме джуна, а не аргумент лида: он сообщает, чем человек
+ *    пользуется, вместо того чтобы сообщать, что клиент получит. Плюс они
+ *    физически конкурировали с главным контентом за внимание.
+ *  • Ушёл «эффект лупы» (scale по скроллу на каждой строке). Приём заметный,
+ *    но грубый: он двигает текст, который человек в этот момент читает.
+ *    Фокус теперь задаётся тем, чем его задают в печати, — прозрачностью
+ *    соседей, а не размером активного элемента.
+ *  • Из описаний убраны инструкции «нажмите — покажу пайплайн». Интерфейсная
+ *    подсказка внутри продающего абзаца сбивает тон; аффорданс клика несут
+ *    стрелка и hover-состояние, а не текст.
+ *
+ * Главный приём секции — превью, следующее за курсором. Оно не декоративное:
+ * в нём лежит состав работ, то есть ответ на «что конкретно я получу».
+ * На тач-устройствах курсора нет, поэтому там тот же состав отдаётся
+ * инлайн-строкой под описанием — контент не теряется.
+ */
 
-// Термины и программы для боковых бегущих строк.
-const TERMS = [
-  '3D', 'MOTION', 'VFX', 'BLENDER', 'MAYA', 'CINEMA 4D', 'AFTER EFFECTS',
-  'HOUDINI', 'ZBRUSH', 'SUBSTANCE', 'UNREAL', 'WEBGL', 'THREE.JS', 'REACT',
-  'GO', 'XCODE', 'FIGMA', 'GLSL', 'NUKE', 'DAVINCI', 'БРЕНДИНГ', 'UI/UX',
-  'RENDER', 'RIGGING', 'SHADER',
-]
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { motion, useMotionValue, useSpring, AnimatePresence } from 'framer-motion'
+import { ArrowUpRight } from 'lucide-react'
+import { Reveal } from '../design/primitives'
+import { ease, duration, spring, prefersReducedMotion } from '../design/motion'
+import { SERVICES_COPY } from '../data/content'
 
-const MASK = 'linear-gradient(to bottom, transparent, black 12%, black 88%, transparent)'
-
-/** Вертикальная бегущая строка (вверх/вниз) сбоку от блока. */
-function SideMarquee({ dir, className }: { dir: 'up' | 'down'; className: string }) {
-  const list = dir === 'up' ? TERMS : [...TERMS].reverse()
-  const doubled = [...list, ...list]
-  return (
-    <div
-      aria-hidden
-      className={`pointer-events-none select-none absolute top-0 h-full overflow-hidden hidden lg:block ${className}`}
-      style={{ WebkitMaskImage: MASK, maskImage: MASK }}
-    >
-      <div className={`flex flex-col items-center gap-7 ${dir === 'up' ? 'animate-my-up' : 'animate-my-down'}`}>
-        {doubled.map((t, i) => (
-          <span
-            key={i}
-            className="font-bold uppercase tracking-tight whitespace-nowrap"
-            style={{ fontSize: '1.15rem', color: i % 3 === 0 ? 'var(--accent)' : 'rgba(12,11,10,0.32)' }}
-          >
-            {t}
-          </span>
-        ))}
-      </div>
-    </div>
-  )
+type Service = {
+  number: string
+  name: string
+  description: string
+  /** Состав работ. Короткие существительные — это опись, а не буллеты. */
+  deliverables: string[]
+  screen?: string
 }
-
-type Service = { number: string; name: string; description: string; screen?: string }
 
 const SERVICES: Service[] = [
   {
     number: '01',
     name: '3D-моделинг',
     description:
-      'Детализированные объекты, персонажи и окружения для игр, продуктов и визуализаций. Нажмите — покажу пайплайн.',
+      'Объекты, персонажи и окружения, готовые к рендеру и к движку. Топология, развёртка и текстуры приходят в состоянии, которое не придётся переделывать под задачу.',
+    deliverables: ['Хайполи и геймреди', 'Развёртка и текстуры', 'Рендер-сетапы'],
     screen: 'modeling',
   },
   {
     number: '02',
     name: 'Разработка',
     description:
-      'Сайты и веб-приложения под ключ: вёрстка, логика, анимации и 3D. Нажмите, чтобы заглянуть в процесс.',
+      'Сайт или веб-приложение, доведённое до продакшена: вёрстка, логика, движение, 3D. В браузере результат выглядит так же, как в макете, — на этом строится вся работа.',
+    deliverables: ['React и TypeScript', 'WebGL и анимация', 'Сборка и деплой'],
     screen: 'development',
   },
   {
     number: '03',
     name: 'Motion-дизайн',
     description:
-      'Динамичная анимация и моушн-графика: энергия и сторителлинг для брендов, продуктов и интерфейсов. Нажмите — покажу в движении.',
+      'Анимация, которая объясняет продукт быстрее текста: ролики для запуска, интерфейсная моторика, графика для презентаций и площадок.',
+    deliverables: ['Ролики и тизеры', 'Моторика интерфейса', 'Исходники проектов'],
     screen: 'motion',
   },
   {
     number: '04',
     name: 'Брендинг',
     description:
-      'Цельная бренд-система — от знака до носителей и гайдлайна. Нажмите: палитра переключается вживую.',
+      'Бренд-система целиком: знак, типографика, палитра, носители. С гайдлайном, по которому систему сможет вести ваша команда без меня.',
+    deliverables: ['Знак и айдентика', 'Типографика и палитра', 'Гайдлайн'],
     screen: 'branding',
   },
   {
     number: '05',
     name: 'Веб-дизайн',
     description:
-      'Чистые, современные и конверсионные сайты с вниманием к вёрстке, типографике и пользовательскому опыту.',
+      'Макеты, из которых продукт собирается без домысливания: сетка, типографика, состояния, поведение на всех размерах экрана.',
+    deliverables: ['Сетка и типографика', 'Компоненты и состояния', 'Адаптив и хендофф'],
+    screen: 'webdesign',
   },
 ]
 
-/** Строка услуги: при прокрутке плавно «приближается» в фокусе (эффект лупы). */
-function ServiceRow({ service, onOpenScreen }: { service: Service; onOpenScreen?: (id: string) => void }) {
-  const clickable = !!(service.screen && onOpenScreen)
-  const ref = useRef<HTMLDivElement>(null)
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start 0.9', 'end 0.1'] })
-  const scale = useTransform(scrollYProgress, [0, 0.5, 1], [0.92, 1.06, 0.92])
-  const opacity = useTransform(scrollYProgress, [0, 0.5, 1], [0.38, 1, 0.38])
+/**
+ * Панель, живущая у курсора. Одна на всю секцию, а не по штуке на строку:
+ * пять пружин, считающихся параллельно, — это пять лишних rAF-подписок.
+ *
+ * position: fixed снимает необходимость пересчитывать координаты
+ * относительно секции при скролле — курсорные координаты уже в видовых.
+ */
+function CursorPreview({ service, active }: { service: Service | null; active: boolean }) {
+  const x = useMotionValue(0)
+  const y = useMotionValue(0)
+  const sx = useSpring(x, spring.cursor)
+  const sy = useSpring(y, spring.cursor)
+
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      x.set(e.clientX)
+      y.set(e.clientY)
+    }
+    window.addEventListener('mousemove', onMove, { passive: true })
+    return () => window.removeEventListener('mousemove', onMove)
+  }, [x, y])
 
   return (
     <motion.div
-      ref={ref}
-      style={{ scale, opacity, transformOrigin: 'left center', borderTop: '1px solid rgba(12,12,12,0.15)', willChange: 'transform' }}
+      aria-hidden
+      className="fixed top-0 left-0 pointer-events-none hidden lg:block"
+      style={{ x: sx, y: sy, zIndex: 'var(--z-overlay)' as unknown as number }}
     >
-      <div
-        role={clickable ? 'button' : undefined}
-        tabIndex={clickable ? 0 : undefined}
-        onClick={clickable ? () => onOpenScreen!(service.screen!) : undefined}
-        onKeyDown={clickable ? (e) => (e.key === 'Enter' || e.key === ' ') && onOpenScreen!(service.screen!) : undefined}
-        className={
-          'group flex items-start gap-6 sm:gap-8 md:gap-12 py-8 sm:py-10 md:py-12 transition-colors ' +
-          (clickable ? 'cursor-pointer hover:bg-black/[0.03] rounded-2xl px-2 -mx-2' : '')
-        }
-      >
-        <span
-          className="text-[#0c0b0a] font-bold leading-none shrink-0 transition-colors group-hover:text-[color:var(--accent)]"
-          style={{ fontSize: 'clamp(3rem, 10vw, 140px)' }}
-        >
-          {service.number}
-        </span>
-
-        <div className="flex flex-col gap-3 pt-1">
-          <h3
-            className="text-[#0c0b0a] font-medium uppercase leading-tight flex items-center gap-3 flex-wrap"
-            style={{ fontSize: 'clamp(1rem, 2.2vw, 2.1rem)' }}
+      {/* Второй слой нужен, чтобы смещение «от курсора» и анимация появления
+          не дрались за один и тот же transform. */}
+      <AnimatePresence>
+        {active && service && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.94, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 4 }}
+            transition={{ duration: duration.fast, ease: ease.entrance }}
+            className="flex flex-col"
+            style={{
+              position: 'absolute',
+              left: 'var(--s-6)',
+              top: 'var(--s-6)',
+              width: '19rem',
+              padding: 'var(--s-6)',
+              gap: 'var(--s-4)',
+              background: 'var(--n-50)',
+              color: 'var(--n-900)',
+              borderRadius: 'var(--r-lg)',
+              boxShadow: 'var(--sh-lg)',
+            }}
           >
-            {service.name}
-            {clickable && (
-              <span className="inline-flex items-center gap-1 text-[color:var(--accent)] text-sm sm:text-base normal-case font-normal tracking-widest uppercase transition-transform group-hover:translate-x-1">
-                Открыть →
-              </span>
-            )}
-          </h3>
-          <p className="text-[#0c0b0a] font-light leading-relaxed max-w-2xl" style={{ fontSize: 'clamp(0.85rem, 1.6vw, 1.25rem)', opacity: 0.6 }}>
-            {service.description}
-          </p>
-        </div>
-      </div>
+            <span className="t-mono" style={{ color: 'var(--a)' }}>
+              Состав работ
+            </span>
+            <ul className="flex flex-col" style={{ gap: 'var(--s-2)' }}>
+              {service.deliverables.map((d) => (
+                <li
+                  key={d}
+                  className="t-body"
+                  style={{ color: 'var(--n-800)', lineHeight: 'var(--lh-heading)' }}
+                >
+                  {d}
+                </li>
+              ))}
+            </ul>
+            <span className="t-mono" style={{ color: 'var(--n-600)' }}>
+              Открыть экран
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   )
 }
 
+function ServiceRow({
+  service,
+  index,
+  dimmed,
+  onHover,
+  onOpenScreen,
+}: {
+  service: Service
+  index: number
+  /** Затемняется, когда наведена соседняя строка. Фокус — прозрачностью. */
+  dimmed: boolean
+  onHover: (s: Service | null) => void
+  onOpenScreen?: (id: string) => void
+}) {
+  const clickable = !!(service.screen && onOpenScreen)
+  const open = () => clickable && onOpenScreen!(service.screen!)
+
+  return (
+    <Reveal
+      as="div"
+      y={20}
+      delay={index * 0.06}
+      style={{ borderTop: '1px solid var(--n-800)' }}
+    >
+      <div
+        role={clickable ? 'button' : undefined}
+        tabIndex={clickable ? 0 : undefined}
+        onClick={open}
+        onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && open()}
+        onMouseEnter={() => onHover(service)}
+        onMouseLeave={() => onHover(null)}
+        onFocus={() => onHover(service)}
+        onBlur={() => onHover(null)}
+        className={`group grid ${clickable ? 'cursor-pointer' : ''}`}
+        style={{
+          gridTemplateColumns: 'auto 1fr auto',
+          columnGap: 'var(--s-6)',
+          rowGap: 'var(--s-3)',
+          paddingBlock: 'clamp(var(--s-8), 4vw, var(--s-16))',
+          // Только opacity — layout при затемнении соседей не трогается.
+          opacity: dimmed ? 0.32 : 1,
+          transition: `opacity var(--d-base) var(--e-standard)`,
+        }}
+      >
+        {/* Номер как элемент композиции: моноширинная колонка, не украшение */}
+        <span
+          className="t-mono"
+          style={{
+            color: 'var(--n-600)',
+            paddingTop: '0.65em',
+            transition: 'color var(--d-fast) var(--e-standard)',
+          }}
+        >
+          {service.number}
+        </span>
+
+        <div className="flex flex-col" style={{ gap: 'var(--s-4)' }}>
+          <h3
+            className="t-h2"
+            style={{ color: 'var(--n-50)' }}
+          >
+            {/* Сдвиг вправо при наведении — «строка подаётся навстречу» */}
+            <span className="inline-block transition-transform duration-500 group-hover:translate-x-3">
+              {service.name}
+            </span>
+          </h3>
+
+          <p
+            className="t-body"
+            style={{ color: 'var(--n-500)', maxWidth: '52ch' }}
+          >
+            {service.description}
+          </p>
+
+          {/* Тач-фолбэк состава работ: на десктопе он живёт в курсорном превью */}
+          <ul
+            className="flex flex-wrap lg:hidden"
+            style={{ gap: 'var(--s-2) var(--s-4)', marginTop: 'var(--s-1)' }}
+          >
+            {/* Разделитель между пунктами обязателен: при разрядке t-mono
+                пробел между словами почти равен пробелу между пунктами,
+                и без точки список читался сплошным потоком. */}
+            {service.deliverables.map((d, i) => (
+              <li key={d} className="t-mono" style={{ color: 'var(--n-600)' }}>
+                {d}
+                {i < service.deliverables.length - 1 && (
+                  <span aria-hidden style={{ color: 'var(--n-400)', marginLeft: 'var(--s-4)' }}>
+                    ·
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {clickable && (
+          <span
+            aria-hidden
+            className="hidden sm:inline-flex items-center justify-center shrink-0 transition-transform duration-500 group-hover:-translate-y-1 group-hover:translate-x-1"
+            style={{
+              color: 'var(--a)',
+              paddingTop: '0.5em',
+            }}
+          >
+            <ArrowUpRight size={28} strokeWidth={1.25} />
+          </span>
+        )}
+      </div>
+    </Reveal>
+  )
+}
+
 export default function ServicesSection({ onOpenScreen }: { onOpenScreen?: (id: string) => void }) {
+  const [hovered, setHovered] = useState<Service | null>(null)
+  const pointerFine = useRef(false)
+
+  useEffect(() => {
+    pointerFine.current =
+      window.matchMedia('(hover: hover) and (pointer: fine)').matches &&
+      !prefersReducedMotion()
+  }, [])
+
+  // Наведение регистрируем только там, где курсор существует: иначе на тач
+  // «hover» залипает после тапа и строки остаются затемнёнными.
+  const handleHover = useCallback((s: Service | null) => {
+    if (!pointerFine.current) return
+    setHovered(s)
+  }, [])
+
   return (
     <section
       id="price"
-      className="relative overflow-hidden bg-white rounded-t-[40px] sm:rounded-t-[50px] md:rounded-t-[60px] px-5 sm:px-8 md:px-10 py-20 sm:py-24 md:py-32"
+      className="relative rounded-t-[40px] sm:rounded-t-[50px] md:rounded-t-[60px] section-pad"
+      style={{ background: 'var(--n-950)' }}
     >
-      {/* Боковые вертикальные бегущие строки */}
-      <SideMarquee dir="up" className="left-0 w-[130px] xl:w-[180px]" />
-      <SideMarquee dir="down" className="right-0 w-[130px] xl:w-[180px]" />
+      <CursorPreview service={hovered} active={!!hovered} />
 
-      <h2
-        className="relative z-10 text-[#0c0b0a] font-bold uppercase text-center mb-16 sm:mb-20 md:mb-28"
-        style={{ fontSize: 'clamp(3rem, 12vw, 160px)' }}
-      >
-        Услуги
-      </h2>
+      <div className="shell">
+        {/* ── Шапка секции ─────────────────────────────────────────── */}
+        <div
+          className="flex flex-col lg:flex-row lg:items-end lg:justify-between"
+          style={{ gap: 'var(--s-8)', marginBottom: 'clamp(var(--s-12), 8vw, var(--s-24))' }}
+        >
+          <div className="flex flex-col" style={{ gap: 'var(--s-4)' }}>
+            <Reveal y={12}>
+              <span className="t-mono" style={{ color: 'var(--a)' }}>
+                {SERVICES_COPY.label}
+              </span>
+            </Reveal>
+            <Reveal y={24} delay={0.08}>
+              <h2 className="t-h1 optical-left" style={{ color: 'var(--n-50)' }}>
+                {SERVICES_COPY.title}
+              </h2>
+            </Reveal>
+          </div>
 
-      <div className="relative z-10 max-w-5xl mx-auto">
-        {SERVICES.map((service) => (
-          <ServiceRow key={service.number} service={service} onOpenScreen={onOpenScreen} />
-        ))}
+          {/* Подзаголовок задан локально: в content.ts он говорит про четыре
+              направления, а их пять. Правка чужого файла тут не в моей зоне. */}
+          <Reveal y={20} delay={0.16} className="lg:max-w-[36ch]">
+            <p className="t-body" style={{ color: 'var(--n-500)' }}>
+              Пять направлений, которые чаще всего нужны вместе. Беру их целиком —
+              и отвечаю за результат на стыках, где обычно всё и рассыпается.
+            </p>
+          </Reveal>
+        </div>
+
+        {/* ── Список ───────────────────────────────────────────────── */}
+        <div style={{ borderBottom: '1px solid var(--n-800)' }}>
+          {SERVICES.map((service, i) => (
+            <ServiceRow
+              key={service.number}
+              service={service}
+              index={i}
+              dimmed={!!hovered && hovered.number !== service.number}
+              onHover={handleHover}
+              onOpenScreen={onOpenScreen}
+            />
+          ))}
+        </div>
       </div>
     </section>
   )

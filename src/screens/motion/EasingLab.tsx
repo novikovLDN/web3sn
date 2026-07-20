@@ -1,28 +1,34 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { C, DISPLAY, EASE, MONO } from './palette'
+import { cssEase, duration } from '../../design/motion'
 import { usePrefersReducedMotion } from './primitives'
 
 /**
- * Кривые лаборатории. `path` — не декоративная закорючка, а точная геометрия
- * своего cubic-bezier: в системе координат SVG (квадрат 120×120, ось Y вниз)
- * контрольная точка (x,y) кривой лежит в (x·120, 120 − y·120).
- * Поэтому overshoot Back-out уходит выше нуля, а Anticipate — ниже
- * (viewBox="0 -34 120 188" у <Curve> даёт запас сверху и снизу под оба случая).
+ * Кривые лаборатории — это НЕ произвольная витрина easing. Это ровно тот
+ * набор, на котором построено движение всего сайта (src/design/motion.ts),
+ * с подписью, за что каждая отвечает. Раздел поэтому доказывает тезис услуги
+ * буквально: движение здесь — система, а не набор решений на глаз.
+ *
+ * `path` — не декоративная закорючка, а точная геометрия своего cubic-bezier:
+ * в системе координат SVG (квадрат 120×120, ось Y вниз) контрольная точка
+ * (x,y) кривой лежит в (x·120, 120 − y·120). Поэтому overshoot у Back-out
+ * уходит выше нуля — запас под это даёт viewBox="0 -34 120 188" у <Curve>.
  *
  * Все шесть значений различны: сравнивать две карточки с одинаковым
  * cubic-bezier под разными именами было бы обманом инструмента.
  */
 export const EASES = [
-  { name: 'Linear', css: 'linear', path: 'M0 120 L120 0' },
-  { name: 'Ease-in', css: 'cubic-bezier(0.7,0,0.84,0)', path: 'M0 120 C84 120 100.8 120 120 0' },
-  { name: 'Ease-out', css: 'cubic-bezier(0.16,1,0.3,1)', path: 'M0 120 C19.2 0 36 0 120 0' },
-  { name: 'Ease-in-out', css: 'cubic-bezier(0.65,0,0.35,1)', path: 'M0 120 C78 120 42 0 120 0' },
-  { name: 'Back-out', css: 'cubic-bezier(0.34,1.56,0.64,1)', path: 'M0 120 C40.8 -67.2 76.8 0 120 0' },
-  { name: 'Anticipate', css: 'cubic-bezier(0.36,0,0.66,-0.56)', path: 'M0 120 C43.2 120 79.2 187.2 120 0' },
+  { name: 'Standard', role: 'База интерфейса', css: cssEase.standard, path: 'M0 120 C38.4 33.6 0 0 120 0' },
+  { name: 'Entrance', role: 'Появление контента', css: cssEase.entrance, path: 'M0 120 C19.2 0 36 0 120 0' },
+  { name: 'Exit', role: 'Уход контента', css: cssEase.exit, path: 'M0 120 C84 120 100.8 120 120 0' },
+  { name: 'Editorial', role: 'Крупные блоки', css: cssEase.editorial, path: 'M0 120 C78 120 42 0 120 0' },
+  { name: 'Overshoot', role: 'Акценты, никогда текст', css: cssEase.overshoot, path: 'M0 120 C40.8 -67.2 76.8 0 120 0' },
+  { name: 'Linear', role: 'Только бесконечные циклы', css: 'linear', path: 'M0 120 L120 0' },
 ] as const
 
-const DUR = 1400
+/** Демо-прогон идёт на самой длинной ступени шкалы — разницу кривых видно. */
+const DUR = duration.cinematic * 1000
 const PUCK = 56
 
 /**

@@ -1,22 +1,43 @@
-import { Suspense, lazy, useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
-import FadeIn from '../components/FadeIn'
+/**
+ * Экран услуги «3D-моделинг».
+ *
+ * Визуальная идея — студия: тёплый глиняный свет, крупная редакционная
+ * типографика, много воздуха. Противоположность холодному терминалу
+ * «Разработки» — и так и должно остаться.
+ *
+ * Приведено к общей системе: кривые, длительности и stagger берутся из
+ * design/motion, типографика — из шкалы токенов. Своё: палитра, гарнитуры,
+ * bento-раскладка и горизонтальный пайплайн.
+ *
+ * Экран должен доказывать компетенцию, а не иллюстрировать её. Поэтому
+ * добавлен блок «Что на выходе»: клиента, который платит за 3D, интересует
+ * не столько процесс, сколько что именно он получит на руки.
+ *
+ * ВАЖНО: модель подхватывается в Model3D через import.meta.glob из
+ * src/models/*.glb — пользователь кладёт файлы туда сам. Ленивый импорт
+ * ниже трогать нельзя, иначе авто-обнаружение сломается.
+ */
 
-const EASE = [0.22, 0.61, 0.36, 1] as const
+import { Suspense, lazy, useEffect, useState, type CSSProperties } from 'react'
+import { motion } from 'framer-motion'
+import { Reveal, SplitText } from '../design/primitives'
+import { ease, cssEase, duration, stagger } from '../design/motion'
 
 const Model3D = lazy(() => import('./Model3D'))
 
-/* Тёплая «студийная» палитра — своя, не как у «Разработки». */
-const C = {
-  bg: '#0e0c0a',
-  panel: '#181410',
-  border: 'rgba(201,168,130,0.16)',
-  clay: '#c9a882',
-  clayDim: '#8a7355',
-  accent: '#ef4a23',
-  cream: '#ece7db',
-  dim: 'rgba(236,231,219,0.55)',
-}
+/* ── Палитра экрана ──────────────────────────────────────────────────
+   Тёплая «студийная», своя. Акцент и кремовый — из глобальных токенов. */
+const SCREEN_VARS = {
+  '--m3-bg': '#0e0c0a',
+  '--m3-panel': '#181410',
+  '--m3-line': 'rgba(201, 168, 130, 0.16)',
+  '--m3-clay': '#c9a882',
+  '--m3-clay-dim': '#8a7355',
+  '--m3-a': 'var(--a)',
+  '--m3-cream': 'var(--n-900)',
+  '--m3-ink': 'var(--n-50)',
+  '--m3-dim': 'rgba(236, 231, 219, 0.62)',
+} as CSSProperties
 
 function useFonts() {
   useEffect(() => {
@@ -25,34 +46,45 @@ function useFonts() {
     const l = document.createElement('link')
     l.id = id
     l.rel = 'stylesheet'
-    l.href = 'https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=Onest:wght@400;500;600;700&display=swap'
+    l.href =
+      'https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=Onest:wght@400;500;600;700&display=swap'
     document.head.appendChild(l)
   }, [])
 }
 
-/* ── Что моделим — bento-сетка (тренд 2026) ─────────────────────── */
+/* ── Что моделю — bento-сетка ────────────────────────────────────── */
 const BENTO = [
-  { t: 'Персонажи', d: 'Стилизованные и реалистичные герои с характером.', span: 'md:col-span-2 md:row-span-2', big: true },
-  { t: 'Предметы', d: 'Продукты, реквизит, гаджеты.', span: '' },
+  { t: 'Персонажи', d: 'Стилизованные и реалистичные герои с читаемым характером.', span: 'md:col-span-2 md:row-span-2', big: true },
+  { t: 'Предметы', d: 'Продукты, реквизит, устройства.', span: '' },
   { t: 'Окружения', d: 'Сцены и локации.', span: '' },
-  { t: 'Хард-сурфейс', d: 'Техника, механизмы, оружие.', span: 'md:col-span-2' },
-  { t: 'Под анимацию', d: 'Чистая топология и риг-реди сетка.', span: '' },
-  { t: 'Стилизация', d: 'Свой визуальный язык проекта.', span: '' },
+  { t: 'Хард-сурфейс', d: 'Техника и механизмы с корректной фаской.', span: 'md:col-span-2' },
+  { t: 'Под анимацию', d: 'Четырёхугольная сетка, готовая к ригу.', span: '' },
+  { t: 'Стилизация', d: 'Визуальный язык под конкретный проект.', span: '' },
 ]
 
-/* ── Пайплайн — горизонтальная лента шагов (не sticky-стек) ─────── */
+/* ── Пайплайн ────────────────────────────────────────────────────── */
 const STEPS = [
-  { n: '01', t: 'Референсы', d: 'Собираю рефы и задаю направление.' },
-  { n: '02', t: 'Блокинг', d: 'Грубая форма: пропорции и силуэт.' },
-  { n: '03', t: 'Скульпт', d: 'Детали, объём и характер.' },
-  { n: '04', t: 'Ретопология', d: 'Чистая сетка под анимацию.' },
-  { n: '05', t: 'UV + Текстуры', d: 'Развёртка и PBR-материалы.' },
-  { n: '06', t: 'Свет + Рендер', d: 'Постановка света и финал.' },
+  { n: '01', t: 'Референсы', d: 'Собираю рефы и фиксирую направление до первого полигона.' },
+  { n: '02', t: 'Блокинг', d: 'Грубая форма: пропорции и силуэт. Здесь дешевле всего менять решение.' },
+  { n: '03', t: 'Скульпт', d: 'Объём, детали и характер.' },
+  { n: '04', t: 'Ретопология', d: 'Чистая сетка под деформацию, а не под скриншот.' },
+  { n: '05', t: 'UV и текстуры', d: 'Развёртка без швов на видимых местах, PBR-материалы.' },
+  { n: '06', t: 'Свет и рендер', d: 'Постановка света и финальные кадры.' },
+]
+
+/* ── Что получает клиент ─────────────────────────────────────────────
+   Конкретика вместо обещаний: это и есть аргумент уровня. */
+const DELIVERABLES = [
+  { k: 'Форматы', v: 'FBX, OBJ, glTF/GLB и исходная сцена' },
+  { k: 'Топология', v: 'Квады, чистые лупы, готовность к ригу' },
+  { k: 'Материалы', v: 'PBR-сеты с развёрткой и картами' },
+  { k: 'Рендеры', v: 'Кадры под превью и промо в нужном разрешении' },
 ]
 
 export default function Modeling3DScreen({ onClose }: { onClose: () => void }) {
   useFonts()
   const [hovered, setHovered] = useState<number | null>(null)
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
     window.addEventListener('keydown', onKey)
@@ -60,125 +92,364 @@ export default function Modeling3DScreen({ onClose }: { onClose: () => void }) {
   }, [onClose])
 
   return (
-    <main data-screen="modeling" className="animate-screen-in relative font-onest" style={{ background: C.bg, color: C.cream }}>
-      {/* тёплое студийное свечение */}
+    <main
+      data-screen="modeling"
+      className="animate-screen-in relative font-onest"
+      style={{ ...SCREEN_VARS, background: 'var(--m3-bg)', color: 'var(--m3-cream)' }}
+    >
+      {/* Тёплое студийное свечение: два источника, как в реальной постановке */}
       <div
         className="fixed inset-0 pointer-events-none"
-        style={{ background: 'radial-gradient(60% 50% at 65% 30%, rgba(239,74,35,0.10), transparent 70%), radial-gradient(50% 40% at 20% 80%, rgba(201,168,130,0.07), transparent 70%)' }}
+        aria-hidden
+        style={{
+          background:
+            'radial-gradient(60% 50% at 65% 30%, rgba(239,74,35,0.10), transparent 70%), radial-gradient(50% 40% at 20% 80%, rgba(201,168,130,0.07), transparent 70%)',
+        }}
       />
 
-      <button onClick={onClose} className="fixed top-5 left-5 z-50 flex items-center gap-2 rounded-full px-4 py-2 text-sm backdrop-blur" style={{ border: `1px solid ${C.clayDim}`, color: C.clay, background: 'rgba(14,12,10,0.6)' }}>
+      <button
+        onClick={onClose}
+        className="fixed top-5 left-5 z-50 rounded-full px-4 py-2 backdrop-blur"
+        style={{
+          border: '1px solid var(--m3-clay-dim)',
+          color: 'var(--m3-clay)',
+          background: 'rgba(14,12,10,0.6)',
+          fontSize: 'var(--t-xs)',
+        }}
+      >
         ← Назад
       </button>
 
-      {/* ── ГЕРОЙ: иммерсивная студия ───────────────────────────── */}
-      <section className="relative min-h-screen grid lg:grid-cols-2 items-center gap-6 px-6 md:px-12 pt-24 pb-12">
-        {/* левая колонка — редакционный текст */}
+      {/* ── ГЕРОЙ ─────────────────────────────────────────────────── */}
+      <section
+        className="relative min-h-screen grid lg:grid-cols-2 items-center"
+        style={{ paddingInline: 'var(--gutter)', paddingTop: 'var(--s-24)', paddingBottom: 'var(--s-16)', gap: 'var(--s-12)' }}
+      >
         <div className="relative z-10 max-w-xl">
-          <FadeIn as="span" delay={0} y={16} className="block text-xs uppercase tracking-[0.35em] mb-5" style={{ color: C.clayDim }}>
-            Услуга 01 · Студия
-          </FadeIn>
-          <FadeIn as="h1" delay={0.05} y={30} className="font-tech font-extrabold uppercase leading-[0.92] tracking-tight" style={{ fontSize: 'clamp(2.6rem,7vw,6rem)', color: C.cream }}>
-            3D-<br />моделинг
-          </FadeIn>
-          <FadeIn as="p" delay={0.15} y={20} className="mt-6 text-lg md:text-xl font-light" style={{ color: C.dim }}>
-            Объём, характер и эмоция. Модели, которые хочется рассмотреть со всех сторон — от первого блокинга до финального рендера.
-          </FadeIn>
-          <FadeIn delay={0.25} y={20} className="mt-8 flex flex-wrap gap-3">
+          <Reveal y={14} style={{ marginBottom: 'var(--s-6)' }}>
+            <span className="t-mono" style={{ color: 'var(--m3-clay-dim)' }}>
+              Компетенция · 3D-моделинг
+            </span>
+          </Reveal>
+
+          <h1
+            className="font-tech font-extrabold uppercase optical-left"
+            style={{
+              fontSize: 'var(--t-h1)',
+              lineHeight: 'var(--lh-display)',
+              letterSpacing: 'var(--tr-h1)',
+              color: 'var(--m3-cream)',
+            }}
+          >
+            <SplitText text="3D" by="char" delay={0.1} />
+            <br />
+            <SplitText text="моделинг" by="char" delay={0.2} />
+          </h1>
+
+          <Reveal delay={0.45} y={18} style={{ marginTop: 'var(--s-8)' }}>
+            <p
+              className="font-light"
+              style={{
+                fontSize: 'var(--t-lead)',
+                lineHeight: 'var(--lh-body)',
+                letterSpacing: 'var(--tr-body)',
+                color: 'var(--m3-dim)',
+                maxWidth: '44ch',
+              }}
+            >
+              Объём, характер и свет. От первого блокинга до модели, которую
+              можно отдать в анимацию, на движок или в рендер — без переделки.
+            </p>
+          </Reveal>
+
+          <Reveal delay={0.6} y={16} className="flex flex-wrap gap-3" style={{ marginTop: 'var(--s-8)' }}>
             {['Персонажи', 'Продукты', 'Окружения'].map((t) => (
-              <span key={t} className="rounded-full px-4 py-2 text-sm transition-transform duration-[500ms] ease-[cubic-bezier(0.22,0.61,0.36,1)] hover:scale-110 cursor-default" style={{ border: `1px solid ${C.clayDim}`, color: C.clay }}>
+              <span
+                key={t}
+                className="rounded-full px-4 py-2 cursor-default hover:scale-[1.06]"
+                style={{
+                  border: '1px solid var(--m3-clay-dim)',
+                  color: 'var(--m3-clay)',
+                  fontSize: 'var(--t-xs)',
+                  transition: `transform ${duration.base}s ${cssEase.standard}`,
+                }}
+              >
                 {t}
               </span>
             ))}
-          </FadeIn>
+          </Reveal>
         </div>
 
-        {/* правая колонка — 3D-сцена, свободно, без «оконной» рамки */}
+        {/* 3D-сцена: без «оконной» рамки — модель стоит в пространстве экрана */}
         <div className="relative h-[46vh] lg:h-[78vh]">
-          <Suspense fallback={<div className="absolute inset-0 flex items-center justify-center"><span className="w-8 h-8 rounded-full border-2 animate-spin" style={{ borderColor: 'rgba(201,168,130,0.25)', borderTopColor: C.clay }} /></div>}>
+          <Suspense
+            fallback={
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span
+                  className="w-8 h-8 rounded-full border-2 animate-spin"
+                  style={{ borderColor: 'rgba(201,168,130,0.25)', borderTopColor: 'var(--m3-clay)' }}
+                />
+              </div>
+            }
+          >
             <Model3D />
           </Suspense>
-          <span className="absolute top-2 left-2 text-[11px] uppercase tracking-widest" style={{ color: C.clayDim }}>turntable · 360°</span>
+          <span className="t-mono absolute top-2 left-2" style={{ color: 'var(--m3-clay-dim)' }}>
+            turntable · 360°
+          </span>
         </div>
 
-        {/* стрелка */}
-        <div className="absolute left-1/2 -translate-x-1/2 bottom-6 flex flex-col items-center gap-2 animate-bob-down" style={{ color: C.clayDim }}>
-          <span className="text-[11px] uppercase tracking-[0.3em]">Ниже</span>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
+        <div
+          className="absolute left-1/2 -translate-x-1/2 bottom-6 flex flex-col items-center gap-2 animate-bob-down"
+          style={{ color: 'var(--m3-clay-dim)' }}
+        >
+          <span className="t-mono">Далее</span>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 5v14M5 12l7 7 7-7" />
+          </svg>
         </div>
       </section>
 
-      {/* ── BENTO: что моделим ──────────────────────────────────── */}
-      <section className="px-6 md:px-12 py-20 relative z-10">
-        <FadeIn as="h2" delay={0} y={24} className="font-tech font-extrabold uppercase tracking-tight mb-10" style={{ fontSize: 'clamp(1.8rem,5vw,3.5rem)', color: C.cream }}>
-          Что я создаю
-        </FadeIn>
-        <div className="grid grid-cols-1 md:grid-cols-4 auto-rows-[190px] gap-4 max-w-6xl">
+      {/* ── BENTO ─────────────────────────────────────────────────── */}
+      <section className="relative z-10" style={{ paddingInline: 'var(--gutter)', paddingBlock: 'var(--section-y)' }}>
+        <h2
+          className="font-tech font-extrabold uppercase"
+          style={{
+            fontSize: 'var(--t-h2)',
+            lineHeight: 'var(--lh-tight)',
+            letterSpacing: 'var(--tr-h2)',
+            color: 'var(--m3-cream)',
+            marginBottom: 'var(--s-16)',
+          }}
+        >
+          <SplitText text="Что я создаю" by="word" />
+        </h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 auto-rows-[190px] gap-4" style={{ maxWidth: 'var(--max-w)' }}>
           {BENTO.map((b, i) => {
             const isH = hovered === i
             const other = hovered !== null && !isH
             return (
-              <FadeIn key={b.t} delay={i * 0.06} y={28} className={b.span}>
+              <Reveal key={b.t} delay={i * stagger.item} y={26} className={b.span}>
                 <motion.div
                   onMouseEnter={() => setHovered(i)}
                   onMouseLeave={() => setHovered(null)}
-                  animate={{ scale: isH ? 1.07 : other ? 0.94 : 1, opacity: other ? 0.55 : 1 }}
-                  transition={{ duration: 0.5, ease: EASE }}
-                  className="rounded-3xl overflow-hidden p-5 md:p-6 flex flex-col justify-between h-full cursor-default"
+                  animate={{ scale: isH ? 1.06 : other ? 0.95 : 1, opacity: other ? 0.5 : 1 }}
+                  transition={{ duration: duration.base, ease: ease.standard }}
+                  className="relative rounded-3xl p-5 md:p-6 flex flex-col justify-between h-full cursor-default"
                   style={{
-                    background: b.big ? C.accent : C.panel,
-                    border: `1px solid ${b.big ? 'transparent' : C.border}`,
-                    color: b.big ? '#0c0b0a' : C.cream,
+                    background: b.big ? 'var(--m3-a)' : 'var(--m3-panel)',
+                    border: `1px solid ${b.big ? 'transparent' : 'var(--m3-line)'}`,
+                    color: b.big ? 'var(--m3-ink)' : 'var(--m3-cream)',
                     zIndex: isH ? 20 : 1,
-                    boxShadow: isH ? '0 30px 70px -20px rgba(0,0,0,0.6)' : 'none',
-                    position: 'relative',
                   }}
                 >
-                  <span className={`font-tech font-extrabold leading-none ${b.big ? 'text-5xl' : 'text-2xl'}`} style={{ color: b.big ? '#0c0b0a' : C.clay }}>◆</span>
-                  <div className="min-w-0">
-                    <h3 className={`font-tech font-bold uppercase mb-1.5 leading-tight ${b.big ? 'text-2xl md:text-3xl' : 'text-base md:text-lg'}`}>{b.t}</h3>
-                    <p className={`font-light leading-snug ${b.big ? 'text-sm md:text-base' : 'text-xs sm:text-[13px]'}`} style={{ opacity: 0.75 }}>{b.d}</p>
+                  {/* Тень отдельным слоем: анимируется его opacity, а не box-shadow —
+                      иначе каждый кадр наведения уходил бы в paint. */}
+                  <motion.span
+                    aria-hidden
+                    className="absolute inset-0 rounded-3xl pointer-events-none"
+                    style={{ boxShadow: 'var(--sh-lg)' }}
+                    initial={false}
+                    animate={{ opacity: isH ? 1 : 0 }}
+                    transition={{ duration: duration.base, ease: ease.standard }}
+                  />
+                  <span
+                    className="relative font-tech font-extrabold leading-none"
+                    style={{
+                      fontSize: b.big ? 'var(--t-h3)' : 'var(--t-h4)',
+                      color: b.big ? 'var(--m3-ink)' : 'var(--m3-clay)',
+                    }}
+                  >
+                    ◆
+                  </span>
+                  <div className="relative min-w-0">
+                    <h3
+                      className="font-tech font-bold uppercase"
+                      style={{
+                        fontSize: b.big ? 'var(--t-h4)' : 'var(--t-body)',
+                        lineHeight: 'var(--lh-heading)',
+                        letterSpacing: 'var(--tr-h3)',
+                        marginBottom: 'var(--s-2)',
+                      }}
+                    >
+                      {b.t}
+                    </h3>
+                    <p
+                      className="font-light"
+                      style={{
+                        fontSize: b.big ? 'var(--t-sm)' : 'var(--t-xs)',
+                        lineHeight: 'var(--lh-body)',
+                        letterSpacing: 'var(--tr-body)',
+                        opacity: 0.72,
+                      }}
+                    >
+                      {b.d}
+                    </p>
                   </div>
                 </motion.div>
-              </FadeIn>
+              </Reveal>
             )
           })}
         </div>
       </section>
 
-      {/* ── ПАЙПЛАЙН: горизонтальная лента ──────────────────────── */}
-      <section className="px-6 md:px-12 py-20 relative z-10">
-        <FadeIn as="h2" delay={0} y={24} className="font-tech font-extrabold uppercase tracking-tight mb-12" style={{ fontSize: 'clamp(1.8rem,5vw,3.5rem)', color: C.cream }}>
-          Как я работаю
-        </FadeIn>
+      {/* ── ПАЙПЛАЙН ──────────────────────────────────────────────── */}
+      <section className="relative z-10" style={{ paddingInline: 'var(--gutter)', paddingBlock: 'var(--section-y)' }}>
+        <h2
+          className="font-tech font-extrabold uppercase"
+          style={{
+            fontSize: 'var(--t-h2)',
+            lineHeight: 'var(--lh-tight)',
+            letterSpacing: 'var(--tr-h2)',
+            color: 'var(--m3-cream)',
+            marginBottom: 'var(--s-16)',
+          }}
+        >
+          <SplitText text="Как устроена работа" by="word" />
+        </h2>
+
         <div className="relative">
-          <div className="absolute left-0 right-0 top-14 h-px" style={{ background: C.border }} />
-          <div className="flex gap-6 overflow-x-auto overflow-y-visible pt-6 pb-4 -mx-6 px-6 md:mx-0 md:px-0" style={{ scrollbarWidth: 'none' }}>
+          <div className="absolute left-0 right-0 top-14 h-px" style={{ background: 'var(--m3-line)' }} />
+          {/* Горизонтальная прокрутка вместо переноса: пайплайн — это
+              последовательность, и она должна читаться одной линией. */}
+          <div
+            className="flex gap-6 overflow-x-auto overflow-y-visible pt-6 pb-4"
+            style={{ scrollbarWidth: 'none', marginInline: 'calc(-1 * var(--gutter))', paddingInline: 'var(--gutter)' }}
+          >
             {STEPS.map((s, i) => (
-              <FadeIn key={s.n} delay={i * 0.08} y={24} className="shrink-0 w-[240px]">
-                <div className="relative transition-transform duration-[500ms] ease-[cubic-bezier(0.22,0.61,0.36,1)] hover:scale-[1.08] cursor-default">
-                  <span className="relative z-10 flex items-center justify-center w-16 h-16 rounded-full font-tech font-bold text-lg" style={{ background: C.panel, border: `1px solid ${C.clayDim}`, color: C.clay }}>
+              <Reveal key={s.n} delay={i * stagger.item} y={22} className="shrink-0 w-[240px]">
+                <div
+                  className="relative hover:scale-[1.05]"
+                  style={{ transition: `transform ${duration.base}s ${cssEase.standard}`, transformOrigin: 'left top' }}
+                >
+                  <span
+                    className="relative z-10 flex items-center justify-center w-16 h-16 rounded-full font-tech font-bold"
+                    style={{
+                      background: 'var(--m3-panel)',
+                      border: '1px solid var(--m3-clay-dim)',
+                      color: 'var(--m3-clay)',
+                      fontSize: 'var(--t-body)',
+                    }}
+                  >
                     {s.n}
                   </span>
-                  <h3 className="font-tech font-bold uppercase text-lg mt-6 leading-tight" style={{ color: C.cream }}>{s.t}</h3>
-                  <p className="text-sm font-light mt-2 pr-6" style={{ color: C.dim }}>{s.d}</p>
+                  <h3
+                    className="font-tech font-bold uppercase"
+                    style={{
+                      fontSize: 'var(--t-body)',
+                      lineHeight: 'var(--lh-heading)',
+                      letterSpacing: 'var(--tr-h3)',
+                      color: 'var(--m3-cream)',
+                      marginTop: 'var(--s-6)',
+                    }}
+                  >
+                    {s.t}
+                  </h3>
+                  <p
+                    className="font-light"
+                    style={{
+                      fontSize: 'var(--t-sm)',
+                      lineHeight: 'var(--lh-body)',
+                      letterSpacing: 'var(--tr-body)',
+                      color: 'var(--m3-dim)',
+                      marginTop: 'var(--s-2)',
+                      paddingRight: 'var(--s-6)',
+                    }}
+                  >
+                    {s.d}
+                  </p>
                 </div>
-              </FadeIn>
+              </Reveal>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── CTA ─────────────────────────────────────────────────── */}
-      <section className="px-6 py-28 flex flex-col items-center text-center gap-8 relative z-10">
-        <motion.h2 initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="font-tech font-extrabold uppercase tracking-tight" style={{ fontSize: 'clamp(2rem,7vw,5rem)', lineHeight: 1.08, color: C.cream }}>
-          Оживим вашу
-          <br />
-          идею в объёме
-        </motion.h2>
-        <button onClick={onClose} className="rounded-full px-10 py-4 font-medium uppercase tracking-widest transition-transform hover:scale-[1.03]" style={{ background: C.accent, color: '#0c0b0a', boxShadow: '0 8px 24px -6px rgba(239,74,35,0.5)' }}>
-          ← Вернуться к услугам
-        </button>
+      {/* ── ЧТО НА ВЫХОДЕ ─────────────────────────────────────────── */}
+      <section className="relative z-10" style={{ paddingInline: 'var(--gutter)', paddingBlock: 'var(--section-y)' }}>
+        <Reveal y={14} style={{ marginBottom: 'var(--s-8)' }}>
+          <span className="t-mono" style={{ color: 'var(--m3-clay-dim)' }}>
+            Что на выходе
+          </span>
+        </Reveal>
+
+        <dl className="grid gap-x-12 sm:grid-cols-2 lg:grid-cols-4" style={{ maxWidth: 'var(--max-w)' }}>
+          {DELIVERABLES.map((d, i) => (
+            <Reveal key={d.k} delay={i * stagger.item} y={20}>
+              <div className="border-t" style={{ borderColor: 'var(--m3-line)', paddingTop: 'var(--s-6)', paddingBottom: 'var(--s-8)' }}>
+                <dt className="t-mono" style={{ color: 'var(--m3-clay)', marginBottom: 'var(--s-3)' }}>
+                  {d.k}
+                </dt>
+                <dd
+                  className="font-light"
+                  style={{
+                    fontSize: 'var(--t-body)',
+                    lineHeight: 'var(--lh-body)',
+                    letterSpacing: 'var(--tr-body)',
+                    color: 'var(--m3-dim)',
+                  }}
+                >
+                  {d.v}
+                </dd>
+              </div>
+            </Reveal>
+          ))}
+        </dl>
+      </section>
+
+      {/* ── ФИНАЛ ─────────────────────────────────────────────────── */}
+      <section
+        className="relative z-10 flex flex-col items-center text-center"
+        style={{ paddingInline: 'var(--gutter)', paddingBlock: 'var(--section-y)', gap: 'var(--s-8)' }}
+      >
+        <h2
+          className="font-tech font-extrabold uppercase"
+          style={{
+            fontSize: 'var(--t-h2)',
+            lineHeight: 'var(--lh-tight)',
+            letterSpacing: 'var(--tr-h2)',
+            color: 'var(--m3-cream)',
+            maxWidth: '16ch',
+          }}
+        >
+          <SplitText text="Модель делается под задачу" by="word" />
+        </h2>
+
+        <Reveal delay={0.2} y={18} style={{ maxWidth: '52ch' }}>
+          <p
+            className="font-light"
+            style={{
+              fontSize: 'var(--t-body)',
+              lineHeight: 'var(--lh-body)',
+              letterSpacing: 'var(--tr-body)',
+              color: 'var(--m3-dim)',
+            }}
+          >
+            Модель для рендера и модель для реалтайма — разные объекты.
+            Скажите, куда она пойдёт, и это определит топологию, бюджет полигонов
+            и материалы с самого начала.
+          </p>
+        </Reveal>
+
+        <Reveal delay={0.3} y={16}>
+          <button
+            onClick={onClose}
+            className="rounded-full px-10 py-4 hover:scale-[1.03]"
+            style={{
+              background: 'var(--m3-a)',
+              color: 'var(--m3-ink)',
+              fontSize: 'var(--t-xs)',
+              letterSpacing: 'var(--tr-label)',
+              textTransform: 'uppercase',
+              fontWeight: 500,
+              boxShadow: 'var(--glow-a)',
+              transition: `transform ${duration.base}s ${cssEase.standard}`,
+            }}
+          >
+            ← Вернуться к услугам
+          </button>
+        </Reveal>
       </section>
     </main>
   )

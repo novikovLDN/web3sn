@@ -1,45 +1,207 @@
-import { useEffect, useRef } from 'react'
-import { motion, useScroll, useTransform, useVelocity, type MotionValue } from 'framer-motion'
-import { C, EASE, DISPLAY } from './motion/palette'
+/**
+ * Motion — полноэкранная страница услуги.
+ *
+ * Экран должен доказывать компетенцию, а не иллюстрировать её. Поэтому три
+ * его главных блока — не картинки, а работающие инструменты: шкала
+ * длительностей, лаборатория кривых и экспозиционный лист. Все три показывают
+ * ту самую систему, по которой сделан весь сайт.
+ *
+ * Что было убрано при пересборке и почему:
+ *  • Счётчики «140+ проектов / 8 лет / 24-7 на связи» — цифры, которые нечем
+ *    подтвердить. Одна непроверяемая цифра обесценивает все соседние.
+ *  • Портал из колец и второе крупное слово на скролле — 500vh прокрутки,
+ *    не сообщавшей ничего. Пространство здесь работает лучше плотности.
+ *  • Сетка «Что я анимирую» дублировала горизонтальную галерею форматов
+ *    почти дословно. Осталась галерея — у неё своя раскладка.
+ */
+
+import { useCallback, useEffect, useRef } from 'react'
+import { motion, useInView, useScroll, useTransform, useVelocity } from 'framer-motion'
+import { C, MOTION_VARS, DISPLAY, MONO, T } from './motion/palette'
+import { cssEase, duration, ease, stagger as staggerScale, inView as inViewCfg } from '../design/motion'
 import { useMotionFonts } from './motion/useMotionFonts'
-import { Reveal, WordReveal, CountUp, Kinetic, Magnetic } from './motion/primitives'
+import { Reveal, WordReveal, Kinetic, Magnetic, usePrefersReducedMotion } from './motion/primitives'
 import MotionHero from './motion/MotionHero'
 import DopeSheet from './motion/DopeSheet'
 import EasingLab from './motion/EasingLab'
 import { scrollToTarget } from '../lib/scroll'
 
-/* ── Универсальные хелперы анимации ─────────────────────────────── */
-const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.07 } } }
-const rise = { hidden: { opacity: 0, y: 26 }, show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: EASE } } }
+/* ── Общий ритм появления блоков ─────────────────────────────────
+   Шаг и кривая — из системы, не подобраны на глаз. */
+const staggerParent = { hidden: {}, show: { transition: { staggerChildren: staggerScale.item } } }
+const rise = {
+  hidden: { opacity: 0, y: 26 },
+  show: { opacity: 1, y: 0, transition: { duration: duration.slow, ease: ease.entrance } },
+}
 
-/* ── Горизонтальная галерея форматов ────────────────────────────── */
+/** Вертикальный ритм секции — из токенов, чтобы воздух был один на весь сайт. */
+const sectionPad = { paddingBlock: 'var(--section-y)' } as const
+
+function SectionHead({ title, note }: { title: string; note?: string }) {
+  return (
+    <div className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-3 mb-12 md:mb-16">
+      <Reveal>
+        <h2 className="font-bold uppercase" style={{ color: 'var(--m-chalk)', ...T.h2, ...DISPLAY }}>
+          {title}
+        </h2>
+      </Reveal>
+      {note && (
+        <Reveal delay={0.08} y={12}>
+          <p className="text-[11px] uppercase tracking-[0.22em]" style={{ color: 'var(--m-dim)', ...MONO }}>
+            {note}
+          </p>
+        </Reveal>
+      )}
+    </div>
+  )
+}
+
+/* ── Шкала длительностей ──────────────────────────────────────────
+   Заменила блок выдуманных счётчиков. Здесь нет ни одной цифры, которую
+   нельзя проверить: это буквально duration из src/design/motion.ts.
+   Шесть фишек стартуют одновременно и приходят в разное время — шкала
+   становится видимой, а не описанной словами. */
+const DURATIONS = [
+  { ms: 120, name: 'instant', use: 'Смена состояния, подсветка' },
+  { ms: 240, name: 'fast', use: 'Наведение, фокус, мелкий сдвиг' },
+  { ms: 400, name: 'base', use: 'Переход состояния' },
+  { ms: 650, name: 'slow', use: 'Появление блока контента' },
+  { ms: 950, name: 'slower', use: 'Разворот секции' },
+  { ms: 1400, name: 'cinematic', use: 'Переход между экранами' },
+] as const
+
+function TimingScale() {
+  const reduced = usePrefersReducedMotion()
+  const ref = useRef<HTMLDivElement>(null)
+  const visible = useInView(ref, { once: true, amount: 0.35 })
+  const pucks = useRef<(HTMLSpanElement | null)[]>([])
+
+  /** Сброс без перехода → форсированный reflow → общий старт. */
+  const run = useCallback(() => {
+    pucks.current.forEach((el, i) => {
+      const lane = el?.parentElement
+      if (!el || !lane) return
+      const travel = Math.max(0, lane.clientWidth - el.offsetWidth)
+      el.style.transition = 'none'
+      el.style.transform = 'translate3d(0,0,0)'
+      // Без этого чтения браузер схлопнет сброс и запуск в один стиль.
+      void el.offsetHeight
+      el.style.transition = `transform ${DURATIONS[i].ms}ms ${cssEase.standard}`
+      el.style.transform = `translate3d(${travel}px,0,0)`
+    })
+  }, [])
+
+  useEffect(() => {
+    if (visible && !reduced) run()
+  }, [visible, reduced, run])
+
+  return (
+    <section id="m-timing" className="px-6 md:px-12" style={sectionPad}>
+      <div className="max-w-5xl">
+        <SectionHead title="Шкала длительностей" note="Шесть ступеней · одни на весь сайт" />
+
+        <Reveal className="max-w-[52ch] mb-12" y={16}>
+          <p className="font-light" style={{ color: 'var(--m-dim)', fontSize: 'var(--t-body)', lineHeight: 1.6 }}>
+            Длительность здесь не подбирается под каждую анимацию. Ступеней шесть,
+            они кратны, и они общие для всех экранов. Ниже — все шесть, запущенные
+            одновременно.
+          </p>
+        </Reveal>
+
+        <div ref={ref} className="flex flex-col">
+          {DURATIONS.map((d, i) => (
+            <div
+              key={d.name}
+              className="grid grid-cols-[auto_1fr] md:grid-cols-[7rem_1fr_14rem] items-center gap-x-5 gap-y-2 py-5"
+              style={{ borderTop: `1px solid ${C.border}` }}
+            >
+              <span className="text-[11px] tabular-nums tracking-[0.18em]" style={{ color: 'var(--m-sea)', ...MONO }}>
+                {d.ms} МС
+              </span>
+              {/* Дорожка: фишка едет только на transform */}
+              <span className="relative block h-6 col-span-2 md:col-span-1 order-last md:order-none">
+                <span
+                  aria-hidden
+                  className="absolute left-0 right-0 top-1/2 h-px"
+                  style={{ background: C.border }}
+                />
+                <span
+                  ref={(el) => {
+                    pucks.current[i] = el
+                  }}
+                  aria-hidden
+                  className="absolute left-0 top-1/2 block h-2.5 w-2.5 -translate-y-1/2 rounded-sm"
+                  style={{ background: i === DURATIONS.length - 1 ? C.ember : C.seaGlass }}
+                />
+              </span>
+              <span className="text-xs md:text-right font-light" style={{ color: 'var(--m-dim)' }}>
+                {d.use}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {!reduced && (
+          <button
+            type="button"
+            onClick={run}
+            className="mt-8 text-[11px] uppercase tracking-[0.22em] transition-opacity hover:opacity-60"
+            style={{ color: 'var(--m-ember)', ...MONO }}
+          >
+            ▶ Прогнать шкалу
+          </button>
+        )}
+      </div>
+    </section>
+  )
+}
+
+/* ── Горизонтальная галерея форматов ────────────────────────────
+   Единственный «кинематографичный» блок экрана: полоса едет по горизонтали,
+   пока страница прокручивается по вертикали. Sticky-контейнер обязан
+   оставаться без overflow-hidden у предков — иначе прилипание ломается,
+   поэтому обрезка живёт на самом липком элементе. */
 const FORMATS = [
-  { t: 'Explainer', c: C.ember },
-  { t: 'Логотип', c: C.seaGlass },
-  { t: 'Reels', c: '#A8C9C5' },
-  { t: 'UI-моушн', c: C.deepOcean },
-  { t: '3D-моушн', c: C.petrol },
-  { t: 'Титры', c: '#0B3A40' },
+  { t: 'Explainer', d: 'Продукт объяснён за минуту: сценарий, раскадровка, сборка.', c: C.ember },
+  { t: 'Логотип в движении', d: 'Интро, аутро и стингеры, собранные из логики самого знака.', c: C.seaGlass },
+  { t: 'UI-моушн', d: 'Переходы и микросостояния, отданные разработке спецификацией.', c: '#A8C9C5' },
+  { t: 'Соцсети', d: 'Вертикальный формат: ритм рассчитан на просмотр без звука.', c: C.deepOcean },
+  { t: '3D-моушн', d: 'Объём, свет и симуляции там, где плоскость уже не справляется.', c: C.petrol },
+  { t: 'Титры и графика', d: 'Ловер-трети, инфографика, субтитры — набор, который держит сетку.', c: '#0B3A40' },
 ]
+
 function HGallery() {
   const ref = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] })
-  const x = useTransform(scrollYProgress, [0, 1], ['3%', '-64%'])
+  const x = useTransform(scrollYProgress, [0, 1], ['2%', '-66%'])
   return (
-    <section id="m-formats" ref={ref} className="relative" style={{ height: '260vh' }}>
+    <section id="m-formats" ref={ref} className="relative" style={{ height: '280vh' }}>
       <div className="sticky top-0 h-screen flex flex-col justify-center overflow-hidden">
-        <h2 className="px-6 md:px-12 mb-10 font-bold uppercase tracking-tight" style={{ fontSize: 'clamp(1.8rem,5vw,3.5rem)', color: C.chalk, ...DISPLAY }}>
-          Форматы
-        </h2>
+        <div className="px-6 md:px-12 mb-10 flex flex-wrap items-baseline justify-between gap-x-8 gap-y-2">
+          <h2 className="font-bold uppercase" style={{ color: 'var(--m-chalk)', ...T.h2, ...DISPLAY }}>
+            Форматы
+          </h2>
+          <p className="text-[11px] uppercase tracking-[0.22em]" style={{ color: 'var(--m-dim)', ...MONO }}>
+            Шесть направлений
+          </p>
+        </div>
         <motion.div style={{ x }} className="flex gap-6 px-6 md:px-12">
           {FORMATS.map((f) => (
-            <div key={f.t} className="shrink-0 w-[70vw] md:w-[38vw] h-[52vh] rounded-3xl p-8 flex flex-col justify-between" style={{ background: C.panel, border: `1px solid ${C.border}` }}>
-              <span className="w-16 h-16 rounded-2xl" style={{ background: f.c }} />
+            <article
+              key={f.t}
+              className="shrink-0 w-[74vw] md:w-[38vw] h-[54vh] rounded-3xl p-8 md:p-10 flex flex-col justify-between"
+              style={{ background: C.panel, border: `1px solid ${C.border}` }}
+            >
+              <span className="block w-14 h-14 rounded-2xl" style={{ background: f.c }} />
               <div>
-                <h3 className="font-bold uppercase text-3xl md:text-5xl mb-2" style={{ color: C.chalk, ...DISPLAY }}>{f.t}</h3>
-                <p className="font-light" style={{ color: C.dim }}>Динамика, ритм и характер под задачу.</p>
+                <h3 className="font-bold uppercase mb-3" style={{ color: 'var(--m-chalk)', ...T.h3, ...DISPLAY }}>
+                  {f.t}
+                </h3>
+                <p className="font-light max-w-[34ch]" style={{ color: 'var(--m-dim)', lineHeight: 1.6 }}>
+                  {f.d}
+                </p>
               </div>
-            </div>
+            </article>
           ))}
         </motion.div>
       </div>
@@ -47,80 +209,61 @@ function HGallery() {
   )
 }
 
-/* ── Большое кинетическое слово на скролле ──────────────────────── */
+/* ── Крупное слово на прокрутке ────────────────────────────────── */
 function BigScrollWord() {
   const ref = useRef<HTMLDivElement>(null)
+  const reduced = usePrefersReducedMotion()
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] })
-  const scale = useTransform(scrollYProgress, [0, 0.5, 1], [0.65, 1.05, 0.65])
-  const rotate = useTransform(scrollYProgress, [0, 1], [-6, 6])
-  const opacity = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0, 1, 1, 0])
+  const scale = useTransform(scrollYProgress, [0, 0.5, 1], [0.78, 1.02, 0.78])
+  const opacity = useTransform(scrollYProgress, [0, 0.32, 0.68, 1], [0, 1, 1, 0])
   return (
-    <section id="m-word" ref={ref} className="py-40 overflow-hidden flex items-center justify-center">
-      <motion.h2 style={{ scale, rotate, opacity }} className="text-center font-bold uppercase leading-[0.9]" >
-        <span className="block" style={{ color: C.seaGlass, fontSize: 'clamp(2.5rem,11vw,9rem)', ...DISPLAY }}>
-          Анимация
+    <section
+      id="m-word"
+      ref={ref}
+      className="px-6 md:px-12 overflow-hidden flex items-center justify-center"
+      style={sectionPad}
+    >
+      <motion.h2
+        style={reduced ? undefined : { scale, opacity }}
+        className="text-center font-bold uppercase"
+        >
+        <span className="block" style={{ color: 'var(--m-sea)', fontSize: 'clamp(2.2rem,9vw,7rem)', lineHeight: 0.92, letterSpacing: '-0.04em', ...DISPLAY }}>
+          Тайминг —
         </span>
-        <span className="block" style={{ color: C.chalk, fontSize: 'clamp(2.5rem,11vw,9rem)', ...DISPLAY }}>решает всё</span>
+        <span className="block" style={{ color: 'var(--m-chalk)', fontSize: 'clamp(2.2rem,9vw,7rem)', lineHeight: 0.92, letterSpacing: '-0.04em', ...DISPLAY }}>
+          это решение
+        </span>
       </motion.h2>
     </section>
   )
 }
 
-/* ── Портал «влёта в пространство» ──────────────────────────────── */
-const RING_COLORS = [C.ember, C.seaGlass, '#A8C9C5', C.deepOcean, C.petrol, '#0B3A40']
-function PortalRing({ p, i }: { p: MotionValue<number>; i: number }) {
-  const scale = useTransform(p, [0, 1], [0.12 + i * 0.06, 2.6 + i * 1.5])
-  const opacity = useTransform(p, [0, 0.15, 0.8, 1], [0, 0.6, 0.6, 0])
-  return <motion.div style={{ scale, opacity, borderColor: RING_COLORS[i % RING_COLORS.length] }} className="absolute w-[300px] h-[300px] rounded-full border-2" />
-}
-function ZoomPortal() {
-  const ref = useRef<HTMLDivElement>(null)
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] })
-  const textOpacity = useTransform(scrollYProgress, [0.25, 0.5, 0.82], [0, 1, 0])
-  const textScale = useTransform(scrollYProgress, [0.25, 0.6], [0.7, 1.05])
-  return (
-    <section id="m-portal" ref={ref} className="relative" style={{ height: '260vh' }}>
-      <div className="sticky top-0 h-screen flex items-center justify-center overflow-hidden">
-        {[0, 1, 2, 3, 4, 5].map((i) => (
-          <PortalRing key={i} p={scrollYProgress} i={i} />
-        ))}
-        <motion.div style={{ opacity: textOpacity, scale: textScale }} className="relative z-10 text-center px-6">
-          <h2 className="font-bold uppercase leading-[0.95]" style={{ color: C.chalk, fontSize: 'clamp(2.2rem,7vw,5rem)', ...DISPLAY }}>
-            Внутри движения
-          </h2>
-          <p className="mt-4 font-light max-w-md mx-auto" style={{ color: C.dim }}>Каждый кадр — шаг в пространство истории.</p>
-        </motion.div>
-      </div>
-    </section>
-  )
-}
-
-/* ── Данные ─────────────────────────────────────────────────────── */
-const STATS = [
-  { to: 140, suf: '+', l: 'проектов' },
-  { to: 60, suf: ' fps', l: 'плавность' },
-  { to: 8, suf: ' лет', l: 'в моушене' },
-  { to: 24, suf: '/7', l: 'на связи' },
-]
-const SERVICES = [
-  { t: 'Explainer-ролики', d: 'Объясняем продукт понятно и динамично.' },
-  { t: 'Логотип в движении', d: 'Живой айдент: интро, аутро, стингеры.' },
-  { t: 'UI-моушн', d: 'Микроанимации и переходы интерфейсов.' },
-  { t: 'Соцсети', d: 'Reels, шортсы, вертикальный контент.' },
-  { t: '3D-моушн', d: 'Объёмная графика и симуляции.' },
-  { t: 'Титры и графика', d: 'Ловер-трети, инфографика, субтитры.' },
-]
 const PRINCIPLES = [
-  { n: '01', t: 'Ритм', d: 'Тайминг и паузы, которые чувствуются телом.' },
-  { n: '02', t: 'Смысл', d: 'Каждое движение работает на историю, а не ради красоты.' },
-  { n: '03', t: 'Характер', d: 'Свой почерк анимации под тон бренда.' },
+  {
+    n: '01',
+    t: 'Тайминг',
+    d: 'Одни и те же кадры с разным таймингом — два разных сообщения. Тайминг решается раньше формы.',
+  },
+  {
+    n: '02',
+    t: 'Функция',
+    d: 'Движение отвечает на вопрос пользователя: что изменилось и куда смотреть. Нет вопроса — нет анимации.',
+  },
+  {
+    n: '03',
+    t: 'Система',
+    d: 'Кривые и длительности задаются один раз на проект. Разный визуал при одном почерке движения читается как качество.',
+  },
 ]
 
 export default function MotionScreen({ onClose }: { onClose: () => void }) {
   useMotionFonts()
+  const reduced = usePrefersReducedMotion()
   const { scrollY } = useScroll()
   const scrollVel = useVelocity(scrollY)
-  const bandSkew = useTransform(scrollVel, [-2500, 0, 2500], [-6, 0, 6], { clamp: true })
+  // Полоса наклоняется от скорости прокрутки: скорость становится видимой.
+  const bandSkew = useTransform(scrollVel, [-2500, 0, 2500], [-5, 0, 5], { clamp: true })
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
     window.addEventListener('keydown', onKey)
@@ -128,97 +271,118 @@ export default function MotionScreen({ onClose }: { onClose: () => void }) {
   }, [onClose])
 
   return (
-    <main data-screen="motion" className="animate-screen-in relative font-sans" style={{ background: C.abyss, color: C.chalk }}>
-      <div className="fixed inset-0 pointer-events-none" style={{ background: 'radial-gradient(55% 45% at 50% 15%, rgba(31,92,99,0.20), transparent 70%), radial-gradient(45% 40% at 85% 85%, rgba(226,114,91,0.06), transparent 70%)' }} />
+    <main
+      data-screen="motion"
+      className="animate-screen-in relative font-sans"
+      style={{ ...MOTION_VARS, background: 'var(--m-abyss)', color: 'var(--m-chalk)' }}
+    >
+      <div
+        aria-hidden
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          background:
+            'radial-gradient(55% 45% at 50% 15%, rgba(31,92,99,0.20), transparent 70%), radial-gradient(45% 40% at 85% 85%, rgba(226,114,91,0.06), transparent 70%)',
+        }}
+      />
 
-      <button onClick={onClose} className="fixed top-5 left-5 z-50 flex items-center gap-2 rounded-full px-4 py-2 text-sm backdrop-blur transition-transform hover:scale-105" style={{ border: `1px solid ${C.petrol}`, color: C.seaGlass, background: 'rgba(7,19,22,0.6)' }}>
-        ← Назад
+      <button
+        onClick={onClose}
+        className="fixed top-5 left-5 z-50 flex items-center gap-2 rounded-full px-4 py-2 text-[11px] uppercase tracking-[0.18em] backdrop-blur transition-transform hover:scale-105"
+        style={{
+          border: `1px solid ${C.petrol}`,
+          color: 'var(--m-sea)',
+          background: 'rgba(7,19,22,0.6)',
+          transitionTimingFunction: cssEase.standard,
+          transitionDuration: 'var(--d-fast)',
+          ...MONO,
+        }}
+      >
+        ← Услуги
       </button>
 
       {/* 1 · Герой */}
       <MotionHero onClose={onClose} />
 
-      {/* 2 · Полоса тегов (наклоняется от скорости скролла) */}
-      <motion.div className="py-3 border-y" style={{ borderColor: C.border, skewX: bandSkew }}>
-        <Kinetic text="AFTER EFFECTS · CINEMA 4D · SPLINE · RIVE · LOTTIE · BLENDER" dir="l" color={C.petrol} size="clamp(0.9rem,2vw,1.4rem)" op={0.9} />
+      {/* 2 · Инструменты. Полоса наклоняется от скорости прокрутки */}
+      <motion.div className="py-4 border-y" style={{ borderColor: C.border, skewX: reduced ? 0 : bandSkew }}>
+        <Kinetic text="After Effects · Cinema 4D · Blender · Spline · Rive · Lottie" dir="l" color={C.petrol} op={0.9} />
       </motion.div>
 
-      {/* 3 · Заявление с пословным появлением */}
-      <section id="m-statement" className="px-6 md:px-12 py-28 max-w-5xl">
+      {/* 3 · Заявление */}
+      <section id="m-statement" className="px-6 md:px-12" style={sectionPad}>
         <WordReveal
-          text="Хорошая анимация невидима — её не замечаешь, но чувствуешь. Она ведёт взгляд, задаёт настроение и превращает интерфейс в историю."
-          className="font-bold uppercase leading-[1.05] tracking-tight"
-          style={{ fontSize: 'clamp(1.6rem,4.5vw,3.4rem)', color: C.chalk, ...DISPLAY }}
+          text="Движение — не слой поверх интерфейса. Это то, как продукт объясняет себя: что с чем связано, что только что произошло и куда смотреть дальше."
+          className="max-w-[24ch] md:max-w-[20ch] font-bold uppercase"
+          style={{ color: 'var(--m-chalk)', ...T.statement, ...DISPLAY }}
         />
       </section>
 
-      {/* 4 · Статистика (счётчики) */}
-      <section id="m-stats" className="px-6 md:px-12 py-16 border-y" style={{ borderColor: C.border }}>
-        <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.4 }} className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-6xl">
-          {STATS.map((s) => (
-            <motion.div key={s.l} variants={rise}>
-              <div className="font-bold" style={{ fontSize: 'clamp(2.5rem,6vw,4.5rem)', color: C.ember, ...DISPLAY }}>
-                <CountUp to={s.to} suffix={s.suf} />
-              </div>
-              <div className="mt-1 text-sm uppercase tracking-widest" style={{ color: C.dim }}>{s.l}</div>
-            </motion.div>
-          ))}
-        </motion.div>
-      </section>
+      {/* 4 · Шкала длительностей — заменила выдуманную статистику */}
+      <TimingScale />
 
-      {/* 5 · Easing-лаборатория */}
+      {/* 5 · Лаборатория кривых */}
       <EasingLab />
 
-      {/* 6 · Услуги */}
-      <section id="m-services" className="px-6 md:px-12 py-24">
-        <Reveal><h2 className="font-bold uppercase tracking-tight mb-10" style={{ fontSize: 'clamp(1.8rem,5vw,3.5rem)', color: C.chalk, ...DISPLAY }}>Что я анимирую</h2></Reveal>
-        <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.2 }} className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-6xl">
-          {SERVICES.map((s, i) => (
-            <motion.div key={s.t} variants={rise} whileHover={{ y: -8, scale: 1.02 }} transition={{ duration: 0.4, ease: EASE }} className="rounded-2xl p-6 cursor-default" style={{ background: C.panel, border: `1px solid ${C.border}` }}>
-              <span className="inline-block w-10 h-10 rounded-lg mb-4" style={{ background: i % 2 ? C.seaGlass : C.ember }} />
-              <h3 className="font-semibold text-xl mb-1" style={{ color: C.chalk }}>{s.t}</h3>
-              <p className="text-sm font-light" style={{ color: C.dim }}>{s.d}</p>
+      {/* 6 · Принципы */}
+      <section id="m-principles" className="px-6 md:px-12" style={sectionPad}>
+        <SectionHead title="Принципы" />
+        <motion.div
+          variants={staggerParent}
+          initial="hidden"
+          whileInView="show"
+          viewport={inViewCfg}
+          className="grid md:grid-cols-3 gap-x-8 gap-y-12 max-w-6xl"
+        >
+          {PRINCIPLES.map((p) => (
+            <motion.div key={p.n} variants={rise}>
+              <span
+                className="block font-bold tabular-nums"
+                style={{ fontSize: 'clamp(2.6rem,6vw,4.5rem)', lineHeight: 1, letterSpacing: '-0.04em', color: C.petrol, ...DISPLAY }}
+              >
+                {p.n}
+              </span>
+              <h3 className="font-bold uppercase mt-4 mb-3" style={{ color: 'var(--m-chalk)', ...T.h3, ...DISPLAY }}>
+                {p.t}
+              </h3>
+              <p className="font-light max-w-[34ch]" style={{ color: 'var(--m-dim)', lineHeight: 1.6 }}>
+                {p.d}
+              </p>
             </motion.div>
           ))}
         </motion.div>
       </section>
 
-      {/* 7 · Экспозиционный лист — навигация по кадрам */}
+      {/* 7 · Экспозиционный лист — навигация по разделам экрана */}
       <DopeSheet onJump={(a) => scrollToTarget(a)} />
 
-      {/* 8 · Принципы */}
-      <section id="m-principles" className="px-6 md:px-12 py-24">
-        <Reveal><h2 className="font-bold uppercase tracking-tight mb-12" style={{ fontSize: 'clamp(1.8rem,5vw,3.5rem)', color: C.chalk, ...DISPLAY }}>Принципы</h2></Reveal>
-        <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.3 }} className="grid md:grid-cols-3 gap-6 max-w-6xl">
-          {PRINCIPLES.map((p) => (
-            <motion.div key={p.n} variants={rise} className="relative">
-              <span className="font-bold" style={{ fontSize: 'clamp(3rem,7vw,6rem)', color: C.petrol, opacity: 0.5, ...DISPLAY }}>{p.n}</span>
-              <h3 className="font-bold uppercase text-2xl mt-2" style={{ color: C.chalk, ...DISPLAY }}>{p.t}</h3>
-              <p className="mt-2 font-light" style={{ color: C.dim }}>{p.d}</p>
-            </motion.div>
-          ))}
-        </motion.div>
-      </section>
-
-      {/* 9 · Горизонтальная галерея */}
+      {/* 8 · Форматы */}
       <HGallery />
 
-      {/* 10 · Портал: влёт в пространство */}
-      <ZoomPortal />
-
-      {/* 11 · Большое слово на скролле */}
+      {/* 9 · Крупное слово */}
       <BigScrollWord />
 
-      {/* 11 · CTA */}
-      <section id="m-cta" className="px-6 py-32 flex flex-col items-center text-center gap-8 relative z-10">
-        <motion.h2 initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, ease: EASE }} className="font-bold uppercase tracking-tight" style={{ fontSize: 'clamp(2rem,7vw,5rem)', lineHeight: 1.08, color: C.chalk, ...DISPLAY }}>
-          Заставим ваш
-          <br />
-          бренд двигаться
-        </motion.h2>
-        <Magnetic onClick={onClose} className="rounded-full px-10 py-4 font-medium uppercase tracking-widest" style={{ background: C.ember, color: '#0c0b0a', boxShadow: '0 10px 30px -8px rgba(226,114,91,0.55)' }}>
-          ← Вернуться к услугам
-        </Magnetic>
+      {/* 10 · Завершение */}
+      <section id="m-cta" className="px-6 md:px-12 flex flex-col items-start gap-10 relative z-10" style={sectionPad}>
+        <Reveal>
+          <h2 className="font-bold uppercase max-w-[16ch]" style={{ color: 'var(--m-chalk)', ...T.h2, ...DISPLAY }}>
+            Расскажите, что должно двигаться
+          </h2>
+        </Reveal>
+        <Reveal delay={0.1} y={16} className="max-w-[46ch]">
+          <p className="font-light" style={{ color: 'var(--m-dim)', fontSize: 'var(--t-body)', lineHeight: 1.6 }}>
+            Опишите задачу и срок. Отвечу в течение суток — либо с предложением,
+            либо с честным «это не ко мне».
+          </p>
+        </Reveal>
+        <Reveal delay={0.18} y={16}>
+          <Magnetic
+            onClick={onClose}
+            className="rounded-full px-9 py-4 text-[11px] font-medium uppercase tracking-[0.2em]"
+            style={{ background: C.ember, color: C.abyss, ...MONO }}
+          >
+            ← Вернуться к услугам
+          </Magnetic>
+        </Reveal>
       </section>
     </main>
   )

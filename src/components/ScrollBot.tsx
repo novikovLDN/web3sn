@@ -1,84 +1,166 @@
 import { useEffect, useRef, useState } from 'react'
 
 /**
- * Мини-робот-компаньон, «висящий» на правом крае и едущий по вертикали
- * вместе с прогрессом прокрутки. Появляется во время скролла (цепляется за
- * рельс и покачивается), плавно исчезает в покое. Оригинальный персонаж.
+ * Индикатор прогресса чтения на правом краю.
+ *
+ * Что здесь было раньше и почему заменено: мультяшный робот-космонавт,
+ * едущий по краю экрана. Два независимых повода его убрать.
+ *
+ *  1. Позиционирование. Персонаж в голубых тонах вне палитры сообщает
+ *     «дружелюбно и весело» — ровно противоположное тому, что должен
+ *     сообщать сайт дорогого специалиста уровня руководителя.
+ *  2. Производительность. Он двигался через `top: calc(...)` — это layout-
+ *     свойство: каждый кадр прокрутки браузер пересчитывал геометрию
+ *     страницы. Ниже — только `transform`, то есть работа на композиторе.
+ *
+ * Взамен — то, что делают на премиальных сайтах: тонкий рельс, засечки
+ * разделов и подпись текущего раздела. Это не украшение, а ориентация:
+ * на длинной странице человек должен понимать, где он и сколько осталось.
  */
+
+// Разделы в порядке следования. Совпадает с порядком секций в App.tsx.
+const SECTIONS = [
+  { id: 'about', label: 'Профиль' },
+  { id: 'stats', label: 'Цифры' },
+  { id: 'price', label: 'Услуги' },
+  { id: 'projects', label: 'Проекты' },
+  { id: 'process', label: 'Процесс' },
+  { id: 'faq', label: 'Вопросы' },
+  { id: 'contact', label: 'Контакты' },
+]
+
 export default function ScrollBot() {
-  const [p, setP] = useState(0)
+  const [progress, setProgress] = useState(0)
   const [active, setActive] = useState(false)
+  const [current, setCurrent] = useState('')
   const idle = useRef<number | null>(null)
+  const raf = useRef<number | null>(null)
 
   useEffect(() => {
-    if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return // только десктоп
-    const onScroll = () => {
+    // Только десктоп: на тач-устройствах есть системный индикатор прокрутки.
+    if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return
+
+    const read = () => {
+      raf.current = null
       const max = document.documentElement.scrollHeight - window.innerHeight
-      setP(max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0)
+      setProgress(max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0)
+
+      // Текущий раздел — тот, чья верхняя граница ближе всего сверху к
+      // трети экрана. Треть, а не край: раздел ощущается «текущим»
+      // раньше, чем упирается в верх окна.
+      const anchor = window.innerHeight / 3
+      let found = ''
+      for (const s of SECTIONS) {
+        const el = document.getElementById(s.id)
+        if (!el) continue
+        if (el.getBoundingClientRect().top <= anchor) found = s.label
+      }
+      setCurrent(found)
+    }
+
+    const onScroll = () => {
+      // Чтение геометрии — не чаще кадра. Без этого каждое событие
+      // прокрутки вызывало бы принудительный reflow.
+      if (raf.current == null) raf.current = requestAnimationFrame(read)
+
       setActive(true)
       if (idle.current) window.clearTimeout(idle.current)
-      idle.current = window.setTimeout(() => setActive(false), 1300)
+      idle.current = window.setTimeout(() => setActive(false), 1600)
     }
+
     window.addEventListener('scroll', onScroll, { passive: true })
-    onScroll()
+    read()
     return () => {
       window.removeEventListener('scroll', onScroll)
       if (idle.current) window.clearTimeout(idle.current)
+      if (raf.current != null) cancelAnimationFrame(raf.current)
     }
   }, [])
 
   return (
-    <div className="fixed top-0 right-0 z-[90] pointer-events-none h-full hidden md:block">
-      {/* робот «висит» вплотную к системному скроллбару — без отдельной линии */}
+    <div
+      aria-hidden
+      className="fixed top-0 right-0 h-full pointer-events-none hidden lg:flex items-center"
+      style={{ zIndex: 90, paddingRight: 'var(--s-6)' }}
+    >
       <div
-        className="absolute right-0 transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.22,0.61,0.36,1)]"
+        className="flex items-center gap-4"
         style={{
-          top: `calc(${p} * (100vh - 84px) + 6px)`,
-          opacity: active ? 1 : 0,
-          transform: active ? 'scale(1)' : 'scale(0.55)',
+          opacity: active ? 1 : 0.25,
+          transition: 'opacity var(--d-slow) var(--e-standard)',
         }}
       >
-        <div className="animate-bot-sway">
-          <Bot />
+        {/* Подпись текущего раздела. Уезжает вправо в покое —
+            transform, не изменение ширины. */}
+        {/* Подпись показывается только от 1536px: на более узких экранах
+            контейнер контента (max-w 1440 + гаттеры) доходит почти до края,
+            и подпись ложилась поверх текста. Рельс при этом остаётся всегда —
+            он узкий и в поле контента не заходит. */}
+        <span
+          className="t-mono whitespace-nowrap hidden 2xl:inline"
+          style={{
+            color: 'var(--text-faint)',
+            transform: active ? 'translateX(0)' : 'translateX(8px)',
+            opacity: active ? 1 : 0,
+            transition:
+              'transform var(--d-slow) var(--e-standard), opacity var(--d-slow) var(--e-standard)',
+          }}
+        >
+          {current}
+        </span>
+
+        {/* Рельс с засечками разделов */}
+        <div className="relative flex flex-col justify-between" style={{ height: '38vh' }}>
+          {/* Фоновая линия */}
+          <span
+            className="absolute"
+            style={{
+              left: '50%',
+              top: 0,
+              bottom: 0,
+              width: 1,
+              marginLeft: -0.5,
+              background: 'var(--n-300)',
+            }}
+          />
+          {/* Пройденная часть: scaleY от верха — чистый composited-слой. */}
+          <span
+            className="absolute origin-top"
+            style={{
+              left: '50%',
+              top: 0,
+              bottom: 0,
+              width: 1,
+              marginLeft: -0.5,
+              background: 'var(--a)',
+              transform: `scaleY(${progress})`,
+              // Без перехода: значение и так меняется каждый кадр,
+              // дополнительное сглаживание дало бы запаздывание.
+            }}
+          />
+          {/* Засечки разделов */}
+          {SECTIONS.map((s, i) => {
+            const at = i / (SECTIONS.length - 1)
+            const passed = progress >= at - 0.02
+            return (
+              <span
+                key={s.id}
+                className="relative block rounded-full"
+                style={{
+                  width: 3,
+                  height: 3,
+                  marginLeft: 'auto',
+                  marginRight: 'auto',
+                  background: passed ? 'var(--a)' : 'var(--n-400)',
+                  transform: passed ? 'scale(1.6)' : 'scale(1)',
+                  transition:
+                    'transform var(--d-base) var(--e-standard), background-color var(--d-base) var(--e-standard)',
+                }}
+              />
+            )
+          })}
         </div>
       </div>
     </div>
-  )
-}
-
-/** Оригинальный робот-космонавт. */
-function Bot() {
-  return (
-    <svg width="48" height="62" viewBox="0 0 48 62" fill="none">
-      {/* руки-крюки вверх */}
-      <path d="M17 22 C11 16 13 10 18 9" stroke="#d9dde6" strokeWidth="4" strokeLinecap="round" />
-      <path d="M31 22 C37 16 35 10 30 9" stroke="#d9dde6" strokeWidth="4" strokeLinecap="round" />
-      {/* ноги (болтаются) */}
-      <g className="animate-bot-sway" style={{ transformOrigin: '24px 42px', animationDuration: '2s' }}>
-        <rect x="18.5" y="42" width="4.5" height="14" rx="2.25" fill="#c8cdd8" />
-        <rect x="25" y="42" width="4.5" height="14" rx="2.25" fill="#c8cdd8" />
-        <circle cx="20.7" cy="57" r="3" fill="#eef1f6" />
-        <circle cx="27.3" cy="57" r="3" fill="#eef1f6" />
-      </g>
-      {/* корпус */}
-      <rect x="12" y="24" width="24" height="22" rx="11" fill="#eef1f6" />
-      <circle cx="24" cy="35" r="3" fill="var(--accent)" />
-      {/* голова */}
-      <rect x="10" y="6" width="28" height="22" rx="11" fill="#eef1f6" />
-      {/* визор */}
-      <rect x="14" y="11" width="20" height="12" rx="6" fill="#141826" />
-      {/* глаза */}
-      <circle cx="20" cy="17" r="2.4" fill="#5ad1ff">
-        <animate attributeName="r" values="2.4;0.6;2.4" dur="4s" repeatCount="indefinite" begin="1s" />
-      </circle>
-      <circle cx="28" cy="17" r="2.4" fill="#5ad1ff">
-        <animate attributeName="r" values="2.4;0.6;2.4" dur="4s" repeatCount="indefinite" begin="1s" />
-      </circle>
-      {/* антенна */}
-      <line x1="24" y1="6" x2="24" y2="1.5" stroke="#c8cdd8" strokeWidth="2" strokeLinecap="round" />
-      <circle cx="24" cy="1.5" r="2" fill="var(--accent)">
-        <animate attributeName="opacity" values="1;0.3;1" dur="1.6s" repeatCount="indefinite" />
-      </circle>
-    </svg>
   )
 }

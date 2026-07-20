@@ -108,7 +108,7 @@ export default function MiniPlayer({ start }: { start: boolean }) {
     setIndex((i) => (i + dir + TRACKS.length) % TRACKS.length)
   }
 
-  const fg = onLight ? '#0c0b0a' : '#ece7db'
+  const fg = onLight ? 'var(--n-50)' : 'var(--n-900)'
   const dim = onLight ? 'rgba(12,11,10,0.55)' : 'rgba(167,161,150,0.9)'
   const border = onLight ? 'rgba(12,11,10,0.25)' : 'rgba(236,231,219,0.15)'
   const bg = onLight ? 'rgba(236,231,219,0.6)' : 'rgba(12,11,10,0.4)'
@@ -126,9 +126,13 @@ export default function MiniPlayer({ start }: { start: boolean }) {
         onPause={() => setPlaying(false)}
         onEnded={() => step(1)}
       />
+      {/* Левый нижний угол — единственная зона, свободная во всех секциях.
+          Сверху справа плеер ложился на контент: на первом экране — на плашку
+          доступности, в контактах — на поле почты. Справа внизу занято кнопкой
+          «наверх», справа по всей высоте — индикатором прокрутки. */}
       <div
         ref={pillRef}
-        className="fixed top-16 sm:top-20 right-5 md:right-10 z-50 flex items-center gap-2 rounded-full px-3 py-2 backdrop-blur-md transition-[opacity,background-color,border-color] duration-300"
+        className="fixed bottom-5 md:bottom-8 left-5 md:left-10 z-50 flex items-center gap-2 rounded-full px-3 py-2 backdrop-blur-md transition-[opacity,background-color,border-color] duration-300"
         style={{ background: bg, border: `1px solid ${border}`, opacity: start ? 1 : 0, pointerEvents: start ? 'auto' : 'none' }}
       >
         {multi && (
