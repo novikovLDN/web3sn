@@ -7,7 +7,6 @@ import ScrollTop from './components/ScrollTop'
 import ScrollBot from './components/ScrollBot'
 import useSmoothScroll from './hooks/useSmoothScroll'
 import { jumpToTarget } from './lib/scroll'
-import { INTERLUDES } from './data/content'
 import { ease, duration, prefersReducedMotion } from './design/motion'
 import HeroSection from './sections/HeroSection'
 import ProjectsSection from './sections/ProjectsSection'
@@ -17,7 +16,7 @@ import ProcessSection from './sections/ProcessSection'
 import ChronicleSection from './sections/ChronicleSection'
 import FaqSection from './sections/FaqSection'
 import ContactSection from './sections/ContactSection'
-import Interlude from './sections/Interlude'
+import DataStrip from './sections/DataStrip'
 import DevelopmentScreen from './screens/DevelopmentScreen'
 import Modeling3DScreen from './screens/Modeling3DScreen'
 import MotionScreen from './screens/MotionScreen'
@@ -148,20 +147,22 @@ export default function App() {
             <main className="bg-[var(--surface)]" style={{ overflowX: 'clip' }}>
               <HeroSection />
               <ProjectsSection />
-              {/* Пауза после работ: даёт им осесть, прежде чем начнётся
-                  разговор о деле. Без неё портфолио и услуги читаются
-                  одним куском. Плюс она гасит инверсию света — светлая
-                  секция обязана уходить в полную темноту, иначе удар
-                  тянется дальше, чем должен. */}
-              <Interlude {...INTERLUDES.afterProjects} side="right" />
+              {/* Переход после работ. Была полноэкранная пауза с афоризмом —
+                  снята: проверка показала, что фраза оказалась отраслевой
+                  банальностью, а целый экран под неё требовал внимания
+                  вместо того, чтобы отпускать. Вместо неё полоса данных:
+                  тот же запрос на технологичность, но без необходимости
+                  иметь незаезженную мысль. Все данные настоящие. */}
+              <DataStrip index="01 / 02" next="Компетенции" />
               <ServicesSection onOpenScreen={openScreen} />
               <AboutSection />
               <ProcessSection />
               <ChronicleSection />
-              {/* Вторая пауза — перед просьбой написать. Пустой экран здесь
-                  работает как молчание перед вопросом: снимает ощущение,
-                  что тебя ведут по воронке. */}
-              <Interlude {...INTERLUDES.beforeContact} side="left" />
+              {/* Здесь была вторая пауза. Убрана совсем, и это осознанно:
+                  повтор одного приёма превращает жест в рубрику, а второй
+                  текст был такой же банальностью, как первый. Переход
+                  перед контактом решается сменой плотности — контакт
+                  занимает полный вьюпорт и отделяет себя сам. */}
               <FaqSection />
               <ContactSection />
             </main>
