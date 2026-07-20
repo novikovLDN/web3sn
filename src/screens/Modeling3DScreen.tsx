@@ -1,50 +1,73 @@
 /**
  * Экран услуги — 3D-моделинг.
  *
- * ВИЗУАЛЬНАЯ НИША: СТУДИЯ, А НЕ РЕНДЕР
- * ────────────────────────────────────
+ * ТЕЗИС: ЭКРАН — ЭТО ПРОСМОТРОВАЯ, А НЕ ГАЛЕРЕЯ
+ * ─────────────────────────────────────────────
+ * Портфолио 3D-художника почти всегда устроено как галерея финальных
+ * кадров. Проблема в том, что финальный кадр перестал быть доказательством:
+ * картинку такого качества выдаёт генератор, и зритель это знает.
+ * Доказательством стало ровно то, чего у генератора нет, — сетка,
+ * развёртка, ретопология, бюджет полигонов. То есть всё, что на финальном
+ * кадре по определению не видно.
+ *
+ * Поэтому экран собран не как галерея, а как просмотровая: один объект
+ * под светом и док внизу, которым его прогоняют по стадиям пайплайна —
+ * сетка, ретопология, развёртка, глина, затенение, финальный кадр.
+ * Переключение меняет весь экран разом: сам объект на стенде, текст
+ * закона, температуру интерфейса и то, какие из живых метрик выходят
+ * на первый план. Одно решение — вся страница; так устроено управление
+ * системой, а не набор кнопок сбоку.
+ *
+ * ВИЗУАЛЬНАЯ НИША: ЗАТЕМНЁННЫЙ ПАВИЛЬОН
+ * ─────────────────────────────────────
  * Температуры остальных экранов заняты: светлая швейцарская с ультрамарином
  * (Веб-дизайн), средний серый цикл (Брендинг), петроль (Моушн), терминальный
  * зелёный (Разработка), тёмная тёплая (главная). За 3D закреплена тёплая
- * глина — и здесь она углублена до конкретного места: съёмочный павильон.
+ * глина, и здесь она углублена до конкретного места — умбра затемнённого
+ * съёмочного павильона, где единственный источник цвета это объект под
+ * светом. Ниша работает на смысл услуги: спорить с объектом нечему.
  *
- * Фон — не «просто тёмный», а умбра, цвет затемнённого павильона; свет на
- * экране приходит с двух сторон, как от рисующего и контрового источника.
- * Это не декорация: весь экран построен вокруг мысли, что 3D — производство,
- * где решают постановка, материал и сетка, а не «красивая картинка».
+ * ПРО ЦВЕТ СТАДИЙ. У каждой стадии своя температура, и это не украшение:
+ * во всех редакторах проходы вьюпорта закодированы цветом, человек из
+ * профессии читает стадию по цвету раньше, чем по подписи. Дисциплина
+ * при этом сохранена — одна температура на стадию, ноль градиентов,
+ * и она приходит из общего словаря, а не подбирается на месте.
+ *
+ * ПРО НУМЕРАЦИЮ. Исследование помечает разделы «01 / 02 / 03» как признак
+ * шаблонности, и здесь это справедливо: у раздела номер ничего не значит.
+ * Поэтому номера сняты с разделов и оставлены там, где несут смысл, —
+ * на стадиях пайплайна: пятую физически нельзя сделать раньше третьей,
+ * и порядок в доке это утверждает. Разделы вместо номера получили
+ * технический ярлык — имя того, что в разделе можно потрогать.
  *
  * ЧТО ЗДЕСЬ ДОКАЗЫВАЕТ КОМПЕТЕНЦИЮ
  * ────────────────────────────────
- * Рендер — единственный взгляд на модель, по которому о модели судить нельзя:
- * он скрывает ровно то, за что платят. Поэтому экран показывает не результат,
- * а ремесло, и каждый раздел даёт это потрогать:
- *   01 одна модель в четырёх режимах — рендер, вайрфрейм, нормали, развёртка;
- *   02 гранёность силуэта считается на странице: видно, где полигоны ещё
- *      работают, а где их уже оплачивают впустую;
- *   03 изгиб с живым числом лупов — почему деформация про рёбра, а не про
- *      полигоны, и при каком угле на сегмент сетка схлопывается;
- *   04 шероховатость и металличность как два ползунка, меняющие поведение
- *      света, а не цвет;
- *   05 три схемы постановки на одном объекте, с планом расстановки.
+ *   · стенд с шестью стадиями — интерактивный вьюер, которого нет ни у
+ *     кого из индустриальных модельеров: это сигнал «код + 3D», а не
+ *     общее место;
+ *   · метрики, посчитанные из самого файла в кадре, — треугольники,
+ *     плотность текселя, вызовы отрисовки. Врать в них нельзя;
+ *   · гранёность силуэта, изгиб, материал и свет — четыре стенда, где
+ *     утверждение проверяется рукой, а не принимается на слово.
  *
  * ПРОИЗВОДИТЕЛЬНОСТЬ
  * ──────────────────
- * WebGL-сцена монтируется только когда стенд действительно в кадре, и
- * размонтируется, когда уходит: r3f иначе рендерит всегда, независимо от
- * видимости. На узком экране сцена не грузится сама — только по явному
- * нажатию, чтобы телефон не платил за бандл three.js при пролистывании.
- * Смена режима — подмена материала на уже загруженной геометрии.
+ * WebGL монтируется только когда стенд в кадре, и размонтируется при
+ * уходе: r3f иначе рендерит всегда. На узком экране сцена не грузится
+ * сама — только по явному нажатию, чтобы телефон не платил за бандл
+ * three.js при пролистывании. Смена стадии — подмена материала на уже
+ * загруженной геометрии.
  *
  * В DOM-части анимируются только transform и opacity. Всё остальное —
- * мгновенная смена состояния: ползунок должен отвечать в тот же кадр,
- * анимированный ползунок — это не плавность, а задержка.
- *
+ * мгновенная смена состояния: ползунок обязан ответить в тот же кадр,
+ * анимированный ползунок это не плавность, а задержка.
  * Кривые и длительности — только из design/motion.ts.
  */
 
 import {
   Suspense,
   lazy,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -53,16 +76,17 @@ import {
   type ReactNode,
 } from 'react'
 import { motion } from 'framer-motion'
-import { Reveal, SplitText, useOffscreenPause } from '../design/primitives'
+import { Reveal, SplitText } from '../design/primitives'
 import { cssEase, duration, ease, prefersReducedMotion, stagger } from '../design/motion'
-import type { ShadingMode } from './Model3D'
+import { STAGES, type MetricKey, type ModelStats, type PipelineStage } from './modeling/stages'
 
 // Ленивый импорт обязателен: иначе three.js и r3f уезжают в основной бандл.
 const Model3D = lazy(() => import('./Model3D'))
 
 /* ── Локальная палитра ────────────────────────────────────────────────
    Умбра затемнённого павильона плюс глина. Ниже по дереву цвет берётся
-   только через var(): хексов в разметке нет. */
+   только через var(): хексов в разметке нет. Температура стадии
+   приезжает отдельной переменной и перекрашивает экран целиком. */
 const SCREEN_VARS = {
   '--m3-stage': '#17120e',
   '--m3-stage-2': '#1f1812',
@@ -75,7 +99,9 @@ const SCREEN_VARS = {
   '--m3-ink-70': 'rgba(242, 236, 225, 0.7)',
   '--m3-ink-45': 'rgba(242, 236, 225, 0.45)',
   '--m3-a': 'var(--a)',
-  '--m3-a-08': 'rgba(239, 74, 35, 0.08)',
+  // Unbounded и Onest — обе с подтверждённой кириллицей (cyrillic,
+  // cyrillic-ext). JetBrains Mono тоже: цифры и подписи на стенде
+  // не должны деградировать в подстановочный шрифт.
   '--m3-display': "'Unbounded', 'MTS Wide', system-ui, sans-serif",
   '--m3-sans': "'Onest', system-ui, sans-serif",
   '--m3-mono': "'JetBrains Mono', ui-monospace, Menlo, monospace",
@@ -115,21 +141,34 @@ const readout: CSSProperties = {
   fontVariantNumeric: 'tabular-nums',
 }
 
-function SectionHead({ n, title, lead }: { n: string; title: string; lead?: string }) {
+/* ══════════════════════════════════════════════════════════════════════
+   ОБЩИЕ ЭЛЕМЕНТЫ
+   ══════════════════════════════════════════════════════════════════════ */
+
+/**
+ * Заголовок раздела.
+ *
+ * Слева не номер, а ярлык — имя того, что в разделе можно потрогать.
+ * Сам заголовок при этом утверждение, а не название: раздел обязан
+ * что-то сказать ещё до того, как в нём что-то потрогают.
+ */
+function SectionHead({ label, title, lead }: { label: string; title: string; lead?: string }) {
   return (
     <header style={{ marginBottom: 'var(--s-12)' }}>
       <Reveal y={16}>
         <div
-          className="flex items-baseline gap-4 sm:gap-5 pb-4"
+          className="flex flex-col sm:flex-row sm:items-baseline gap-2 sm:gap-6 pb-4"
           style={{ borderBottom: '1px solid var(--m3-line)' }}
         >
-          <span style={{ ...mono, color: 'var(--m3-a)' }}>{n}</span>
+          <span style={{ ...mono, color: 'var(--m3-tint)', whiteSpace: 'nowrap' }}>{label}</span>
           <h2
             style={{
               fontFamily: 'var(--m3-display)',
               fontWeight: 600,
-              fontSize: 'clamp(1.6rem, 4.2vw, 3.2rem)',
+              fontSize: 'clamp(1.55rem, 4vw, 2.9rem)',
               letterSpacing: '-0.03em',
+              // 1.06, а не плотнее: у Unbounded высокие «й» и «ё», и на
+              // многострочном заголовке верхняя строка срезала бы диакритику.
               lineHeight: 1.06,
             }}
           >
@@ -142,10 +181,10 @@ function SectionHead({ n, title, lead }: { n: string; title: string; lead?: stri
           <p
             style={{
               marginTop: 'var(--s-6)',
-              maxWidth: '56ch',
-              color: 'var(--m3-ink-70)',
+              maxWidth: '58ch',
               fontWeight: 300,
-              fontSize: 'clamp(0.96rem, 1.6vw, 1.16rem)',
+              color: 'var(--m3-ink-70)',
+              fontSize: 'clamp(0.98rem, 1.6vw, 1.16rem)',
               lineHeight: 1.62,
               letterSpacing: '-0.005em',
             }}
@@ -158,7 +197,7 @@ function SectionHead({ n, title, lead }: { n: string; title: string; lead?: stri
   )
 }
 
-/** Панель-инструмент: общая оправа для всех пяти стендов экрана. */
+/** Панель-инструмент: общая оправа для всех стендов экрана. */
 function Panel({
   children,
   style,
@@ -204,9 +243,9 @@ function Chip({
         ...mono,
         borderRadius: 'var(--r-full)',
         padding: '0.55rem 1rem',
-        border: `1px solid ${active ? 'var(--m3-clay)' : 'var(--m3-line)'}`,
+        border: `1px solid ${active ? 'var(--m3-tint)' : 'var(--m3-line)'}`,
         background: active ? 'rgba(216, 189, 148, 0.12)' : 'transparent',
-        color: active ? 'var(--m3-clay)' : 'var(--m3-ink-45)',
+        color: active ? 'var(--m3-tint)' : 'var(--m3-ink-45)',
       }}
     >
       {children}
@@ -234,7 +273,7 @@ function Slider({
 }) {
   return (
     <label style={{ display: 'block' }}>
-      <span className="flex items-baseline justify-between" style={{ marginBottom: 'var(--s-3)' }}>
+      <span className="flex items-baseline justify-between gap-3" style={{ marginBottom: 'var(--s-3)' }}>
         <span style={{ ...mono, color: 'var(--m3-ink-45)' }}>{label}</span>
         <span style={{ ...readout, color: 'var(--m3-clay)' }}>
           {value}
@@ -249,7 +288,7 @@ function Slider({
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
         aria-label={label}
-        style={{ width: '100%', accentColor: 'var(--a)' }}
+        style={{ width: '100%', accentColor: 'var(--m3-tint)' }}
       />
     </label>
   )
@@ -274,45 +313,23 @@ function StageNote({ children }: { children: ReactNode }) {
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   01 · ЧЕТЫРЕ ВЗГЛЯДА НА ОДИН ОБЪЕКТ
-   Стенд монтирует WebGL только когда он в кадре и только если экран
-   достаточно широкий: на телефоне сцена грузится по явному нажатию.
+   СТЕНД
+   Один объект под светом. На широком экране он липнет к верху и держится
+   в кадре, пока читаются законы стадий: переключение в доке видно ровно
+   в тот момент, когда читаешь, что именно оно должно показать.
+
+   Важно: липкость работает только потому, что ни один предок не имеет
+   overflow: hidden — он бы её молча отключил. Корневой контейнер проекта
+   использует overflow-x: clip, который sticky не ломает.
    ══════════════════════════════════════════════════════════════════════ */
 
-const MODES: { id: ShadingMode; label: string; caption: string }[] = [
-  {
-    id: 'render',
-    label: 'Рендер',
-    caption:
-      'То, что видит заказчик. Материал и свет прячут и хорошую сетку, и плохую — по этому кадру о модели судить нельзя.',
-  },
-  {
-    id: 'wire',
-    label: 'Вайрфрейм',
-    caption:
-      'Сетка. Здесь видно, из чего собрана форма: равномерны ли грани, идут ли лупы по местам сгиба, нет ли треугольных вееров там, где будет деформация.',
-  },
-  {
-    id: 'normals',
-    label: 'Нормали',
-    caption:
-      'Направление граней цветом. Тёмные пятна — вывернутые нормали: на рендере они дают дыры и чёрные артефакты, а в движке ещё и пропадают вовсе.',
-  },
-  {
-    id: 'uv',
-    label: 'Развёртка',
-    caption:
-      'Клетка по UV. Ровная клетка — ровное разрешение текстуры; растянутая — участок, где текстура поплывёт. Швы проходят там, где их не увидит камера.',
-  },
-]
-
-function Viewer() {
+function Stand({ stage, onStats }: { stage: PipelineStage; onStats: (s: ModelStats) => void }) {
   const boxRef = useRef<HTMLDivElement>(null)
-  const [mode, setMode] = useState<ShadingMode>('render')
   const [inView, setInView] = useState(false)
   const [autoLoad, setAutoLoad] = useState(false)
   const [requested, setRequested] = useState(false)
   const reduce = prefersReducedMotion()
+  const def = STAGES.find((s) => s.id === stage) ?? STAGES[0]
 
   // Широкий экран с курсором тянет сцену сам. Узкий — только по нажатию:
   // бандл three.js не должен приезжать к тому, кто просто листает страницу.
@@ -332,133 +349,256 @@ function Viewer() {
     return () => io.disconnect()
   }, [])
 
-  // W — как переключение вайрфрейма в любом 3D-редакторе. Жест, по которому
-  // человек из профессии сразу понимает, что стенд сделан своим.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'w' && e.key !== 'W' && e.key !== 'ц' && e.key !== 'Ц') return
-      if (e.metaKey || e.ctrlKey || e.altKey) return
-      const el = document.activeElement
-      if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) return
-      setMode((m) => (m === 'wire' ? 'render' : 'wire'))
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [])
-
   const live = inView && (autoLoad || requested)
-  const active = MODES.find((m) => m.id === mode) ?? MODES[0]
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_320px] lg:gap-10 items-start">
-      <Panel style={{ overflow: 'hidden' }}>
-        <div
-          ref={boxRef}
-          className="relative"
-          style={{ height: 'clamp(320px, 52vh, 560px)', background: 'var(--m3-stage-2)' }}
-        >
-          {live ? (
-            <Suspense
-              fallback={
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span style={{ ...mono, color: 'var(--m3-clay-dim)' }}>Сцена загружается</span>
-                </div>
-              }
-            >
-              <Model3D mode={mode} spin={!reduce} />
-            </Suspense>
-          ) : (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-6 text-center">
-              <span style={{ ...mono, color: 'var(--m3-clay-dim)' }}>Стенд · WebGL</span>
-              {!autoLoad && (
-                <button
-                  onClick={() => setRequested(true)}
-                  style={{
-                    ...mono,
-                    borderRadius: 'var(--r-full)',
-                    padding: '0.7rem 1.4rem',
-                    border: '1px solid var(--m3-clay)',
-                    background: 'transparent',
-                    color: 'var(--m3-clay)',
-                  }}
-                >
-                  Загрузить сцену
-                </button>
-              )}
-              <span
+    <Panel style={{ overflow: 'hidden' }}>
+      <div
+        ref={boxRef}
+        className="relative"
+        style={{ height: 'clamp(320px, 58vh, 600px)', background: 'var(--m3-stage-2)' }}
+      >
+        {live ? (
+          <Suspense
+            fallback={
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span style={{ ...mono, color: 'var(--m3-clay-dim)' }}>Сцена загружается</span>
+              </div>
+            }
+          >
+            <Model3D stage={stage} spin={!reduce} onStats={onStats} />
+          </Suspense>
+        ) : (
+          /* Фолбэк — не спиннер: экран не имеет права оказаться пустым.
+             Пока сцены нет, в кадре стоит осмысленный статичный кадр —
+             разметка павильона и имя текущей стадии. */
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-6 text-center">
+            <StandPlaceholder />
+            {!autoLoad && (
+              <button
+                onClick={() => setRequested(true)}
                 style={{
-                  ...readout,
-                  color: 'var(--m3-ink-45)',
-                  maxWidth: '32ch',
-                  lineHeight: 1.5,
-                  letterSpacing: 0,
+                  ...mono,
+                  borderRadius: 'var(--r-full)',
+                  padding: '0.7rem 1.4rem',
+                  border: '1px solid var(--m3-tint)',
+                  background: 'transparent',
+                  color: 'var(--m3-tint)',
                 }}
               >
-                {autoLoad
-                  ? 'Сцена включится, когда стенд окажется в кадре.'
-                  : 'Сцена весит заметно — на мобильном она грузится только по вашему нажатию.'}
-              </span>
-            </div>
-          )}
+                Загрузить сцену
+              </button>
+            )}
+            <span
+              style={{
+                ...readout,
+                color: 'var(--m3-ink-45)',
+                maxWidth: '34ch',
+                lineHeight: 1.5,
+                letterSpacing: 0,
+              }}
+            >
+              {autoLoad
+                ? 'Сцена включится, когда стенд окажется в кадре.'
+                : 'Сцена весит заметно — на мобильном она грузится только по вашему нажатию.'}
+            </span>
+          </div>
+        )}
 
-          <span className="absolute top-3 left-4" style={{ ...mono, color: 'var(--m3-clay-dim)' }}>
-            {active.label}
-          </span>
-        </div>
-      </Panel>
-
-      <div>
-        <div className="flex flex-wrap gap-2" style={{ marginBottom: 'var(--s-6)' }}>
-          {MODES.map((m) => (
-            <Chip key={m.id} active={m.id === mode} onClick={() => setMode(m.id)}>
-              {m.label}
-            </Chip>
-          ))}
-        </div>
-
-        {/* key по режиму: подпись меняется проявлением, а не подменой текста
-            на месте — иначе переключение читается как сбой, а не как ответ. */}
-        <motion.p
-          key={active.id}
-          initial={reduce ? false : { opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: duration.base, ease: ease.entrance }}
-          style={{
-            fontWeight: 300,
-            fontSize: '0.92rem',
-            lineHeight: 1.62,
-            color: 'var(--m3-ink-70)',
-          }}
+        {/* Шапка стенда. Номер и имя стадии — там же, где их ищут
+            в любом вьюпорте: в верхнем левом углу кадра. */}
+        <span
+          className="absolute top-3 left-4 flex items-center gap-2 pointer-events-none"
+          style={{ ...mono, color: 'var(--m3-tint)' }}
         >
-          {active.caption}
-        </motion.p>
-
-        <p
-          style={{
-            marginTop: 'var(--s-6)',
-            paddingTop: 'var(--s-6)',
-            borderTop: '1px solid var(--m3-line-soft)',
-            ...readout,
-            letterSpacing: 0,
-            lineHeight: 1.55,
-            color: 'var(--m3-ink-45)',
-          }}
-        >
-          Клавиша W переключает рендер и сетку. Объект на стенде —
-          демонстрационный: если положить свой .glb в src/models, стенд
-          подхватит его автоматически.
-        </p>
+          <span style={{ opacity: 0.55 }}>{def.n}</span>
+          {def.label}
+        </span>
       </div>
+    </Panel>
+  )
+}
+
+/**
+ * Статичный кадр вместо спиннера. Разметка павильона: горизонт, круг
+ * поворотного стола, объект и подвес источника. Показывает, что стенд —
+ * это место с постановкой, ещё до того как приехал WebGL.
+ */
+function StandPlaceholder() {
+  return (
+    <svg
+      viewBox="-100 -70 200 140"
+      style={{ width: 'min(70%, 300px)', display: 'block', opacity: 0.55 }}
+      aria-hidden
+    >
+      <ellipse cx="0" cy="34" rx="72" ry="16" fill="none" stroke="var(--m3-line)" strokeWidth="1" />
+      <ellipse cx="0" cy="34" rx="44" ry="10" fill="none" stroke="var(--m3-line-soft)" strokeWidth="1" />
+      <path d="M-16 34 L0 -22 L16 34 Z" fill="none" stroke="var(--m3-tint)" strokeWidth="1.2" />
+      <line x1="-92" y1="34" x2="92" y2="34" stroke="var(--m3-line-soft)" strokeWidth="1" />
+      <line x1="0" y1="-52" x2="0" y2="-34" stroke="var(--m3-line)" strokeWidth="1" />
+      <circle cx="0" cy="-56" r="4" fill="none" stroke="var(--m3-tint)" strokeWidth="1.2" />
+    </svg>
+  )
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   МЕТРИКИ
+   Числа приходят из обхода геометрии и из renderer.info — то есть из
+   того самого файла, который сейчас крутится в кадре. Их нельзя
+   вписать в вёрстку: пока сцена не измерена, тут прочерки.
+   ══════════════════════════════════════════════════════════════════════ */
+
+const nf = new Intl.NumberFormat('ru-RU')
+
+type MetricRow = { key: MetricKey; label: string; value: string; note: string }
+
+function buildMetrics(s: ModelStats | null): MetricRow[] {
+  const dash = '—'
+  return [
+    {
+      key: 'triangles',
+      label: 'Треугольников',
+      value: s ? nf.format(s.triangles) : dash,
+      note: 'Считано по индексу геометрии. В glTF любая сетка уже триангулирована — квадов в файле физически не существует, и обещать их числом было бы враньём.',
+    },
+    {
+      key: 'vertices',
+      label: 'Вершин',
+      value: s ? nf.format(s.vertices) : dash,
+      note: 'Вершин всегда больше, чем углов формы: шов развёртки и жёсткое ребро разрезают вершину надвое. Разрыв между вершинами и треугольниками — это цена швов.',
+    },
+    {
+      key: 'meshes',
+      label: 'Мешей',
+      value: s ? nf.format(s.meshes) : dash,
+      note: 'Каждый отдельный меш — это минимум один вызов отрисовки. Модель из сорока деталей стоит дороже той же формы, слитой в один объект.',
+    },
+    {
+      key: 'materials',
+      label: 'Материалов',
+      value: s ? nf.format(s.materials) : dash,
+      note: 'Материалы исходные, а не подменённые стадией. Их число — прямой множитель к нагрузке: движок переключает состояние на каждом.',
+    },
+    {
+      key: 'textures',
+      label: 'Текстур',
+      value: s
+        ? s.textures === 0
+          ? 'нет'
+          : `${s.textures} · ${(s.texturePixels / 1e6).toFixed(1)} Мпикс`
+        : dash,
+      note: 'Уникальные карты и их суммарная площадь в пикселях — то, что реально ляжет в видеопамять, независимо от веса файла на диске.',
+    },
+    {
+      key: 'texel',
+      label: 'Плотность текселя',
+      value: s?.texel ? `${Math.round(s.texel)} px/ед.${s.texelAssumed ? ' *' : ''}` : dash,
+      note: s?.texelAssumed
+        ? 'Посчитано из UV-площади и площади поверхности при гипотетической карте 2048². Звёздочка — потому что своих текстур у объекта нет и подставлять реальное разрешение неоткуда.'
+        : `Посчитано из UV-площади и площади поверхности при реальном разрешении карт (${s?.texelBasis ?? 0}²). Ровная плотность по всей модели — то, ради чего развёртку и переделывают.`,
+    },
+    {
+      key: 'calls',
+      label: 'Вызовов отрисовки',
+      value: s ? nf.format(s.calls) : dash,
+      note: 'Показание renderer.info за последний кадр, а не оценка. На стадии ретопологии число выше: сетка поверх поверхности — это отдельный проход.',
+    },
+    {
+      key: 'bounds',
+      label: 'Габариты',
+      value: s ? s.bounds.map((v) => v.toFixed(2)).join(' × ') : dash,
+      note: 'Размер в единицах сцены. Модель, приехавшая в чужих единицах, ломает и свет, и физику — поэтому масштаб проверяют до передачи, а не после.',
+    },
+  ]
+}
+
+function MetricsBoard({ stats, stage }: { stats: ModelStats | null; stage: PipelineStage }) {
+  const rows = useMemo(() => buildMetrics(stats), [stats])
+  const def = STAGES.find((s) => s.id === stage) ?? STAGES[0]
+  const reduce = prefersReducedMotion()
+
+  return (
+    <div>
+      <div
+        className="grid gap-px sm:grid-cols-2 lg:grid-cols-4"
+        style={{ background: 'var(--m3-line-soft)', borderRadius: 'var(--r-lg)', overflow: 'hidden' }}
+      >
+        {rows.map((r) => {
+          // Стадия выводит вперёд свои метрики. Остальные не прячутся —
+          // они гаснут: список должен остаться целым, иначе теряется
+          // ощущение, что это один прибор, а не шесть разных.
+          const focused = def.focus.includes(r.key)
+          return (
+            <div
+              key={r.key}
+              style={{
+                background: 'var(--m3-panel)',
+                padding: 'var(--s-6)',
+                opacity: focused ? 1 : 0.55,
+                transition: `opacity ${duration.base}s ${cssEase.standard}`,
+              }}
+            >
+              <span style={{ ...mono, color: focused ? 'var(--m3-tint)' : 'var(--m3-ink-45)' }}>
+                {r.label}
+              </span>
+              <p
+                style={{
+                  marginTop: 'var(--s-3)',
+                  fontFamily: 'var(--m3-mono)',
+                  fontVariantNumeric: 'tabular-nums',
+                  fontSize: 'clamp(1.15rem, 2.4vw, 1.55rem)',
+                  letterSpacing: '-0.01em',
+                  color: 'var(--m3-ink)',
+                }}
+              >
+                {r.value}
+              </p>
+              <p
+                style={{
+                  marginTop: 'var(--s-4)',
+                  fontWeight: 300,
+                  fontSize: '0.82rem',
+                  lineHeight: 1.55,
+                  color: 'var(--m3-ink-70)',
+                }}
+              >
+                {r.note}
+              </p>
+            </div>
+          )
+        })}
+      </div>
+
+      <motion.p
+        key={stats ? stats.source : 'idle'}
+        initial={reduce ? false : { opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: duration.base, ease: ease.entrance }}
+        style={{
+          marginTop: 'var(--s-6)',
+          maxWidth: '68ch',
+          ...readout,
+          letterSpacing: 0,
+          lineHeight: 1.6,
+          color: 'var(--m3-ink-45)',
+        }}
+      >
+        {stats === null
+          ? 'Прочерки стоят до первого замера: пока сцена не отрисовала кадр, брать числа неоткуда. Включите стенд выше — таблица заполнится сама.'
+          : stats.source === 'demo'
+            ? 'Замер сделан на демонстрационном объекте — своего .glb в src/models сейчас нет. Положите файл туда, и стенд подхватит его, а таблица пересчитается по нему.'
+            : 'Замер сделан на модели из src/models — на том самом файле, который сейчас в кадре.'}
+      </motion.p>
     </div>
   )
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   02 · ГРАНЁНОСТЬ СИЛУЭТА
-   Число полигонов само по себе ничего не значит — значит только то, видно
-   ли грань. Отклонение хорды от дуги считается прямо здесь: r·(1−cos(π/n)).
-   Это единственная величина на экране, которую можно перепроверить, — и
-   именно она показывает, где полигоны перестают работать.
+   ГРАНЁНОСТЬ СИЛУЭТА
+   Число полигонов само по себе ничего не значит — значит только то,
+   видно ли грань. Отклонение хорды от дуги считается прямо здесь:
+   r·(1−cos(π/n)). Величину можно перепроверить, и именно она
+   показывает, где полигоны перестают работать.
    ══════════════════════════════════════════════════════════════════════ */
 
 function facetVerdict(devPct: number): { text: string; hot: boolean } {
@@ -492,7 +632,7 @@ function FacetLab() {
 
         <dl style={{ marginTop: 'var(--s-8)' }}>
           {[
-            { k: 'Треугольников', v: tris.toLocaleString('ru-RU') },
+            { k: 'Треугольников', v: nf.format(tris) },
             { k: 'Отклонение от дуги', v: `${devPct.toFixed(3)} % радиуса` },
           ].map((row) => (
             <div
@@ -543,7 +683,7 @@ function FacetLab() {
             {seg <= 48 &&
               points.split(' ').map((p) => {
                 const [x, y] = p.split(',')
-                return <circle key={p} cx={x} cy={y} r={2.2} fill="var(--a)" />
+                return <circle key={p} cx={x} cy={y} r={2.2} fill="var(--m3-tint)" />
               })}
           </svg>
         </Panel>
@@ -563,11 +703,11 @@ function FacetLab() {
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   03 · ИЗГИБ
+   ИЗГИБ
    Между лупами поверхность плоская — значит ломаная по станциям и есть
    настоящий силуэт согнутой формы, а не его иллюстрация. Отсюда правило,
-   которое обычно передают на словах: считать надо не полигоны, а градусы
-   на сегмент.
+   которое обычно передают на словах: считать надо не полигоны, а
+   градусы на сегмент.
    ══════════════════════════════════════════════════════════════════════ */
 
 function BendLab() {
@@ -628,7 +768,11 @@ function BendLab() {
 
         <div
           className="flex items-baseline justify-between gap-4"
-          style={{ marginTop: 'var(--s-8)', paddingTop: 'var(--s-3)', borderTop: '1px solid var(--m3-line-soft)' }}
+          style={{
+            marginTop: 'var(--s-8)',
+            paddingTop: 'var(--s-3)',
+            borderTop: '1px solid var(--m3-line-soft)',
+          }}
         >
           <span style={{ ...mono, color: 'var(--m3-ink-45)' }}>Градусов на сегмент</span>
           <span style={{ ...readout, color: crushed ? 'var(--m3-a)' : 'var(--m3-clay)' }}>
@@ -671,7 +815,7 @@ function BendLab() {
                 y1={a.split(',')[1]}
                 x2={b.split(',')[0]}
                 y2={b.split(',')[1]}
-                stroke={crushed ? 'var(--a)' : 'var(--m3-clay-dim)'}
+                stroke={crushed ? 'var(--m3-a)' : 'var(--m3-clay-dim)'}
                 strokeWidth={1.1}
               />
             ))}
@@ -692,7 +836,7 @@ function BendLab() {
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   04–05 · МАТЕРИАЛ И СВЕТ
+   МАТЕРИАЛ И СВЕТ
    Схематический шар: не рендер, а диаграмма поведения света. Она честно
    отрабатывает две вещи, ради которых и существуют каналы материала:
    шероховатость управляет шириной блика, металличность гасит диффузную
@@ -773,7 +917,7 @@ const SCHEMES: Scheme[] = [
 
 /**
  * Схематический шар. Все величины — атрибуты градиентов, пересчитываемые
- * при смене состояния: ни одного перехода, ползунок обязан отвечать сразу.
+ * при смене состояния: ни одного перехода, ползунок обязан ответить сразу.
  */
 function LitSphere({
   uid,
@@ -803,7 +947,12 @@ function LitSphere({
   const ry = 50 + scheme.rim[1] * 52
 
   return (
-    <svg viewBox="0 0 200 200" style={{ width: '100%', display: 'block' }} role="img" aria-label="Схема поведения света на поверхности">
+    <svg
+      viewBox="0 0 200 200"
+      style={{ width: '100%', display: 'block' }}
+      role="img"
+      aria-label="Схема поведения света на поверхности"
+    >
       <defs>
         <radialGradient id={`${uid}-body`} cx="50%" cy="50%" r="74%" fx={`${fx}%`} fy={`${fy}%`}>
           <stop offset="0%" stopColor={css(litSide)} />
@@ -855,7 +1004,12 @@ function LitSphere({
 /** План расстановки сверху: свет — это места в павильоне, а не бегунки. */
 function LightPlan({ scheme }: { scheme: Scheme }) {
   return (
-    <svg viewBox="-70 -60 140 120" style={{ width: '100%', display: 'block' }} role="img" aria-label={`План расстановки: ${scheme.name}`}>
+    <svg
+      viewBox="-70 -60 140 120"
+      style={{ width: '100%', display: 'block' }}
+      role="img"
+      aria-label={`План расстановки: ${scheme.name}`}
+    >
       <circle r={12} cx={0} cy={0} fill="rgba(216, 189, 148, 0.18)" stroke="var(--m3-clay)" strokeWidth={1} />
       {scheme.plan.map((l) => (
         <g key={l.label}>
@@ -865,7 +1019,7 @@ function LightPlan({ scheme }: { scheme: Scheme }) {
             cy={l.y}
             r={l.r}
             fill={l.strong ? 'rgba(239, 74, 35, 0.28)' : 'rgba(216, 189, 148, 0.14)'}
-            stroke={l.strong ? 'var(--a)' : 'var(--m3-clay-dim)'}
+            stroke={l.strong ? 'var(--m3-tint)' : 'var(--m3-clay-dim)'}
             strokeWidth={1}
           />
         </g>
@@ -923,14 +1077,14 @@ const STEPS = [
    ══════════════════════════════════════════════════════════════════════ */
 export default function Modeling3DScreen({ onClose }: { onClose: () => void }) {
   useModelingFonts()
+  const [stage, setStage] = useState<PipelineStage>('beauty')
+  const [stats, setStats] = useState<ModelStats | null>(null)
   const [rough, setRough] = useState(35)
   const [metal, setMetal] = useState(0)
   const [si, setSi] = useState(0)
   const scheme = SCHEMES[si]
   const reduce = prefersReducedMotion()
-  // Бесконечная подсказка прокрутки не должна двигать свой слой,
-  // когда герой давно уехал вверх.
-  const hintRef = useOffscreenPause<HTMLDivElement>()
+  const def = STAGES.find((s) => s.id === stage) ?? STAGES[0]
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
@@ -938,178 +1092,293 @@ export default function Modeling3DScreen({ onClose }: { onClose: () => void }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
 
+  // Цифры 1–6 переключают стадию, как слоты вьюпорта в любом редакторе.
+  // Жест, по которому человек из профессии сразу понимает, что стенд
+  // сделан своим, а не собран из чужого компонента.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+      const el = document.activeElement
+      if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) return
+      const i = Number(e.key)
+      if (!Number.isInteger(i) || i < 1 || i > STAGES.length) return
+      setStage(STAGES[i - 1].id)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
+  // Замер приходит из кадра WebGL: держим обработчик стабильным, иначе
+  // стенд получал бы новый проп на каждый рендер экрана.
+  const onStats = useCallback((s: ModelStats) => setStats(s), [])
+
+  // Активная стадия подтягивается в видимую часть дока. На 390px шесть
+  // кнопок не помещаются, и переключение цифрами уводило бы активную
+  // кнопку за край: человек нажал — и не увидел, что именно выбрано.
+  const dockRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = dockRef.current?.querySelector<HTMLElement>('[aria-pressed="true"]')
+    el?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: reduce ? 'auto' : 'smooth' })
+  }, [stage, reduce])
+
+  /* Температура текущей стадии уезжает в переменную корня — ровно тем же
+     механизмом, что палитра в Брендинге. Ниже по дереву акцент берётся
+     только через var(--m3-tint): ни одного хекса в разметке. */
+  const stageVars = { '--m3-tint': def.tint } as unknown as CSSProperties
+
   return (
     <main
       data-screen="modeling"
       className="animate-screen-in relative"
       style={{
         ...SCREEN_VARS,
+        ...stageVars,
         background: 'var(--m3-stage)',
         color: 'var(--m3-ink)',
         fontFamily: 'var(--m3-sans)',
+        // Место под док, который живёт поверх контента.
+        paddingBottom: 'var(--s-32)',
       }}
     >
-      {/* Свет павильона: рисующий сверху-справа, отражённый глиняный снизу-слева. */}
-      <div
-        className="fixed inset-0 pointer-events-none"
-        aria-hidden
-        style={{
-          background:
-            'radial-gradient(58% 48% at 68% 26%, rgba(239,74,35,0.10), transparent 72%), radial-gradient(52% 42% at 16% 82%, rgba(216,189,148,0.08), transparent 74%)',
-        }}
-      />
-
       <button
         onClick={onClose}
-        className="fixed top-5 left-5 rounded-full px-4 py-2 backdrop-blur"
+        className="fixed top-5 left-5 rounded-full px-4 py-2 text-sm backdrop-blur"
         style={{
           zIndex: 'var(--z-nav)',
           border: '1px solid var(--m3-line)',
-          color: 'var(--m3-clay)',
-          background: 'rgba(23,18,14,0.78)',
-          fontSize: '0.85rem',
+          color: 'var(--m3-ink)',
+          background: 'rgba(23, 18, 14, 0.78)',
         }}
       >
         ← Назад
       </button>
 
-      {/* ══ ГЕРОЙ ══════════════════════════════════════════════════ */}
+      {/* ══ ГЕРОЙ ══════════════════════════════════════════════════════
+          Ни бенто, ни сетки превью: один объект под светом и текст рядом.
+          Всё, что можно было бы разложить по ячейкам, показывается на том
+          же самом объекте — переключением стадии. */}
       <section
-        className="relative mx-auto w-full flex flex-col justify-center min-h-screen"
+        className="mx-auto w-full"
         style={{
           maxWidth: 'var(--max-w)',
           paddingInline: 'var(--gutter)',
           paddingTop: 'var(--s-32)',
-          paddingBottom: 'var(--s-24)',
+          paddingBottom: 'var(--s-16)',
         }}
       >
-        <div className="grid lg:grid-cols-12 gap-x-8 gap-y-10 items-end">
-          <div className="lg:col-span-8">
-            <Reveal y={14}>
-              <span style={{ ...mono, color: 'var(--m3-a)' }}>Компетенция · 3D-моделинг</span>
-            </Reveal>
+        <Reveal y={14}>
+          <span style={{ ...mono, color: 'var(--m3-tint)' }}>Компетенция · 3D-моделинг</span>
+        </Reveal>
 
-            <h1
-              className="optical-left"
-              style={{
-                marginTop: 'var(--s-6)',
-                fontFamily: 'var(--m3-display)',
-                fontWeight: 800,
-                fontSize: 'clamp(3rem, 11vw, 9rem)',
-                letterSpacing: '-0.045em',
-                // 0.92, а не плотнее: в «моделинг» краткая над «й» соседнего
-                // набора и выносные элементы поднимаются выше прописной
-                // высоты, и на плотном интерлиньяже строка их срезает.
-                lineHeight: 0.92,
-              }}
+        <h1
+          className="optical-left"
+          style={{
+            marginTop: 'var(--s-6)',
+            fontFamily: 'var(--m3-display)',
+            fontWeight: 800,
+            fontSize: 'clamp(2.5rem, 10vw, 8rem)',
+            letterSpacing: '-0.045em',
+            // 0.96, а не плотнее: у кириллицы «й» и «ё» выходят выше
+            // прописной высоты, и строка сверху срезала бы диакритику.
+            lineHeight: 0.96,
+          }}
+        >
+          <SplitText text="3D-моделинг" by="char" delay={0.1} />
+        </h1>
+
+        <Reveal y={18} delay={0.3}>
+          <p
+            style={{
+              marginTop: 'var(--s-8)',
+              maxWidth: '48ch',
+              fontWeight: 300,
+              fontSize: 'clamp(1.05rem, 2vw, 1.45rem)',
+              lineHeight: 1.5,
+              letterSpacing: '-0.012em',
+            }}
+          >
+            Финальный кадр сегодня умеет делать кто угодно. Сетку, развёртку
+            и ретопологию — нет. Поэтому здесь не галерея рендеров, а
+            просмотровая: один объект и док, которым его прогоняют по всем
+            стадиям производства.
+          </p>
+        </Reveal>
+      </section>
+
+      {/* ══ СТЕНД И ЗАКОНЫ СТАДИЙ ══════════════════════════════════════
+          Стенд липнет к верху и держится в кадре, пока читаются законы:
+          переключение в доке видно ровно в тот момент, когда читаешь,
+          что именно оно должно показать. */}
+      <section
+        className="mx-auto w-full"
+        style={{
+          maxWidth: 'var(--max-w)',
+          paddingInline: 'var(--gutter)',
+          paddingBottom: 'var(--section-y)',
+        }}
+      >
+        <SectionHead
+          label="Стенд · WebGL"
+          title="Каждая стадия отвечает на свой вопрос и ни одна не отвечает на чужой"
+          lead="Шесть стадий — это не шесть фильтров поверх картинки, а шесть разных работ над одним объектом. Док внизу экрана прогоняет модель по ним и вместе с ней меняет весь экран: текст закона, температуру интерфейса и то, какие числа выходят вперёд."
+        />
+
+        <div className="grid gap-8 lg:grid-cols-12 lg:gap-10 items-start">
+          {/* Стенд первым по порядку на узком экране и справа на широком:
+              объект обязан быть виден раньше текста о нём. */}
+          <div className="lg:col-span-7 lg:order-2 lg:sticky lg:top-24">
+            <Stand stage={stage} onStats={onStats} />
+
+            <motion.div
+              key={def.id}
+              initial={reduce ? false : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: duration.base, ease: ease.entrance }}
+              style={{ marginTop: 'var(--s-6)' }}
             >
-              <SplitText text="3D" by="char" delay={0.1} />
-              <br />
-              <SplitText text="моделинг" by="char" delay={0.2} />
-            </h1>
-
-            <Reveal y={18} delay={0.42}>
+              <p style={{ fontWeight: 300, fontSize: '0.95rem', lineHeight: 1.62, color: 'var(--m3-ink)' }}>
+                {def.what}
+              </p>
               <p
                 style={{
-                  marginTop: 'var(--s-8)',
-                  maxWidth: '48ch',
+                  marginTop: 'var(--s-4)',
                   fontWeight: 300,
-                  fontSize: 'clamp(1.08rem, 2vw, 1.5rem)',
-                  lineHeight: 1.5,
-                  letterSpacing: '-0.012em',
+                  fontSize: '0.9rem',
+                  lineHeight: 1.62,
+                  color: 'var(--m3-ink-70)',
                 }}
               >
-                Рендер — единственный взгляд на модель, по которому о модели
-                судить нельзя: он прячет ровно то, за что платят. Ниже — то же
-                самое ремесло без красивого кадра, и всё это можно подвигать.
+                {def.why}
               </p>
-            </Reveal>
+            </motion.div>
+
+            <p
+              style={{
+                marginTop: 'var(--s-6)',
+                paddingTop: 'var(--s-5)',
+                borderTop: '1px solid var(--m3-line-soft)',
+                ...readout,
+                letterSpacing: 0,
+                lineHeight: 1.55,
+                color: 'var(--m3-ink-45)',
+              }}
+            >
+              Стадии переключаются доком внизу или цифрами 1–6. Объект на
+              стенде — демонстрационный: если положить свой .glb в src/models,
+              стенд подхватит его автоматически.
+            </p>
           </div>
 
-          <div className="lg:col-span-4">
-            <Reveal y={16} delay={0.55}>
-              <div style={{ borderTop: '1px solid var(--m3-line)', paddingTop: 'var(--s-6)' }}>
-                {['Сетка и топология', 'Развёртка и PBR-материалы', 'Постановка света', 'Передача в движок и рендер'].map(
-                  (t) => (
-                    <p
-                      key={t}
+          {/* Список стадий — второе управление тем же состоянием.
+              Док даёт скорость, список даёт порядок: видно, что стадии
+              идут друг за другом, а не лежат кучей. */}
+          <ol className="lg:col-span-5 lg:order-1">
+            {STAGES.map((s, i) => {
+              const active = s.id === stage
+              return (
+                <Reveal key={s.id} y={16} delay={i * stagger.item}>
+                  <li>
+                    <button
+                      onClick={() => setStage(s.id)}
+                      aria-pressed={active}
+                      className="w-full text-left flex items-baseline gap-4"
                       style={{
-                        ...readout,
-                        letterSpacing: 0,
-                        color: 'var(--m3-ink-70)',
-                        paddingBlock: 'var(--s-2)',
+                        paddingBlock: 'var(--s-5)',
+                        borderTop: '1px solid var(--m3-line-soft)',
+                        background: 'transparent',
                       }}
                     >
-                      {t}
-                    </p>
-                  )
-                )}
-              </div>
-            </Reveal>
-          </div>
-        </div>
-
-        <div
-          ref={hintRef}
-          className="absolute left-1/2 bottom-6 flex flex-col items-center gap-2 animate-bob-down"
-          style={{ transform: 'translateX(-50%)', color: 'var(--m3-clay-dim)' }}
-          aria-hidden
-        >
-          <span style={mono}>Далее</span>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 5v14M5 12l7 7 7-7" />
-          </svg>
+                      <span
+                        style={{
+                          ...mono,
+                          minWidth: '2.5ch',
+                          color: active ? 'var(--m3-tint)' : 'var(--m3-ink-45)',
+                        }}
+                      >
+                        {s.n}
+                      </span>
+                      <span>
+                        <span
+                          style={{
+                            display: 'block',
+                            fontSize: '1.05rem',
+                            fontWeight: 500,
+                            letterSpacing: '-0.015em',
+                            color: active ? 'var(--m3-tint)' : 'var(--m3-ink)',
+                          }}
+                        >
+                          {s.label}
+                        </span>
+                        <span
+                          style={{
+                            display: 'block',
+                            marginTop: 4,
+                            fontWeight: 300,
+                            fontSize: '0.88rem',
+                            lineHeight: 1.55,
+                            color: 'var(--m3-ink-70)',
+                          }}
+                        >
+                          {s.what}
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                </Reveal>
+              )
+            })}
+          </ol>
         </div>
       </section>
 
-      {/* ══ 01 · РЕЖИМЫ ═══════════════════════════════════════════ */}
+      {/* ══ МЕТРИКИ ════════════════════════════════════════════════════ */}
       <section
-        className="relative mx-auto w-full"
+        className="mx-auto w-full"
         style={{ maxWidth: 'var(--max-w)', paddingInline: 'var(--gutter)', paddingBlock: 'var(--section-y)' }}
       >
         <SectionHead
-          n="01"
-          title="Модель смотрят четырьмя способами"
-          lead="Один и тот же объект в рендере, в сетке, в нормалях и в развёртке. Три последних режима заказчик обычно не видит — и ровно в них видно, сделана модель как производственный объект или как один удачный кадр."
+          label="Замер · из файла"
+          title="Числа берутся из файла, а не из резюме"
+          lead="Всё в таблице посчитано на вашем устройстве обходом той самой геометрии, которая сейчас в кадре: треугольники и вершины — из буферов, плотность текселя — из отношения UV-площади к площади поверхности, вызовы отрисовки — показание рендерера за последний кадр. Написать «оптимизировано» может кто угодно; показать — нет."
         />
-        <Viewer />
+        <MetricsBoard stats={stats} stage={stage} />
       </section>
 
-      {/* ══ 02 · ПОЛИГОНЫ ═════════════════════════════════════════ */}
+      {/* ══ БЮДЖЕТ ПОЛИГОНОВ ═══════════════════════════════════════════ */}
       <section
-        className="relative mx-auto w-full"
+        className="mx-auto w-full"
         style={{ maxWidth: 'var(--max-w)', paddingInline: 'var(--gutter)', paddingBlock: 'var(--section-y)' }}
       >
         <SectionHead
-          n="02"
+          label="Стенд · силуэт"
           title="Полигон — это бюджет, а не оценка качества"
-          lead="«Сколько полигонов» — вопрос без ответа, пока не сказано, куда модель идёт. Считать надо не полигоны, а видно ли грань: отклонение хорды от дуги посчитано здесь же, и его можно перепроверить."
+          lead="«Сто тысяч полигонов» само по себе не значит ни хорошо, ни плохо. Значит только одно: видно грань или уже нет. Величину, которая это решает, можно посчитать — и она посчитана ниже."
         />
         <FacetLab />
       </section>
 
-      {/* ══ 03 · ТОПОЛОГИЯ ════════════════════════════════════════ */}
+      {/* ══ ДЕФОРМАЦИЯ ═════════════════════════════════════════════════ */}
       <section
-        className="relative mx-auto w-full"
+        className="mx-auto w-full"
         style={{ maxWidth: 'var(--max-w)', paddingInline: 'var(--gutter)', paddingBlock: 'var(--section-y)' }}
       >
         <SectionHead
-          n="03"
+          label="Стенд · изгиб"
           title="Деформация — это про рёбра, а не про полигоны"
-          lead="Модель под анимацию проверяется не на превью, а в согнутом виде. Между лупами поверхность плоская, поэтому ломаная ниже — настоящий силуэт, а не иллюстрация к нему."
+          lead="Модель ломается в анимации не потому, что полигонов мало, а потому, что они лежат не там. Ниже — одна и та же форма при разном числе лупов в зоне сгиба."
         />
         <BendLab />
       </section>
 
-      {/* ══ 04 · МАТЕРИАЛ ═════════════════════════════════════════ */}
+      {/* ══ МАТЕРИАЛ ═══════════════════════════════════════════════════ */}
       <section
-        className="relative mx-auto w-full"
+        className="mx-auto w-full"
         style={{ maxWidth: 'var(--max-w)', paddingInline: 'var(--gutter)', paddingBlock: 'var(--section-y)' }}
       >
         <SectionHead
-          n="04"
+          label="Стенд · материал"
           title="Материал — это поведение света, а не цвет"
-          lead="PBR-материал собран из отдельных каналов, и ни один из них не отвечает за «красиво». Два ползунка ниже меняют не оттенок, а то, как поверхность возвращает свет: ширину блика и наличие диффузной составляющей."
+          lead="Шероховатость управляет шириной блика, металличность гасит собственный цвет и красит отражение. Две ручки — и пластик становится металлом, хотя цвет не изменился ни на тон."
         />
 
         <div className="grid gap-6 lg:grid-cols-[320px_1fr] lg:gap-10 items-start">
@@ -1121,7 +1390,7 @@ export default function Modeling3DScreen({ onClose }: { onClose: () => void }) {
             <p
               style={{
                 marginTop: 'var(--s-8)',
-                paddingTop: 'var(--s-6)',
+                paddingTop: 'var(--s-5)',
                 borderTop: '1px solid var(--m3-line-soft)',
                 ...readout,
                 letterSpacing: 0,
@@ -1129,118 +1398,132 @@ export default function Modeling3DScreen({ onClose }: { onClose: () => void }) {
                 color: 'var(--m3-ink-70)',
               }}
             >
-              {metal > 55
-                ? 'Металл: собственного цвета почти нет, вся форма держится на отражении, и блик окрашен в цвет самого металла.'
-                : rough > 60
-                  ? 'Матовая поверхность: блик размазан, форма читается мягкими переходами, мелкий рельеф почти пропадает.'
-                  : 'Диэлектрик с гладкой поверхностью: блик собран и остаётся белым — цвет отражения не зависит от цвета материала.'}
+              {metal > 60
+                ? 'Металл: собственный цвет почти погашен, весь вид держится на отражении. Ошибиться здесь дороже всего — металл выдаёт неверную развёртку мгновенно.'
+                : rough < 20
+                  ? 'Полированный диэлектрик: блик собран в точку, поверхность читается как лак или стекло.'
+                  : 'Диэлектрик со средней шероховатостью: блик рассеян, поверхность читается как окрашенная или матовая.'}
             </p>
           </Panel>
 
           <div>
-            <Panel
-              className="flex items-center justify-center"
-              style={{ padding: 'var(--s-8)', background: 'var(--m3-stage-2)' }}
-            >
-              <div style={{ width: '100%', maxWidth: 320 }}>
+            <Panel style={{ padding: 'var(--s-6)', background: 'var(--m3-stage-2)' }}>
+              <div style={{ maxWidth: 360, margin: '0 auto' }}>
                 <LitSphere uid="mat" scheme={SCHEMES[0]} roughness={rough / 100} metalness={metal / 100} />
               </div>
             </Panel>
+
+            <div
+              className="grid gap-px sm:grid-cols-2"
+              style={{
+                marginTop: 'var(--s-6)',
+                background: 'var(--m3-line-soft)',
+                borderRadius: 'var(--r-lg)',
+                overflow: 'hidden',
+              }}
+            >
+              {CHANNELS.map((c, i) => (
+                <Reveal key={c.t} y={14} delay={i * stagger.item}>
+                  <div style={{ background: 'var(--m3-panel)', padding: 'var(--s-6)', height: '100%' }}>
+                    <span
+                      aria-hidden
+                      style={{
+                        display: 'block',
+                        width: 40,
+                        height: 40,
+                        borderRadius: 'var(--r-sm)',
+                        backgroundImage: c.swatch,
+                        marginBottom: 'var(--s-4)',
+                      }}
+                    />
+                    <h3 style={{ fontSize: '0.98rem', fontWeight: 500, letterSpacing: '-0.015em', marginBottom: 6 }}>
+                      {c.t}
+                    </h3>
+                    <p style={{ fontWeight: 300, fontSize: '0.85rem', lineHeight: 1.55, color: 'var(--m3-ink-70)' }}>
+                      {c.d}
+                    </p>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ══ СВЕТ ═══════════════════════════════════════════════════════ */}
+      <section
+        className="mx-auto w-full"
+        style={{ maxWidth: 'var(--max-w)', paddingInline: 'var(--gutter)', paddingBlock: 'var(--section-y)' }}
+      >
+        <SectionHead
+          label="Стенд · постановка"
+          title="Свет решает, что зритель поймёт"
+          lead="Один и тот же объект при трёх схемах читается как три разные вещи. Постановка — не финальная косметика, а способ сказать, что в модели главное."
+        />
+
+        <div className="grid gap-6 lg:grid-cols-[320px_1fr] lg:gap-10 items-start">
+          <Panel style={{ padding: 'var(--s-6)' }}>
+            <div className="flex flex-wrap gap-2">
+              {SCHEMES.map((s, i) => (
+                <Chip key={s.id} active={i === si} onClick={() => setSi(i)}>
+                  {s.name}
+                </Chip>
+              ))}
+            </div>
+
+            <motion.p
+              key={scheme.id}
+              initial={reduce ? false : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: duration.base, ease: ease.entrance }}
+              style={{
+                marginTop: 'var(--s-6)',
+                fontWeight: 300,
+                fontSize: '0.9rem',
+                lineHeight: 1.6,
+                color: 'var(--m3-ink-70)',
+              }}
+            >
+              {scheme.note}
+            </motion.p>
+
+            <div
+              style={{
+                marginTop: 'var(--s-8)',
+                paddingTop: 'var(--s-5)',
+                borderTop: '1px solid var(--m3-line-soft)',
+              }}
+            >
+              <span style={{ ...mono, color: 'var(--m3-ink-45)' }}>План расстановки</span>
+              <div style={{ marginTop: 'var(--s-4)', maxWidth: 240 }}>
+                <LightPlan scheme={scheme} />
+              </div>
+            </div>
+          </Panel>
+
+          <div>
+            <Panel style={{ padding: 'var(--s-6)', background: 'var(--m3-stage-2)' }}>
+              <div style={{ maxWidth: 360, margin: '0 auto' }}>
+                <LitSphere uid="light" scheme={scheme} roughness={rough / 100} metalness={metal / 100} />
+              </div>
+            </Panel>
             <StageNote>
-              Это схема поведения света, а не рендер: она показывает зависимость,
-              а не считает физику. Проверить её просто — на реальном материале
-              работает то же правило.
+              Шар здесь схема, а не рендер: он показывает поведение света, а не
+              красивый кадр. Материал взят из предыдущего стенда — ползунки
+              продолжают работать и здесь, поэтому видно главное: одна и та же
+              постановка по-разному обходится с матовой поверхностью и с металлом,
+              и выбирать схему в отрыве от материала бессмысленно.
             </StageNote>
           </div>
         </div>
-
-        <div className="grid gap-px sm:grid-cols-2 lg:grid-cols-4" style={{ marginTop: 'var(--s-12)', background: 'var(--m3-line)', borderRadius: 'var(--r-lg)', overflow: 'hidden' }}>
-          {CHANNELS.map((c, i) => (
-            <Reveal key={c.t} y={16} delay={i * stagger.item}>
-              <div className="h-full flex flex-col" style={{ background: 'var(--m3-panel)', padding: 'var(--s-6)', gap: 'var(--s-4)' }}>
-                <span aria-hidden style={{ height: 56, borderRadius: 'var(--r-sm)', background: c.swatch }} />
-                <h3 style={{ ...mono, color: 'var(--m3-clay)' }}>{c.t}</h3>
-                <p style={{ fontWeight: 300, fontSize: '0.85rem', lineHeight: 1.55, color: 'var(--m3-ink-70)' }}>
-                  {c.d}
-                </p>
-              </div>
-            </Reveal>
-          ))}
-        </div>
       </section>
 
-      {/* ══ 05 · СВЕТ ═════════════════════════════════════════════ */}
+      {/* ══ ЧТО ОСТАЁТСЯ У ЗАКАЗЧИКА ══════════════════════════════════ */}
       <section
-        className="relative mx-auto w-full"
+        className="mx-auto w-full"
         style={{ maxWidth: 'var(--max-w)', paddingInline: 'var(--gutter)', paddingBlock: 'var(--section-y)' }}
       >
-        <SectionHead
-          n="05"
-          title="Свет решает, что зритель поймёт"
-          lead="Один объект, три постановки. Модель не меняется ни на вершину — меняется только то, читается ли объём, отделён ли объект от фона и куда смотрит глаз. Поэтому свет ставится под задачу кадра, а не включается по умолчанию."
-        />
-
-        <div className="flex flex-wrap gap-2" style={{ marginBottom: 'var(--s-8)' }}>
-          {SCHEMES.map((s, i) => (
-            <Chip key={s.id} active={i === si} onClick={() => setSi(i)}>
-              {s.name}
-            </Chip>
-          ))}
-        </div>
-
-        <motion.div
-          key={scheme.id}
-          initial={reduce ? false : { opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: duration.base, ease: ease.entrance }}
-          className="grid gap-6 md:grid-cols-[1.2fr_1fr] lg:grid-cols-[1.1fr_0.9fr_1fr] lg:gap-8 items-stretch"
-        >
-          <Panel className="flex items-center justify-center" style={{ padding: 'var(--s-8)', background: 'var(--m3-stage-2)' }}>
-            <div style={{ width: '100%', maxWidth: 280 }}>
-              <LitSphere uid="light" scheme={scheme} roughness={0.42} metalness={0} />
-            </div>
-          </Panel>
-
-          <Panel className="flex flex-col justify-between" style={{ padding: 'var(--s-6)' }}>
-            <span style={{ ...mono, color: 'var(--m3-ink-45)' }}>План · вид сверху</span>
-            <div style={{ paddingBlock: 'var(--s-4)' }}>
-              <LightPlan scheme={scheme} />
-            </div>
-            <span style={{ ...readout, letterSpacing: 0, color: 'var(--m3-ink-45)' }}>
-              Внизу — камера
-            </span>
-          </Panel>
-
-          <div className="flex flex-col justify-center">
-            <h3
-              style={{
-                fontFamily: 'var(--m3-display)',
-                fontWeight: 600,
-                fontSize: '1.35rem',
-                letterSpacing: '-0.02em',
-                lineHeight: 1.2,
-                marginBottom: 'var(--s-4)',
-              }}
-            >
-              {scheme.name}
-            </h3>
-            <p style={{ fontWeight: 300, fontSize: '0.95rem', lineHeight: 1.62, color: 'var(--m3-ink-70)' }}>
-              {scheme.note}
-            </p>
-          </div>
-        </motion.div>
-      </section>
-
-      {/* ══ 06 · ЧТО ОСТАЁТСЯ ═════════════════════════════════════ */}
-      <section
-        className="relative mx-auto w-full"
-        style={{ maxWidth: 'var(--max-w)', paddingInline: 'var(--gutter)', paddingBlock: 'var(--section-y)' }}
-      >
-        <SectionHead
-          n="06"
-          title="Что остаётся у заказчика"
-          lead="Не кадр, а объект, с которым можно работать дальше — в том числе без меня."
-        />
+        <SectionHead label="Передача" title="Что остаётся у заказчика" />
         <div className="grid lg:grid-cols-12 gap-x-8">
           <div className="lg:col-span-8 lg:col-start-5">
             {DELIVERABLES.map((d, i) => (
@@ -1249,14 +1532,14 @@ export default function Modeling3DScreen({ onClose }: { onClose: () => void }) {
                   className="flex flex-col sm:flex-row gap-2 sm:gap-8"
                   style={{ paddingBlock: 'var(--s-6)', borderBottom: '1px solid var(--m3-line-soft)' }}
                 >
-                  <span style={{ ...mono, color: 'var(--m3-a)', minWidth: 36, paddingTop: 4 }}>
+                  <span style={{ ...mono, color: 'var(--m3-tint)', minWidth: 36, paddingTop: 4 }}>
                     {String(i + 1).padStart(2, '0')}
                   </span>
                   <div>
-                    <h3 style={{ fontSize: '1.06rem', fontWeight: 500, letterSpacing: '-0.015em', marginBottom: 6 }}>
+                    <h3 style={{ fontSize: '1.08rem', fontWeight: 500, letterSpacing: '-0.015em', marginBottom: 6 }}>
                       {d.t}
                     </h3>
-                    <p style={{ fontWeight: 300, maxWidth: '50ch', color: 'var(--m3-ink-70)', lineHeight: 1.6 }}>
+                    <p style={{ fontWeight: 300, maxWidth: '48ch', color: 'var(--m3-ink-70)', lineHeight: 1.6 }}>
                       {d.d}
                     </p>
                   </div>
@@ -1267,31 +1550,31 @@ export default function Modeling3DScreen({ onClose }: { onClose: () => void }) {
         </div>
       </section>
 
-      {/* ══ 07 · ПРОЦЕСС ══════════════════════════════════════════ */}
+      {/* ══ ПРОЦЕСС ════════════════════════════════════════════════════ */}
       <section
-        className="relative mx-auto w-full"
+        className="mx-auto w-full"
         style={{ maxWidth: 'var(--max-w)', paddingInline: 'var(--gutter)', paddingBlock: 'var(--section-y)' }}
       >
-        <SectionHead n="07" title="Как идёт работа" />
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-10">
+        <SectionHead label="Порядок" title="Как идёт работа" />
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-8">
           {STEPS.map((s, i) => (
             <Reveal key={s.n} y={18} delay={i * stagger.item}>
               <div style={{ borderTop: '1px solid var(--m3-line)', paddingTop: 'var(--s-6)' }}>
-                <span style={{ ...mono, color: 'var(--m3-a)' }}>{s.n}</span>
+                <span style={{ ...mono, color: 'var(--m3-tint)' }}>{s.n}</span>
                 <h3
                   style={{
                     marginTop: 'var(--s-4)',
                     marginBottom: 'var(--s-3)',
                     fontFamily: 'var(--m3-display)',
                     fontWeight: 600,
-                    fontSize: '1.3rem',
-                    letterSpacing: '-0.02em',
-                    lineHeight: 1.18,
+                    fontSize: '1.2rem',
+                    letterSpacing: '-0.025em',
+                    lineHeight: 1.24,
                   }}
                 >
                   {s.t}
                 </h3>
-                <p style={{ fontWeight: 300, color: 'var(--m3-ink-70)', fontSize: '0.94rem', lineHeight: 1.6 }}>
+                <p style={{ fontWeight: 300, color: 'var(--m3-ink-70)', fontSize: '0.92rem', lineHeight: 1.6 }}>
                   {s.d}
                 </p>
               </div>
@@ -1300,9 +1583,9 @@ export default function Modeling3DScreen({ onClose }: { onClose: () => void }) {
         </div>
       </section>
 
-      {/* ══ ФИНАЛ ═════════════════════════════════════════════════ */}
+      {/* ══ ФИНАЛ ══════════════════════════════════════════════════════ */}
       <section
-        className="relative mx-auto w-full"
+        className="mx-auto w-full"
         style={{ maxWidth: 'var(--max-w)', paddingInline: 'var(--gutter)', paddingBlock: 'var(--section-y)' }}
       >
         <div className="grid lg:grid-cols-12 gap-x-8 gap-y-10 items-end">
@@ -1312,12 +1595,12 @@ export default function Modeling3DScreen({ onClose }: { onClose: () => void }) {
               style={{
                 fontFamily: 'var(--m3-display)',
                 fontWeight: 800,
-                fontSize: 'clamp(2rem, 6.5vw, 4.6rem)',
+                fontSize: 'clamp(1.8rem, 6vw, 4rem)',
                 letterSpacing: '-0.04em',
-                lineHeight: 1.02,
+                lineHeight: 1.08,
               }}
             >
-              <SplitText text="Модель делается под цель" by="word" />
+              <SplitText text="Модель живёт дольше кадра" by="word" />
             </h2>
             <Reveal y={16} delay={0.2}>
               <p
@@ -1329,10 +1612,10 @@ export default function Modeling3DScreen({ onClose }: { onClose: () => void }) {
                   lineHeight: 1.65,
                 }}
               >
-                Модель под кинорендер и модель под движок — разные объекты, а не
-                одна в разном качестве. Скажите, куда она пойдёт, и это определит
-                топологию, бюджет полигонов и материалы с первого дня, а не после
-                того, как выяснится, что переделывать придётся всё.
+                Картинку можно переснять за вечер. Объект, который встаёт в чужую
+                сцену без разворотов, гнётся без изломов и держит крупный план, —
+                нельзя. Разница закладывается на ретопологии, а не на финальном
+                рендере.
               </p>
             </Reveal>
           </div>
@@ -1343,20 +1626,20 @@ export default function Modeling3DScreen({ onClose }: { onClose: () => void }) {
                 onClick={onClose}
                 className="group relative overflow-hidden rounded-full"
                 style={{
-                  border: '1px solid var(--m3-clay)',
-                  color: 'var(--m3-clay)',
+                  border: '1px solid var(--m3-line)',
+                  color: 'var(--m3-ink)',
                   paddingInline: 'var(--s-8)',
                   paddingBlock: 'var(--s-4)',
                   ...mono,
                 }}
               >
-                {/* Заливка — scaleY отдельного слоя: переход по background
+                {/* Заливка — scaleY отдельного слоя. Переход по background
                     стоил бы paint на каждом кадре наведения. */}
                 <span
                   aria-hidden
                   className="absolute inset-0 origin-bottom scale-y-0 group-hover:scale-y-100"
                   style={{
-                    background: 'rgba(216, 189, 148, 0.14)',
+                    background: 'var(--m3-tint)',
                     transition: `transform ${duration.base}s ${cssEase.standard}`,
                   }}
                 />
@@ -1366,6 +1649,75 @@ export default function Modeling3DScreen({ onClose }: { onClose: () => void }) {
           </div>
         </div>
       </section>
+
+      {/* ══ ДОК СТАДИЙ ═════════════════════════════════════════════════
+          Управление остаётся с посетителем на всём экране, а не живёт в
+          одной секции: смысл в том, что одно решение меняет объект, текст,
+          температуру и метрики одновременно, — а увидеть это можно только
+          если переключатель доступен в любом контексте.
+
+          На 390px шесть кнопок в строку не помещаются, поэтому строка
+          прокручивается по горизонтали. Прокрутка живёт внутри самого дока:
+          overflow на общем предке отключил бы липкость стенда выше. */}
+      <div
+        /* На узком экране док поднят: в левом нижнем углу сайта живёт
+           мини-плеер, и на 390px широкая полоса стадий налезала на него.
+           На sm+ док узкий относительно ширины экрана и не конфликтует. */
+        className="fixed left-1/2 bottom-[5.5rem] sm:bottom-6 w-full"
+        style={{
+          zIndex: 'var(--z-nav)',
+          transform: 'translateX(-50%)',
+          maxWidth: 'calc(100vw - 1.5rem)',
+          // Полоса растянута на всю ширину только ради центровки — клики
+          // мимо дока должны доставать до страницы под ним.
+          pointerEvents: 'none',
+        }}
+      >
+        <div
+          className="mx-auto flex items-center gap-3 rounded-full backdrop-blur w-fit max-w-full"
+          style={{
+            border: '1px solid var(--m3-line)',
+            background: 'rgba(23, 18, 14, 0.88)',
+            paddingInline: 'var(--s-4)',
+            paddingBlock: 'var(--s-3)',
+            boxShadow: '0 20px 40px -24px rgba(0,0,0,0.8)',
+            pointerEvents: 'auto',
+          }}
+        >
+          <span className="hidden md:inline shrink-0" style={{ ...mono, color: 'var(--m3-ink-45)' }}>
+            Стадия
+          </span>
+          <div ref={dockRef} className="flex items-center gap-1.5 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+            {STAGES.map((s) => {
+              const active = s.id === stage
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => setStage(s.id)}
+                  aria-pressed={active}
+                  aria-label={`Стадия ${s.n}: ${s.label}`}
+                  title={s.label}
+                  className="shrink-0 rounded-full"
+                  style={{
+                    ...mono,
+                    letterSpacing: '0.1em',
+                    padding: '0.5rem 0.7rem',
+                    border: `1px solid ${active ? s.tint : 'transparent'}`,
+                    // Цвет стадии стоит прямо на кнопке: во вьюпорте проходы
+                    // закодированы цветом, и здесь так же.
+                    color: active ? s.tint : 'var(--m3-ink-45)',
+                    background: active ? 'rgba(242, 236, 225, 0.06)' : 'transparent',
+                    transform: active ? 'scale(1.04)' : 'scale(1)',
+                    transition: `transform ${duration.fast}s ${cssEase.standard}`,
+                  }}
+                >
+                  {s.short}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      </div>
     </main>
   )
 }

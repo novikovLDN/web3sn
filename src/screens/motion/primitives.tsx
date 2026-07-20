@@ -1,12 +1,123 @@
-import { useEffect, useRef, useState } from 'react'
-import { motion, useMotionValue, useSpring } from 'framer-motion'
-import { duration, ease, spring, stagger, inView as inViewCfg } from '../../design/motion'
-import { DISPLAY, MONO, T } from './palette'
+/**
+ * Общая механика Motion-экрана.
+ *
+ * ГЛАВНОЕ ЗДЕСЬ — КРИВАЯ ЭКРАНА
+ * ─────────────────────────────
+ * На экране есть одно персистентное состояние, которым управляет посетитель:
+ * кривая. Она живёт в двух видах одновременно, и оба нужны:
+ *
+ *   • как CSS-переменная --m-ease на корне <main> — по ней идут все CSS-переходы
+ *     (наведения, смена состояния кнопок, подсветки, прогоны инструментов);
+ *   • как контекст React — по ней идут все появления на framer-motion.
+ *
+ * Без второй половины «весь экран двигается по выбранной кривой» было бы
+ * рекламным преувеличением: появления секций — самое заметное движение
+ * на странице, и они обязаны подчиняться тому же выбору.
+ */
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from 'react'
+import { motion } from 'framer-motion'
+import { duration, ease, inView as inViewCfg } from '../../design/motion'
+import { T, mono } from './palette'
 
-/** true, если пользователь просил уменьшить анимацию. Реактивен к смене настройки. */
+/* ── Набор кривых экрана ──────────────────────────────────────────
+   Это не витрина easing, а полный именованный набор из design/motion.ts —
+   тот самый, на котором построено движение всего сайта. Названия оставлены
+   как в коде: названный easing в тексте читается как язык профессионала
+   и здесь ничего не стоит, потому что система уже именована.
+
+   Linear включён намеренно: без него сравнивать не с чем, а весь экран
+   держится на сравнении. Overshoot включён потому, что демонстрация кривых
+   и есть содержание этого экрана — на главной он не используется. */
+export type Curve = {
+  id: string
+  /** Имя ровно как ключ в design/motion.ts. */
+  name: string
+  /** Что эта кривая делает в системе. */
+  role: string
+  /** Что она делает с характером экрана, когда выбрана глобально. */
+  feel: string
+  v: [number, number, number, number]
+}
+
+export const CURVES: Curve[] = [
+  {
+    id: 'standard',
+    name: 'ease.standard',
+    role: 'База интерфейса',
+    feel: 'Резкий старт, длинный выход. Экран отвечает мгновенно и оседает мягко.',
+    v: [...ease.standard] as [number, number, number, number],
+  },
+  {
+    id: 'entrance',
+    name: 'ease.entrance',
+    role: 'Появление контента',
+    feel: 'Почти без разгона. Всё уже приехало, пока вы дочитывали строку.',
+    v: [...ease.entrance] as [number, number, number, number],
+  },
+  {
+    id: 'editorial',
+    name: 'ease.editorial',
+    role: 'Крупные блоки и шторки',
+    feel: 'Симметричный вход и выход. Движение приобретает вес полотна, а не элемента.',
+    v: [...ease.editorial] as [number, number, number, number],
+  },
+  {
+    id: 'exit',
+    name: 'ease.exit',
+    role: 'Уход контента',
+    feel: 'Долгая заминка и рывок в конце. На появлениях читается как задержка ввода.',
+    v: [...ease.exit] as [number, number, number, number],
+  },
+  {
+    id: 'overshoot',
+    name: 'ease.overshoot',
+    role: 'Только акценты, никогда текст',
+    feel: 'Перелёт за цель. Одна кнопка — характер, весь экран — суетливость.',
+    v: [...ease.overshoot] as [number, number, number, number],
+  },
+  {
+    id: 'linear',
+    name: 'ease.linear',
+    role: 'Только бесконечные циклы',
+    feel: 'Постоянная скорость. Ничто не разгоняется и не тормозит — механика без веса.',
+    v: [...ease.linear] as [number, number, number, number],
+  },
+]
+
+/* ── Контекст кривой ──────────────────────────────────────────────── */
+
+const EaseContext = createContext<Curve>(CURVES[0])
+
+export function EaseProvider({ curve, children }: { curve: Curve; children: ReactNode }) {
+  return <EaseContext.Provider value={curve}>{children}</EaseContext.Provider>
+}
+
+/** Текущая кривая экрана. Меняется только из CurveDock. */
+export function useScreenCurve() {
+  return useContext(EaseContext)
+}
+
+/** Та же кривая строкой для inline-CSS. */
+export function curveCss(c: Curve) {
+  return `cubic-bezier(${c.v.join(', ')})`
+}
+
+/* ── Уважение к системной настройке ──────────────────────────────
+   Реактивен к смене настройки: пользователь может включить «меньше
+   движения» не выходя со страницы. */
 export function usePrefersReducedMotion() {
   const [reduced, setReduced] = useState(
-    () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    () =>
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
   )
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -17,65 +128,15 @@ export function usePrefersReducedMotion() {
   return reduced
 }
 
-/* ── Заголовок раздела-закона ─────────────────────────────────────
-   Номер и формулировка-утверждение, а не назывной заголовок: раздел
-   обязан что-то заявлять, иначе инструмент под ним нечего доказывать.
-   Один компонент на все модули — иначе нумерация разъезжается при
-   первой же перестановке разделов. */
-export function SectionHead({
-  n,
-  title,
-  lead,
-  note,
-}: {
-  n: string
-  title: string
-  lead?: string
-  note?: string
-}) {
-  return (
-    <header className="mb-10 md:mb-14">
-      <Reveal y={16}>
-        <div
-          className="flex flex-wrap items-baseline gap-x-5 gap-y-2 pb-4"
-          style={{ borderBottom: '1px solid var(--m-border)' }}
-        >
-          <span className="text-[11px] tracking-[0.22em]" style={{ color: 'var(--m-ember)', ...MONO }}>
-            {n}
-          </span>
-          <h2 className="font-bold uppercase" style={{ color: 'var(--m-chalk)', ...T.h2, ...DISPLAY }}>
-            {title}
-          </h2>
-          {note && (
-            <span
-              className="ml-auto text-[11px] uppercase tracking-[0.22em]"
-              style={{ color: 'var(--m-dim)', ...MONO }}
-            >
-              {note}
-            </span>
-          )}
-        </div>
-      </Reveal>
-      {lead && (
-        <Reveal y={14} delay={0.06}>
-          <p
-            className="mt-5 max-w-[56ch] font-light"
-            style={{ color: 'var(--m-dim)', fontSize: 'var(--t-body)', lineHeight: 1.62 }}
-          >
-            {lead}
-          </p>
-        </Reveal>
-      )}
-    </header>
-  )
-}
-
-/* ── Решатель cubic-bezier ────────────────────────────────────────
-   Нужен там, где кадр не проигрывается, а СКРАБИТСЯ: чтобы показать
-   положение слоя в произвольный момент, надо уметь считать значение
-   кривой, а не отдать её браузеру. Ньютон по x за шесть итераций —
-   тот же метод, что внутри движка анимаций; точности 1e-5 хватает,
-   расхождения с нативным переходом на глаз нет. */
+/**
+ * Решатель cubic-bezier.
+ *
+ * Нужен там, где кадр не проигрывается, а считается: чтобы нарисовать график
+ * кривой и показать положение объекта в произвольный момент, надо уметь
+ * получать значение кривой, а не отдавать её браузеру. Ньютон по x за шесть
+ * итераций — тот же метод, что внутри движка анимаций; точности 1e-5 хватает,
+ * расхождения с нативным переходом на глаз нет.
+ */
 export function cubicBezier(x1: number, y1: number, x2: number, y2: number) {
   const cx = 3 * x1
   const bx = 3 * (x2 - x1) - cx
@@ -103,20 +164,76 @@ export function cubicBezier(x1: number, y1: number, x2: number, y2: number) {
   }
 }
 
+/**
+ * График кривой в квадрате «от 0 до 1».
+ *
+ * Путь строится из самих контрольных точек, а не хранится строкой: рисованные
+ * вручную пути расходились бы со значениями при первой же правке motion.ts.
+ * В системе координат SVG ось Y смотрит вниз, поэтому точка (x, y) кривой
+ * лежит в (x·100, 100 − y·100). Поля viewBox сверху и снизу — запас под
+ * overshoot: без них перелёт обрезался бы и перестал читаться как перелёт.
+ */
+export function CurveGraph({
+  v,
+  active,
+  size = 96,
+}: {
+  v: [number, number, number, number]
+  active: boolean
+  size?: number
+}) {
+  const [x1, y1, x2, y2] = v
+  const d = `M0 100 C ${x1 * 100} ${100 - y1 * 100}, ${x2 * 100} ${100 - y2 * 100}, 100 0`
+  return (
+    <svg
+      viewBox="-4 -34 108 168"
+      width={size}
+      height={size}
+      preserveAspectRatio="xMidYMid meet"
+      aria-hidden
+      style={{ display: 'block' }}
+    >
+      <rect
+        x="0"
+        y="0"
+        width="100"
+        height="100"
+        fill="none"
+        stroke="var(--m-line)"
+        strokeWidth="1"
+        vectorEffect="non-scaling-stroke"
+      />
+      <path
+        d={d}
+        fill="none"
+        stroke={active ? 'var(--m-ember)' : 'var(--m-sea-60)'}
+        strokeWidth="2"
+        strokeLinecap="round"
+        vectorEffect="non-scaling-stroke"
+      />
+    </svg>
+  )
+}
+
+/* ── Появление блока ──────────────────────────────────────────────
+   Собственный Reveal, а не общий из design/primitives: общий жёстко
+   зашивает ease.entrance, и тогда обещание «весь экран двигается по
+   выбранной кривой» не выполнялось бы на самом заметном движении страницы. */
 export function Reveal({
   children,
   className,
   style,
   delay = 0,
-  y = 24,
+  y = 22,
 }: {
-  children: React.ReactNode
+  children: ReactNode
   className?: string
-  style?: React.CSSProperties
+  style?: CSSProperties
   delay?: number
   y?: number
 }) {
   const reduced = usePrefersReducedMotion()
+  const curve = useScreenCurve()
   return (
     <motion.div
       className={className}
@@ -124,169 +241,151 @@ export function Reveal({
       initial={reduced ? false : { opacity: 0, y }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={inViewCfg}
-      transition={{ duration: reduced ? 0 : duration.slow, ease: ease.entrance, delay: reduced ? 0 : delay }}
+      transition={{
+        duration: reduced ? 0 : duration.slow,
+        delay: reduced ? 0 : delay,
+        ease: curve.v,
+      }}
     >
       {children}
     </motion.div>
   )
 }
 
-/**
- * Пословное появление крупного текста.
- *
- * Слово выезжает из-под маски: обёртка с overflow:hidden, движется вложенный
- * span. Прежняя версия дополнительно анимировала filter: blur — от него
- * отказались по двум причинам: blur заставляет браузер перерисовывать текст
- * на каждом кадре (это не композиторское свойство), и он же размывает шрифт
- * ровно в тот момент, когда читатель пытается его прочесть.
- */
-export function WordReveal({
-  text,
-  className,
-  style,
+/* ── Заголовок раздела-закона ─────────────────────────────────────
+   МАРКИРОВКА РАЗДЕЛОВ: почему не 01 / 02 / 03.
+   Исследование помечает сквозную нумерацию как признак шаблонности, и на этом
+   экране от неё есть что выиграть, а не только чем пожертвовать. Порядковый
+   номер сообщает единственное — «сколько ещё осталось». Здесь вместо него
+   стоит имя параметра, которым раздел управляет (ДЛИТЕЛЬНОСТЬ, КРИВАЯ, РИТМ,
+   КАДР, СКРОЛЛ): на экране, чей тезис — «движение это параметры, а не
+   украшение», маркер раздела обязан называть параметр. Порядок при этом
+   не теряется: его несёт риска из делений справа, где текущее подсвечено.
+   Считать по ней можно, но она не превращает разделы в пункты списка.
+
+   Заголовок — утверждение, а не назывное словосочетание: под ним стоит
+   инструмент, и ему нужно что-то доказывать. */
+export function SectionHead({
+  param,
+  index,
+  total,
+  title,
+  lead,
+  hint,
 }: {
-  text: string
-  className?: string
-  style?: React.CSSProperties
+  param: string
+  index: number
+  total: number
+  title: string
+  lead?: string
+  hint?: string
 }) {
-  const reduced = usePrefersReducedMotion()
-
-  // При reduced-motion отдаём обычный текст: сотня лишних узлов в DOM
-  // не нужна тому, кто отключил движение.
-  if (reduced) {
-    return (
-      <p className={className} style={style}>
-        {text}
-      </p>
-    )
-  }
-
   return (
-    <motion.p
-      className={className}
-      style={style}
-      aria-label={text}
-      variants={{ hidden: {}, show: { transition: { staggerChildren: stagger.word } } }}
-      initial="hidden"
-      whileInView="show"
-      viewport={inViewCfg}
-    >
-      {text.split(' ').map((w, i) => (
-        <span
-          key={i}
-          aria-hidden
-          className="inline-block overflow-hidden align-top mr-[0.26em]"
-          // Свесы литер (у, р, д) обрезались бы маской по базовой линии —
-          // компенсируем вертикальным запасом и втягиваем его обратно.
-          style={{ paddingBottom: '0.14em', marginBottom: '-0.14em' }}
+    <header className="mb-10 md:mb-14">
+      <Reveal y={14}>
+        <div
+          className="flex flex-wrap items-baseline gap-x-5 gap-y-3 pb-4"
+          style={{ borderBottom: '1px solid var(--m-line)' }}
         >
-          <motion.span
-            className="inline-block"
-            variants={{
-              hidden: { y: '110%' },
-              show: { y: '0%', transition: { duration: duration.slower, ease: ease.entrance } },
-            }}
-          >
-            {w}
-          </motion.span>
-        </span>
-      ))}
-    </motion.p>
-  )
-}
-
-/* ── Кинетическая бегущая строка ──────────────────────────────────
-   Два одинаковых блока и сдвиг на -50% — единственный способ получить
-   бесшовный цикл без пересчёта ширины в JS.
-
-   ВАЖНО: суммарная ширина обязана оставаться в пределах ~12000px.
-   Выше начинается предел max texture size у GPU, и слой просто перестаёт
-   отрисовываться на реальных машинах. Отсюда всего три повтора в блоке. */
-export function Kinetic({
-  text,
-  dir,
-  color,
-  size = 'clamp(0.9rem, 2vw, 1.4rem)',
-  op = 1,
-}: {
-  text: string
-  dir: 'l' | 'r'
-  color: string
-  size?: string
-  op?: number
-}) {
-  const row = [0, 1, 2]
-  return (
-    <div className="overflow-hidden" style={{ opacity: op }}>
-      <div className="flex w-max animate-marquee" style={dir === 'r' ? { animationDirection: 'reverse' } : undefined}>
-        {[0, 1].map((blk) => (
-          <div key={blk} className="flex shrink-0" aria-hidden={blk === 1}>
-            {row.map((i) => (
+          <span style={{ ...mono, color: 'var(--m-ember)' }}>{param}</span>
+          <h2 style={{ ...T.h2, color: 'var(--m-chalk)', fontFamily: 'var(--m-display)' }}>
+            {title}
+          </h2>
+          <span className="ml-auto flex items-center gap-1.5" aria-label={`Раздел ${index} из ${total}`}>
+            {Array.from({ length: total }).map((_, i) => (
               <span
                 key={i}
-                className="font-medium uppercase whitespace-nowrap px-6"
-                style={{ fontSize: size, color, lineHeight: 1, letterSpacing: '0.08em', ...DISPLAY }}
-              >
-                {text}
-                <span className="px-6" style={{ color: 'var(--m-ember)' }}>
-                  ·
-                </span>
-              </span>
+                aria-hidden
+                style={{
+                  display: 'block',
+                  width: i + 1 === index ? 16 : 6,
+                  height: 2,
+                  background: i + 1 === index ? 'var(--m-ember)' : 'var(--m-line)',
+                }}
+              />
             ))}
-          </div>
-        ))}
-      </div>
-    </div>
+          </span>
+        </div>
+      </Reveal>
+      {lead && (
+        <Reveal y={12} delay={0.06}>
+          <p
+            className="mt-5 max-w-[58ch] font-light"
+            style={{ color: 'var(--m-dim)', fontSize: 'var(--t-body)', lineHeight: 1.62 }}
+          >
+            {lead}
+          </p>
+        </Reveal>
+      )}
+      {hint && (
+        <Reveal y={10} delay={0.1}>
+          <p className="mt-4" style={{ ...mono, color: 'var(--m-sea)' }}>
+            {hint}
+          </p>
+        </Reveal>
+      )}
+    </header>
   )
 }
 
-/* ── Магнитная кнопка ─────────────────────────────────────────────
-   На пружине, а не на кривой: движение может быть прервано в любой момент,
-   и только пружина отрабатывает это без рывка. На тач-устройствах курсора
-   нет — там эффект отключён целиком. */
-export function Magnetic({
-  children,
-  className,
-  style,
+/* ── Кнопка прогона ───────────────────────────────────────────────
+   Один вид на все инструменты экрана: если «проиграть» выглядит в каждом
+   разделе по-своему, посетитель каждый раз заново ищет, за что тянуть.
+   Переход по кривой экрана — на самой кнопке видно, что выбор действует. */
+export function RunButton({
   onClick,
+  children = '▶ Проиграть',
+  wide = false,
 }: {
-  children: React.ReactNode
-  className?: string
-  style?: React.CSSProperties
-  onClick?: () => void
+  onClick: () => void
+  children?: ReactNode
+  wide?: boolean
 }) {
-  const ref = useRef<HTMLButtonElement>(null)
-  const reduced = usePrefersReducedMotion()
-  const [enabled, setEnabled] = useState(false)
-  useEffect(() => {
-    setEnabled(window.matchMedia('(hover: hover) and (pointer: fine)').matches && !reduced)
-  }, [reduced])
-
-  const x = useMotionValue(0)
-  const y = useMotionValue(0)
-  const sx = useSpring(x, spring.snappy)
-  const sy = useSpring(y, spring.snappy)
-
   return (
-    <motion.button
-      ref={ref}
+    <button
+      type="button"
       onClick={onClick}
-      onPointerMove={(e) => {
-        if (!enabled || !ref.current) return
-        const r = ref.current.getBoundingClientRect()
-        x.set((e.clientX - (r.left + r.width / 2)) * 0.35)
-        y.set((e.clientY - (r.top + r.height / 2)) * 0.35)
+      className="rounded-full"
+      style={{
+        ...mono,
+        color: 'var(--m-abyss)',
+        background: 'var(--m-ember)',
+        paddingInline: wide ? 'var(--s-8)' : 'var(--s-6)',
+        paddingBlock: 'var(--s-3)',
+        // Только transform и opacity: заливка постоянна, меняется масштаб.
+        transition: `transform var(--d-fast) var(--m-ease)`,
       }}
-      onPointerLeave={() => {
-        x.set(0)
-        y.set(0)
+      onPointerEnter={(e) => {
+        e.currentTarget.style.transform = 'scale(1.04)'
       }}
-      style={enabled ? { x: sx, y: sy, ...style } : style}
-      whileTap={{ scale: 0.97 }}
-      transition={{ duration: duration.fast, ease: ease.soft }}
-      className={className}
+      onPointerLeave={(e) => {
+        e.currentTarget.style.transform = 'scale(1)'
+      }}
     >
       {children}
-    </motion.button>
+    </button>
   )
+}
+
+/**
+ * Гейт по видимости.
+ *
+ * Возвращает [ref, visible]. Нужен везде, где иначе пришлось бы держать
+ * rAF или измерения включёнными постоянно: rAF и getBoundingClientRect
+ * каждый кадр — измеренная на этом проекте причина падения fps, и платить
+ * за них имеет смысл только пока блок в кадре.
+ */
+export function useInViewGate<T extends HTMLElement>(amount = 0.2) {
+  const ref = useRef<T>(null)
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const io = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), {
+      threshold: amount,
+    })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [amount])
+  return [ref, visible] as const
 }

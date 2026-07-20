@@ -3,41 +3,84 @@
  *
  * ТЕЗИС
  * ─────
- * Разработку в портфолио дизайнера обычно показывают антуражем: тёмный
- * терминал, печатающийся код, логотипы фреймворков. Это доказывает ровно
- * одно — что человек видел терминал. Экран построен на обратном допущении:
- * инженерную компетенцию нельзя рассказать, её можно только дать проверить.
- * Поэтому здесь нет ни одного «скриншота работы» и ни одной цифры результата.
- * Здесь пять инструментов, каждый из которых считает или показывает что-то
- * прямо в браузере посетителя: бюджет кадра меряется на его машине, контраст
- * палитры этого же экрана считается по формуле WCAG на этой же странице,
- * порядок фокуса он проходит клавишей Tab сам.
+ * Разработку в портфолио показывают двумя способами, и оба не работают.
+ * Первый — антураж: тёмный терминал, печатающийся код, плавающие скобки.
+ * Он доказывает ровно одно — что человек видел терминал. Второй — список
+ * технологий: React, TypeScript, Vite. Список ставит автора в один ряд
+ * со всеми, кто выучил те же слова.
+ *
+ * Экран построен на третьем допущении: инженера видно по двум вещам, и
+ * обе проверяемы прямо в браузере посетителя.
+ *
+ *   1. ПО ИЗМЕРЕННОМУ ЧИСЛУ. Не «делаю плавно и легко», а время кадра,
+ *      длинные кадры и вес страницы, посчитанные на этой самой странице
+ *      на этой самой машине. Такое число нельзя приписать себе: его можно
+ *      испортить, открыв тяжёлую вкладку, и оно испортится честно.
+ *   2. ПО НАЗВАННОМУ КОМПРОМИССУ. Не «использую Lenis», а «купил инерцию,
+ *      заплатил конфликтом со scroll-driven animations, position: sticky
+ *      и доступностью — поэтому выключаю его на тач-устройствах и при
+ *      prefers-reduced-motion». Названный компромисс вынимает автора из
+ *      сравнения по спискам инструментов. Раздел 03 — про решение этого
+ *      сайта, с его настоящей ценой, показанной числом.
+ *
+ * Всё остальное на экране подчинено этим двум: тип вместо картинки,
+ * четыре состояния данных вместо одного, доступность как посчитанное
+ * условие, а не как обещание.
+ *
+ * ПЕРСИСТЕНТНОЕ СОСТОЯНИЕ ЭКРАНА
+ * ──────────────────────────────
+ * Внизу закреплены УСЛОВИЯ ПРИЁМКИ: настольный 120 Гц, ноутбук 60 Гц,
+ * телефон на медленном канале. Это не декоративный переключатель — он
+ * расходится по всему экрану: под него пересчитывается бюджет кадра
+ * (8.3 против 16.7 мс), время загрузки измеренных байтов, и в разделе
+ * про компромисс меняется сам вердикт — на тач-устройстве инерционный
+ * скролл этого сайта физически выключен, и раздел это показывает.
+ * Инженерное решение не бывает верным вообще; оно верно для условий.
  *
  * ВИЗУАЛЬНАЯ НИША
  * ───────────────
  * Температуры остальных экранов заняты: швейцарская бумага с ультрамарином
- * (Веб-дизайн), средний серый (Брендинг), петроль (Моушн), тёплая глина (3D),
- * тёмная тёплая (главная). Терминальный зелёный на почти-чёрном остаётся
- * за этим экраном — и здесь он не декорация, а функция: это единственная
- * среда, где инструмент показывают на приборной панели, а результат — на
- * светлой сцене рядом. Отсюда две поверхности экрана: тёмная панель
- * (инструмент, моноширинный голос) и светлая сцена (продукт, тот вид, в
- * котором его увидит пользователь). Разделение поверхностей и есть смысл
+ * (Веб-дизайн), бумага с переключаемой палитрой (Брендинг), петроль (Моушн),
+ * тёплая глина (3D). Здесь — приборная: почти-чёрное с зелёным системным
+ * голосом. И зелёный тут не цитата «хакерского терминала», а функция:
+ * экран разделён на две поверхности. Тёмная панель — инструмент, на ней
+ * живут измерения и код. Светлая сцена — продукт, на ней живёт то, что
+ * увидит конечный пользователь. Разделение поверхностей и есть смысл
  * профессии: слева то, что пишут, справа то, что от этого происходит.
  *
- * Гарнитуры: JetBrains Mono — технический голос и заголовки (в терминальной
- * нише моноширинный заголовок честнее декоративного дисплея), Inter Tight —
- * проза. Пиксельная гарнитура прежней версии убрана: она читалась как игра,
- * а услуга продаётся как инженерная.
+ * ГАРНИТУРЫ И КИРИЛЛИЦА
+ * ─────────────────────
+ * Пиксельная Handjet прежней версии убрана: она читается как игровая, а
+ * услуга инженерная. Взяты JetBrains Mono (технический голос, заголовки)
+ * и Inter Tight (проза). Кириллица у обеих проверена по метаданным Google
+ * Fonts — в subsets присутствуют cyrillic и cyrillic-ext; это была открытая
+ * претензия к экрану, и она закрыта не предположением, а проверкой.
+ * Шкала экрана — своя, в переменных --dv-t-* / --dv-lh-* / --dv-tr-*
+ * ниже, с двумя кириллическими поправками, выведенными на живых словах:
+ * интерлиньяж дисплея не ниже 1.0 (в «Разработка» диакритика и выносные
+ * элементы моношрифта выходят за прописную высоту) и разрядка прописных
+ * 0.14em вместо проектных 0.18em (кириллические прописные шире латинских
+ * и при равной разрядке рассыпаются).
+ *
+ * НУМЕРАЦИЯ РАЗДЕЛОВ
+ * ──────────────────
+ * 01/02/03 оставлены осознанно, вопреки общей претензии к нумерации как
+ * к признаку шаблона. Здесь это не украшение порядка, а сам предмет:
+ * разделы — пункты списка приёмки, по которому работу принимают. У списка
+ * приёмки номера есть по определению, и последний раздел («Как идёт
+ * работа») ссылается на них как на этапы проверки.
  *
  * ПРОИЗВОДИТЕЛЬНОСТЬ
  * ──────────────────
- * Анимируются только transform и opacity — на экране, который сам объясняет
- * почему, нарушить это правило было бы прямым противоречием. Все заливки и
- * индикаторы — scaleX/scaleY на отдельном слое, все оверлеи существуют всегда
- * и гасятся прозрачностью. Единственный rAF-цикл (измеритель кадра) гейтится
- * IntersectionObserver и не вызывает getBoundingClientRect. Пульс скелетона —
- * CSS-анимация, остановленная за кадром через useOffscreenPause.
+ * Анимируются только transform и opacity — на экране, который сам
+ * объясняет почему, нарушить это правило значило бы опровергнуть себя.
+ * Все заливки и индикаторы — scaleX/scaleY на отдельном слое, все оверлеи
+ * существуют всегда и гасятся прозрачностью. Два rAF-цикла (измеритель
+ * кадра и лаборатория инерции) гейтятся IntersectionObserver, не зовут
+ * getBoundingClientRect внутри цикла и пишут в состояние React пять раз
+ * в секунду, а не шестьдесят: перерисовка на каждый кадр исказила бы сам
+ * замер. Бесконечные CSS-анимации останавливаются за кадром через
+ * useOffscreenPause.
  *
  * Кривые и длительности — только из design/motion.
  */
@@ -45,10 +88,12 @@
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type CSSProperties,
   type FocusEvent,
+  type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from 'react'
 import { motion } from 'framer-motion'
@@ -56,53 +101,92 @@ import { Reveal, useOffscreenPause } from '../design/primitives'
 import { cssEase, duration, ease, stagger, prefersReducedMotion } from '../design/motion'
 
 /* ── Палитра экрана ──────────────────────────────────────────────────
-   Две поверхности, а не одна: тёмная панель — инструмент, светлая сцена —
-   продукт. Зелёный работает как системный голос среды (подписи, статусы,
-   разметка), оранжевый — как единственный цвет продукта и цвет тревоги.
-   Разделение ролей строгое: зелёный никогда не красит демо-компонент,
-   оранжевый никогда не красит служебную подпись. */
-const SCREEN_VARS = {
-  '--dv-bg': '#04070a',
-  '--dv-panel': '#090f14',
-  '--dv-panel-2': '#0e161d',
-  '--dv-line': 'rgba(74, 222, 128, 0.16)',
-  '--dv-line-soft': 'rgba(74, 222, 128, 0.07)',
-  '--dv-green': '#4ade80',
-  '--dv-green-dim': '#2f9e5f',
-  '--dv-green-bright': '#a7f3c9',
-  '--dv-wash': 'rgba(74, 222, 128, 0.1)',
-  '--dv-cream': '#ece7db',
-  '--dv-cream-70': 'rgba(236, 231, 219, 0.7)',
-  '--dv-cream-45': 'rgba(236, 231, 219, 0.45)',
-  '--dv-accent': '#ef4a23',
-  '--dv-accent-wash': 'rgba(239, 74, 35, 0.14)',
-  /* Светлая сцена: на ней живёт всё, что увидит конечный пользователь. */
-  '--dv-stage': '#f2f1ec',
-  '--dv-stage-2': '#e7e5dd',
-  '--dv-stage-ink': '#14120f',
-  '--dv-stage-ink-60': 'rgba(20, 18, 15, 0.6)',
-  '--dv-stage-line': 'rgba(20, 18, 15, 0.13)',
-  '--dv-mono': "'JetBrains Mono', ui-monospace, Menlo, monospace",
-  '--dv-sans': "'Inter Tight', 'MTS Wide', system-ui, sans-serif",
-} as unknown as CSSProperties
+   Один источник правды. Хексы объявлены здесь и только здесь: из них
+   собираются CSS-переменные корня, и они же попадают в калькулятор
+   контраста раздела 06 — из var() цвет обратно не достать, а показывать
+   «заранее посчитанный на глаз» контраст на этом экране нельзя.
+   В разметке цвет берётся через var() или через это имя, но никогда
+   литералом.
 
-/* Те же значения хексами — их считает калькулятор контраста в разделе 04.
-   Дублирование намеренное: из var() цвет обратно не достать, а показывать
-   контраст «на глаз посчитанный заранее» на этом экране нельзя. */
-const HEX = {
+   Роли строгие: зелёный — системный голос среды (подписи, статусы,
+   разметка, «в норме»), оранжевый — цвет продукта и цвет превышения
+   бюджета. Зелёный никогда не красит демо-компонент, оранжевый никогда
+   не красит служебную подпись. */
+const PALETTE = {
+  bg: '#04070a',
   panel: '#090f14',
+  panel2: '#0e161d',
   green: '#4ade80',
   greenDim: '#2f9e5f',
   greenBright: '#a7f3c9',
   cream: '#ece7db',
   accent: '#ef4a23',
+  /* Светлая сцена: поверхность, на которой продукт выглядит как продукт. */
   stage: '#f2f1ec',
+  stage2: '#e7e5dd',
+  stageCard: '#ffffff',
   stageInk: '#14120f',
-}
+} as const
+
+const SCREEN_VARS = {
+  '--dv-bg': PALETTE.bg,
+  '--dv-panel': PALETTE.panel,
+  '--dv-panel-2': PALETTE.panel2,
+  '--dv-line': 'rgba(74, 222, 128, 0.16)',
+  '--dv-line-soft': 'rgba(74, 222, 128, 0.07)',
+  '--dv-green': PALETTE.green,
+  '--dv-green-dim': PALETTE.greenDim,
+  '--dv-green-bright': PALETTE.greenBright,
+  '--dv-wash': 'rgba(74, 222, 128, 0.1)',
+  '--dv-cream': PALETTE.cream,
+  '--dv-cream-70': 'rgba(236, 231, 219, 0.7)',
+  '--dv-cream-45': 'rgba(236, 231, 219, 0.45)',
+  '--dv-cream-22': 'rgba(236, 231, 219, 0.22)',
+  '--dv-accent': PALETTE.accent,
+  '--dv-accent-wash': 'rgba(239, 74, 35, 0.14)',
+  '--dv-stage': PALETTE.stage,
+  '--dv-stage-2': PALETTE.stage2,
+  '--dv-stage-card': PALETTE.stageCard,
+  '--dv-stage-ink': PALETTE.stageInk,
+  '--dv-stage-ink-60': 'rgba(20, 18, 15, 0.6)',
+  '--dv-stage-line': 'rgba(20, 18, 15, 0.13)',
+
+  '--dv-mono': "'JetBrains Mono', ui-monospace, Menlo, monospace",
+  '--dv-sans': "'Inter Tight', 'MTS Wide', system-ui, sans-serif",
+
+  /* ── Собственная типографическая шкала экрана ──────────────────────
+     Не только var(--t-*) проекта: у экрана свой голос, и решения про
+     кегль, интерлиньяж и трекинг приняты здесь явно.
+
+     Кириллические поправки, выведенные на живых словах этого экрана:
+     · --dv-lh-h1: 1.0, а не проектные 0.88. В слове «Разработка» у
+       моноширинной кириллицы выносные элементы и диакритика выходят за
+       прописную высоту, и на плотном интерлиньяже верхняя строка их
+       срезает. Проверено на «й» и «ё».
+     · --dv-tr-mono: 0.14em вместо проектных --tr-label 0.18em.
+       Кириллические прописные шире латинских и при равной разрядке
+       рассыпаются на отдельные буквы. */
+  '--dv-t-h1': 'clamp(2.6rem, 10.5vw, 7.6rem)',
+  '--dv-t-h2': 'clamp(1.45rem, 4.2vw, 3rem)',
+  '--dv-t-h3': 'clamp(1.15rem, 2.4vw, 1.5rem)',
+  '--dv-t-lead': 'clamp(1.05rem, 2vw, 1.45rem)',
+  '--dv-t-body': 'clamp(0.92rem, 1.5vw, 1.05rem)',
+  '--dv-t-small': '0.82rem',
+  '--dv-t-num': 'clamp(1.5rem, 5vw, 2.4rem)',
+  '--dv-t-code': '0.8rem',
+  '--dv-t-mono': '0.6875rem',
+  '--dv-lh-h1': '1.0',
+  '--dv-lh-h2': '1.12',
+  '--dv-lh-lead': '1.5',
+  '--dv-lh-body': '1.62',
+  '--dv-tr-h1': '-0.055em',
+  '--dv-tr-h2': '-0.035em',
+  '--dv-tr-mono': '0.14em',
+} as unknown as CSSProperties
 
 /* ── Локальные кейфреймы экрана ──────────────────────────────────────
-   Живут здесь, а не в глобальном css: они нужны только двум демо этого
-   экрана. Обе анимации трогают исключительно opacity и transform, а при
+   Живут здесь, а не в глобальном css: нужны только двум демо этого
+   экрана. Обе анимации трогают исключительно opacity и transform, при
    prefers-reduced-motion выключаются полностью — состояние остаётся
    читаемым, движение исчезает. Останов за кадром обеспечивает
    useOffscreenPause: контейнеры помечены его ref. */
@@ -111,6 +195,8 @@ const LOCAL_KEYFRAMES = `
 @keyframes dv-spin { to { transform: rotate(360deg) } }
 [data-screen='development'] .dv-skeleton { animation: dv-skeleton 1.4s ease-in-out infinite }
 [data-screen='development'] .dv-spin { animation: dv-spin 0.9s linear infinite }
+[data-screen='development'] [data-idle='true'] .dv-skeleton,
+[data-screen='development'] [data-idle='true'] .dv-spin { animation-play-state: paused }
 @media (prefers-reduced-motion: reduce) {
   [data-screen='development'] .dv-skeleton,
   [data-screen='development'] .dv-spin { animation: none }
@@ -134,18 +220,74 @@ function useDevFonts() {
 /* ── Технический голос экрана ────────────────────────────────────── */
 const mono: CSSProperties = {
   fontFamily: 'var(--dv-mono)',
-  fontSize: '0.6875rem',
-  letterSpacing: '0.16em',
+  fontSize: 'var(--dv-t-mono)',
+  letterSpacing: 'var(--dv-tr-mono)',
   textTransform: 'uppercase',
   fontWeight: 500,
 }
 
 const code: CSSProperties = {
   fontFamily: 'var(--dv-mono)',
-  fontSize: '0.8rem',
+  fontSize: 'var(--dv-t-code)',
   lineHeight: 1.7,
   letterSpacing: 0,
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   УСЛОВИЯ ПРИЁМКИ — персистентное состояние экрана
+   Одно решение посетителя, которое расходится по трём разделам:
+   бюджет кадра, время загрузки измеренных байтов и вердикт по
+   инерционному скроллу. Числа берутся не с потолка: 8.3 и 16.7 мс —
+   это 1/120 и 1/60 секунды; каналы — грубые, но честно подписанные
+   как расчётные, а не измеренные.
+   ══════════════════════════════════════════════════════════════════ */
+
+type ConditionId = 'desk' | 'laptop' | 'phone'
+
+type Condition = {
+  id: ConditionId
+  label: string
+  short: string
+  /** Бюджет одного кадра, мс. */
+  budget: number
+  /** Расчётная пропускная способность канала, Мбит/с. */
+  mbps: number
+  /** Грубый указатель, тач это или мышь — от него зависит поведение Lenis. */
+  coarse: boolean
+  note: string
+}
+
+const CONDITIONS: Condition[] = [
+  {
+    id: 'desk',
+    label: 'Настольный · 120 Гц',
+    short: '120 Гц',
+    budget: 8.3,
+    mbps: 30,
+    coarse: false,
+    note: 'Самый жёсткий бюджет кадра из трёх: на 120 Гц у браузера вдвое меньше времени, и ошибка в выборе анимируемого свойства видна сразу.',
+  },
+  {
+    id: 'laptop',
+    label: 'Ноутбук · 60 Гц',
+    short: '60 Гц',
+    budget: 16.7,
+    mbps: 12,
+    coarse: false,
+    note: 'Условия, в которых работает большинство. Бюджет 16.7 мс — то самое число, которое обычно пишут словами «60 fps».',
+  },
+  {
+    id: 'phone',
+    label: 'Телефон · медленный канал',
+    short: 'телефон',
+    budget: 16.7,
+    mbps: 1.6,
+    coarse: true,
+    note: 'Тач-устройство и узкий канал. Здесь вес страницы решает больше, чем кадр, а инерционный скролл этого сайта выключен — см. раздел 03.',
+  },
+]
+
+/* ── Мелкие типографические примитивы экрана ─────────────────────── */
 
 function SectionHead({ n, title, lead }: { n: string; title: string; lead?: string }) {
   return (
@@ -160,12 +302,9 @@ function SectionHead({ n, title, lead }: { n: string; title: string; lead?: stri
             style={{
               fontFamily: 'var(--dv-mono)',
               fontWeight: 700,
-              fontSize: 'clamp(1.45rem, 4.2vw, 3rem)',
-              letterSpacing: '-0.035em',
-              // 1.12, а не плотнее: у моноширинной кириллицы «й» и «ё»
-              // выходят выше прописной высоты, и на двух строках заголовка
-              // верхняя строка срезала бы диакритику.
-              lineHeight: 1.12,
+              fontSize: 'var(--dv-t-h2)',
+              letterSpacing: 'var(--dv-tr-h2)',
+              lineHeight: 'var(--dv-lh-h2)',
               color: 'var(--dv-cream)',
             }}
           >
@@ -181,8 +320,8 @@ function SectionHead({ n, title, lead }: { n: string; title: string; lead?: stri
               marginTop: 'var(--s-6)',
               maxWidth: '58ch',
               color: 'var(--dv-cream-70)',
-              fontSize: 'clamp(0.95rem, 1.6vw, 1.15rem)',
-              lineHeight: 1.62,
+              fontSize: 'var(--dv-t-body)',
+              lineHeight: 'var(--dv-lh-body)',
               letterSpacing: '-0.005em',
             }}
           >
@@ -298,16 +437,259 @@ function Segmented<T extends string>({
   )
 }
 
+/** Полоса-индикатор. Заливка — scaleX отдельного слоя, а не ширина:
+    анимировать здесь width значило бы проиллюстрировать ровно ту ошибку,
+    о которой говорит раздел 01. */
+function Bar({
+  fill,
+  alarm,
+  height = 8,
+  marks,
+}: {
+  fill: number
+  alarm?: boolean
+  height?: number
+  marks?: number[]
+}) {
+  return (
+    <div
+      className="relative overflow-hidden"
+      style={{ height, borderRadius: height / 2, background: 'var(--dv-line-soft)' }}
+    >
+      <div
+        aria-hidden
+        className="absolute inset-0 origin-left"
+        style={{
+          background: alarm ? 'var(--dv-accent)' : 'var(--dv-green)',
+          transform: `scaleX(${Math.max(0, Math.min(1, fill))})`,
+          transition: `transform var(--d-fast) ${cssEase.standard}`,
+        }}
+      />
+      {marks?.map((m) => (
+        <span
+          key={m}
+          aria-hidden
+          className="absolute top-0 bottom-0"
+          style={{ left: `${m * 100}%`, width: 1, background: 'var(--dv-cream-45)' }}
+        />
+      ))}
+    </div>
+  )
+}
+
 /* ══════════════════════════════════════════════════════════════════
-   01 · БЮДЖЕТ КАДРА
-   Главный инструмент экрана. Он отвечает на вопрос, который заказчик
-   обычно слышит в виде отговорки «так плавнее»: почему анимируют только
-   transform и opacity. Ответ не в мнении, а в конвейере браузера —
-   свойство определяет, сколько стадий придётся пройти заново.
-   Плюс единственная цифра на экране, которую нельзя выдумать: время
-   кадра меряется прямо в браузере посетителя.
+   01 · ИЗМЕРЕННАЯ ПАНЕЛЬ
+   Главный раздел экрана и прямая замена прежней прозе про «60 fps».
+   Здесь нет ни одного числа, написанного автором: время кадра, длинные
+   кадры и время блокировки считает браузер посетителя прямо сейчас.
+   Эти числа можно испортить — открыть тяжёлую вкладку, свернуть окно —
+   и они испортятся честно. Именно это и делает их доказательством.
    ══════════════════════════════════════════════════════════════════ */
 
+/** Запись Long Animation Frames. Типов в lib.dom пока нет — описываем сами. */
+type LoafEntry = PerformanceEntry & {
+  blockingDuration?: number
+  renderStart?: number
+}
+
+type Loaf = {
+  /** Сколько длинных кадров браузер зафиксировал с открытия страницы. */
+  count: number
+  /** Самый длинный из них, мс. */
+  worst: number
+  /** Суммарное время, на которое такие кадры блокировали ввод, мс. */
+  blocking: number
+  /** Какой API реально доступен: LoAF, старый long-task или никакого. */
+  api: 'loaf' | 'longtask' | 'none'
+}
+
+/**
+ * Наблюдатель за длинными кадрами.
+ *
+ * Long Animation Frames — это не «долгий скрипт», а кадр, который целиком
+ * не уложился в бюджет: вместе со стилем, раскладкой и отрисовкой. Ровно
+ * то, что пользователь видит как рывок. Где LoAF недоступен, честно
+ * откатываемся на long-task (он видит только скрипты) и подписываем это.
+ *
+ * buffered: true — чтобы поймать и то, что случилось до монтирования
+ * компонента, в том числе стоимость самого открытия экрана.
+ */
+function useLoaf(): Loaf {
+  const [state, setState] = useState<Loaf>({ count: 0, worst: 0, blocking: 0, api: 'none' })
+
+  useEffect(() => {
+    if (typeof PerformanceObserver === 'undefined') return
+    const supported: readonly string[] = PerformanceObserver.supportedEntryTypes ?? []
+    const type = supported.includes('long-animation-frame')
+      ? 'long-animation-frame'
+      : supported.includes('longtask')
+        ? 'longtask'
+        : null
+    if (!type) return
+
+    const api: Loaf['api'] = type === 'long-animation-frame' ? 'loaf' : 'longtask'
+    // Накапливаем в ref-подобных локальных переменных и пишем в состояние
+    // одним setState на пачку записей: наблюдатель не должен сам стать
+    // причиной длинного кадра.
+    let count = 0
+    let worst = 0
+    let blocking = 0
+
+    const obs = new PerformanceObserver((list) => {
+      for (const raw of list.getEntries()) {
+        const e = raw as LoafEntry
+        count += 1
+        if (e.duration > worst) worst = e.duration
+        // blockingDuration есть только у LoAF; у long-task считаем
+        // блокировкой всё сверх 50 мс — так же, как это делает TBT.
+        blocking += e.blockingDuration ?? Math.max(0, e.duration - 50)
+      }
+      setState({ count, worst, blocking, api })
+    })
+
+    try {
+      obs.observe({ type, buffered: true })
+    } catch {
+      return
+    }
+    setState({ count: 0, worst: 0, blocking: 0, api })
+    return () => obs.disconnect()
+  }, [])
+
+  return state
+}
+
+/**
+ * Измеритель кадра.
+ *
+ * Цикл rAF запускается только пока блок в кадре: постоянный измеритель
+ * сам стал бы той фоновой работой, о которой рассказывает раздел.
+ * getBoundingClientRect внутри цикла нет — единственная работа за кадр
+ * это вычитание двух чисел. В состояние пишем пять раз в секунду, а не
+ * шестьдесят: перерисовка React на каждый кадр исказила бы сам замер.
+ * Отдаём медиану и 95-й перцентиль: среднее прячет именно те провалы,
+ * ради которых замер и делается.
+ */
+function useFrameMeter() {
+  const ref = useRef<HTMLDivElement>(null)
+  const [stat, setStat] = useState<{ median: number; p95: number } | null>(null)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+
+    let raf = 0
+    let running = false
+    let last = 0
+    let lastPush = 0
+    let acc: number[] = []
+
+    const tick = (now: number) => {
+      if (last) {
+        const d = now - last
+        // Отбрасываем провалы при уходе во вкладку: это не кадр, а пауза.
+        if (d < 200) acc.push(d)
+        if (acc.length > 120) acc.shift()
+      }
+      last = now
+      if (now - lastPush > 200 && acc.length > 8) {
+        lastPush = now
+        const sorted = [...acc].sort((a, b) => a - b)
+        setStat({
+          median: sorted[Math.floor(sorted.length * 0.5)],
+          p95: sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * 0.95))],
+        })
+      }
+      if (running) raf = requestAnimationFrame(tick)
+    }
+
+    const io = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting === running) return
+      running = entry.isIntersecting
+      if (running) {
+        last = 0
+        lastPush = 0
+        acc = []
+        raf = requestAnimationFrame(tick)
+      } else {
+        cancelAnimationFrame(raf)
+      }
+    })
+    io.observe(el)
+
+    return () => {
+      io.disconnect()
+      cancelAnimationFrame(raf)
+    }
+  }, [])
+
+  return { ref, stat }
+}
+
+/** Одна строка приборной панели: подпись, число, шкала. */
+function Readout({
+  label,
+  value,
+  unit,
+  alarm,
+  fill,
+  marks,
+  note,
+}: {
+  label: string
+  value: string
+  unit?: string
+  alarm?: boolean
+  fill?: number
+  marks?: number[]
+  note?: string
+}) {
+  return (
+    <div>
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <span style={{ ...mono, color: 'var(--dv-cream-45)' }}>{label}</span>
+        <span
+          style={{
+            fontFamily: 'var(--dv-mono)',
+            fontWeight: 700,
+            fontSize: 'var(--dv-t-num)',
+            letterSpacing: '-0.03em',
+            color: alarm ? 'var(--dv-accent)' : 'var(--dv-green)',
+          }}
+        >
+          {value}
+          {unit && (
+            <span style={{ fontSize: '0.5em', marginLeft: 6, color: 'var(--dv-cream-45)' }}>
+              {unit}
+            </span>
+          )}
+        </span>
+      </div>
+      {fill !== undefined && (
+        <div style={{ marginTop: 'var(--s-4)' }}>
+          <Bar fill={fill} alarm={alarm} height={10} marks={marks} />
+        </div>
+      )}
+      {note && (
+        <p
+          className="font-light"
+          style={{
+            marginTop: 'var(--s-3)',
+            fontSize: 'var(--dv-t-small)',
+            lineHeight: 1.6,
+            color: 'var(--dv-cream-70)',
+            maxWidth: '62ch',
+          }}
+        >
+          {note}
+        </p>
+      )}
+    </div>
+  )
+}
+
+/* Стадии конвейера и стоимость свойств — объяснение к измеренному числу.
+   Без него панель показывает «сколько», но не показывает «за что». */
 type StageId = 'style' | 'layout' | 'paint' | 'composite'
 
 const PIPELINE: { id: StageId; label: string; what: string }[] = [
@@ -320,7 +702,7 @@ const PIPELINE: { id: StageId; label: string; what: string }[] = [
 const PROPS: { id: string; css: string; stages: StageId[]; verdict: string; note: string }[] = [
   {
     id: 'transform',
-    css: 'transform: translate / scale / rotate',
+    css: 'transform: translate / scale',
     stages: ['style', 'composite'],
     verdict: 'Можно анимировать',
     note: 'Слой уже растрирован. Браузер перекладывает готовую текстуру, не трогая ни геометрию, ни пиксели.',
@@ -337,7 +719,7 @@ const PROPS: { id: string; css: string; stages: StageId[]; verdict: string; note
     css: 'filter: blur()',
     stages: ['style', 'composite'],
     verdict: 'С осторожностью',
-    note: 'Считается на GPU, но заново каждый кадр и по площади слоя. Дороже transform, дешевле отрисовки.',
+    note: 'Считается на GPU, но заново каждый кадр и по всей площади слоя. Дороже transform, дешевле отрисовки.',
   },
   {
     id: 'color',
@@ -365,122 +747,93 @@ const PROPS: { id: string; css: string; stages: StageId[]; verdict: string; note
     css: 'top / left / margin',
     stages: ['style', 'layout', 'paint', 'composite'],
     verdict: 'Не анимировать',
-    note: 'То же самое, но обычно ещё и на длинной странице: сдвиг одного элемента переставляет поток за собой.',
+    note: 'То же самое, но обычно ещё и на длинной странице: сдвиг одного элемента переставляет за собой весь поток.',
   },
 ]
 
-/**
- * Измеритель кадра.
- *
- * Цикл rAF запускается только пока блок в кадре — постоянный измеритель
- * сам стал бы той фоновой работой, о которой рассказывает раздел.
- * getBoundingClientRect внутри цикла нет: единственная работа за кадр —
- * вычитание двух чисел. В состояние пишем пять раз в секунду, а не
- * шестьдесят: перерисовка React на каждый кадр исказила бы сам замер.
- */
-function useFrameMeter() {
-  const ref = useRef<HTMLDivElement>(null)
-  const [ms, setMs] = useState<number | null>(null)
-
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-
-    let raf = 0
-    let running = false
-    let last = 0
-    let lastPush = 0
-    let acc: number[] = []
-
-    const tick = (now: number) => {
-      if (last) {
-        const d = now - last
-        // Отбрасываем провалы при уходе во вкладку: это не кадр, а пауза.
-        if (d < 200) acc.push(d)
-        if (acc.length > 90) acc.shift()
-      }
-      last = now
-      if (now - lastPush > 200 && acc.length > 8) {
-        lastPush = now
-        // Медиана, а не среднее: один выброс не должен красить весь замер.
-        const sorted = [...acc].sort((a, b) => a - b)
-        setMs(sorted[Math.floor(sorted.length / 2)])
-      }
-      if (running) raf = requestAnimationFrame(tick)
-    }
-
-    const io = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting === running) return
-      running = entry.isIntersecting
-      if (running) {
-        last = 0
-        lastPush = 0
-        acc = []
-        raf = requestAnimationFrame(tick)
-      } else {
-        cancelAnimationFrame(raf)
-      }
-    })
-    io.observe(el)
-
-    return () => {
-      io.disconnect()
-      cancelAnimationFrame(raf)
-    }
-  }, [])
-
-  return { ref, ms }
-}
-
-function FrameBudget() {
+function Instruments({ cond }: { cond: Condition }) {
   const [pi, setPi] = useState(0)
   const p = PROPS[pi]
-  const { ref, ms } = useFrameMeter()
+  const { ref, stat } = useFrameMeter()
+  const loaf = useLoaf()
 
-  // Шкала измерителя — до 33.4мс (два пропущенных кадра при 60Гц).
-  const fill = ms === null ? 0 : Math.min(1, ms / 33.4)
+  // Шкала измерителя — до двойного бюджета выбранных условий.
+  const scaleMax = cond.budget * 2
+  const overBudget = stat !== null && stat.median > cond.budget * 1.05
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,300px)_minmax(0,1fr)] lg:gap-8 items-start">
-      {/* Выбор свойства */}
-      <Panel className="lg:sticky lg:top-24" style={{ padding: 'var(--s-6)' }}>
-        <span style={{ ...mono, color: 'var(--dv-cream-45)' }}>Что анимируем</span>
-        <div className="flex flex-col gap-1.5" style={{ marginTop: 'var(--s-4)' }}>
-          {PROPS.map((item, i) => {
-            const active = i === pi
-            const heavy = item.stages.includes('layout') || item.stages.includes('paint')
-            return (
-              <button
-                key={item.id}
-                onClick={() => setPi(i)}
-                aria-pressed={active}
-                className="flex items-center justify-between gap-3 rounded-md px-3 py-2 text-left"
-                style={{
-                  fontFamily: 'var(--dv-mono)',
-                  fontSize: '0.72rem',
-                  border: `1px solid ${active ? (heavy ? 'var(--dv-accent)' : 'var(--dv-green)') : 'var(--dv-line)'}`,
-                  background: active ? (heavy ? 'var(--dv-accent-wash)' : 'var(--dv-wash)') : 'transparent',
-                  color: active ? 'var(--dv-cream)' : 'var(--dv-cream-45)',
-                  transition: `color var(--d-fast) ${cssEase.standard}, border-color var(--d-fast) ${cssEase.standard}, background-color var(--d-fast) ${cssEase.standard}`,
-                }}
-              >
-                <span className="truncate">{item.css}</span>
-                <span
-                  aria-hidden
-                  style={{ color: heavy ? 'var(--dv-accent)' : 'var(--dv-green)', letterSpacing: '0.1em' }}
-                >
-                  {item.stages.length}/4
-                </span>
-              </button>
-            )
-          })}
-        </div>
-      </Panel>
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)] lg:gap-8 items-start">
+      {/* Приборы. sticky здесь работает только потому, что ни один предок
+          секции не имеет overflow: hidden — на этом проекте это уже ломалось. */}
+      <div ref={ref} className="lg:sticky lg:top-24 flex flex-col" style={{ gap: 'var(--s-6)' }}>
+        <Panel style={{ padding: 'var(--s-6)' }}>
+          <Readout
+            label={`Кадр сейчас · бюджет ${cond.budget} мс`}
+            value={stat === null ? '—' : stat.median.toFixed(1)}
+            unit="мс · медиана"
+            alarm={overBudget}
+            fill={stat === null ? 0 : stat.median / scaleMax}
+            marks={[cond.budget / scaleMax]}
+            note={
+              stat === null
+                ? 'Измерение начнётся, когда панель окажется в кадре: постоянно работающий измеритель сам был бы фоновой нагрузкой.'
+                : `95-й перцентиль ${stat.p95.toFixed(1)} мс. Медиана говорит, как экран ощущается обычно, перцентиль — как он ощущается в худшие моменты. Отметка на шкале — бюджет выбранных условий.`
+            }
+          />
+        </Panel>
 
-      {/* Конвейер и измеритель */}
+        <Panel style={{ padding: 'var(--s-6)' }}>
+          <Readout
+            label={loaf.api === 'longtask' ? 'Длинные задачи · long-task' : 'Длинные кадры · LoAF'}
+            value={loaf.api === 'none' ? '—' : String(loaf.count)}
+            unit={loaf.api === 'none' ? '' : 'с открытия страницы'}
+            alarm={loaf.count > 0}
+            note={
+              loaf.api === 'none'
+                ? 'Ваш браузер не отдаёт этот показатель. Это тоже результат измерения — придумывать вместо него число нельзя.'
+                : loaf.api === 'longtask'
+                  ? `Худшая ${loaf.worst.toFixed(0)} мс, суммарная блокировка ввода ${loaf.blocking.toFixed(0)} мс. Ваш браузер знает только про длинные скрипты; кадры, испорченные раскладкой и отрисовкой, он не покажет.`
+                  : `Худший ${loaf.worst.toFixed(0)} мс, суммарная блокировка ввода ${loaf.blocking.toFixed(0)} мс. Long Animation Frames считает кадр целиком — со стилем, раскладкой и отрисовкой, а не только скрипт. Ноль здесь честнее любого обещания плавности.`
+            }
+          />
+        </Panel>
+      </div>
+
+      {/* Объяснение: за что именно платит браузер */}
       <div className="flex flex-col" style={{ gap: 'var(--s-6)' }}>
         <Panel style={{ padding: 'var(--s-6)' }}>
-          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
+          <span style={{ ...mono, color: 'var(--dv-cream-45)' }}>
+            Что происходит, если анимировать
+          </span>
+          <div className="flex flex-wrap gap-1.5" style={{ marginTop: 'var(--s-4)' }}>
+            {PROPS.map((item, i) => {
+              const active = i === pi
+              const heavy = item.stages.includes('layout') || item.stages.includes('paint')
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setPi(i)}
+                  aria-pressed={active}
+                  className="rounded-md px-3 py-1.5 text-left"
+                  style={{
+                    fontFamily: 'var(--dv-mono)',
+                    fontSize: '0.72rem',
+                    border: `1px solid ${active ? (heavy ? 'var(--dv-accent)' : 'var(--dv-green)') : 'var(--dv-line)'}`,
+                    background: active ? (heavy ? 'var(--dv-accent-wash)' : 'var(--dv-wash)') : 'transparent',
+                    color: active ? 'var(--dv-cream)' : 'var(--dv-cream-45)',
+                    transition: `color var(--d-fast) ${cssEase.standard}, border-color var(--d-fast) ${cssEase.standard}, background-color var(--d-fast) ${cssEase.standard}`,
+                  }}
+                >
+                  {item.id}
+                </button>
+              )
+            })}
+          </div>
+
+          <div
+            className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2"
+            style={{ marginTop: 'var(--s-6)' }}
+          >
             <span style={{ ...code, color: 'var(--dv-green-bright)' }}>{p.css}</span>
             <span
               style={{
@@ -501,7 +854,7 @@ function FrameBudget() {
                   <span
                     style={{
                       ...mono,
-                      color: on ? (alarm ? 'var(--dv-accent)' : 'var(--dv-green)') : 'rgba(236,231,219,0.22)',
+                      color: on ? (alarm ? 'var(--dv-accent)' : 'var(--dv-green)') : 'var(--dv-cream-22)',
                       transition: `color var(--d-fast) ${cssEase.standard}`,
                       paddingTop: 6,
                     }}
@@ -509,30 +862,14 @@ function FrameBudget() {
                     {s.label}
                   </span>
                   <div>
-                    {/* Дорожка стадии. Заливка — scaleX отдельного слоя:
-                        анимировать здесь ширину значило бы проиллюстрировать
-                        ровно ту ошибку, о которой раздел и рассказывает. */}
-                    <div
-                      className="relative overflow-hidden"
-                      style={{ height: 6, borderRadius: 3, background: 'var(--dv-line-soft)' }}
-                    >
-                      <div
-                        aria-hidden
-                        className="absolute inset-0 origin-left"
-                        style={{
-                          background: alarm ? 'var(--dv-accent)' : 'var(--dv-green)',
-                          transform: `scaleX(${on ? 1 : 0})`,
-                          transition: `transform var(--d-base) ${cssEase.standard}`,
-                        }}
-                      />
-                    </div>
+                    <Bar fill={on ? 1 : 0} alarm={alarm} height={6} />
                     <p
                       className="font-light"
                       style={{
                         marginTop: 6,
                         fontSize: '0.78rem',
                         lineHeight: 1.5,
-                        color: on ? 'var(--dv-cream-70)' : 'rgba(236,231,219,0.28)',
+                        color: on ? 'var(--dv-cream-70)' : 'var(--dv-cream-22)',
                         transition: `color var(--d-fast) ${cssEase.standard}`,
                       }}
                     >
@@ -560,81 +897,17 @@ function FrameBudget() {
           </p>
         </Panel>
 
-        {/* Измеритель. Единственная цифра на экране, которую невозможно
-            приписать себе: её считает браузер посетителя. */}
         <Panel style={{ padding: 'var(--s-6)' }}>
-          <div ref={ref}>
-            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-              <span style={{ ...mono, color: 'var(--dv-cream-45)' }}>
-                Кадр в вашем браузере сейчас
-              </span>
-              <span
-                style={{
-                  fontFamily: 'var(--dv-mono)',
-                  fontWeight: 700,
-                  fontSize: 'clamp(1.5rem, 5vw, 2.4rem)',
-                  letterSpacing: '-0.03em',
-                  color: ms !== null && ms > 17.5 ? 'var(--dv-accent)' : 'var(--dv-green)',
-                }}
-              >
-                {ms === null ? '—' : `${ms.toFixed(1)} мс`}
-              </span>
-            </div>
-
-            <div
-              className="relative overflow-hidden"
-              style={{ height: 10, borderRadius: 5, background: 'var(--dv-line-soft)', marginTop: 'var(--s-4)' }}
-            >
-              <div
-                aria-hidden
-                className="absolute inset-0 origin-left"
-                style={{
-                  background: ms !== null && ms > 17.5 ? 'var(--dv-accent)' : 'var(--dv-green)',
-                  transform: `scaleX(${fill})`,
-                  transition: `transform var(--d-fast) ${cssEase.standard}`,
-                }}
-              />
-              {/* Отметки бюджета: 120 Гц и 60 Гц на шкале до 33.4мс. */}
-              {[
-                { at: 8.3 / 33.4, t: '8.3' },
-                { at: 16.7 / 33.4, t: '16.7' },
-              ].map((m) => (
-                <span
-                  key={m.t}
-                  aria-hidden
-                  className="absolute top-0 bottom-0"
-                  style={{ left: `${m.at * 100}%`, width: 1, background: 'rgba(236,231,219,0.5)' }}
-                />
-              ))}
-            </div>
-
-            <div className="flex justify-between" style={{ marginTop: 6 }}>
-              <span style={{ ...mono, color: 'var(--dv-cream-45)', fontSize: '0.625rem' }}>0</span>
-              <span style={{ ...mono, color: 'var(--dv-cream-45)', fontSize: '0.625rem' }}>
-                8.3 · 120 Гц
-              </span>
-              <span style={{ ...mono, color: 'var(--dv-cream-45)', fontSize: '0.625rem' }}>
-                16.7 · 60 Гц
-              </span>
-              <span style={{ ...mono, color: 'var(--dv-cream-45)', fontSize: '0.625rem' }}>33.4</span>
-            </div>
-
-            <p
-              className="font-light"
-              style={{
-                marginTop: 'var(--s-4)',
-                fontSize: '0.82rem',
-                lineHeight: 1.6,
-                color: 'var(--dv-cream-70)',
-                maxWidth: '62ch',
-              }}
-            >
-              Медиана времени кадра, измеренная на этой странице. Всё, что
-              успевает уложиться в отметку, экран покажет плавно; всё, что не
-              успевает, пользователь увидит как рывок. Бюджет делится не между
-              «красивым» и «некрасивым», а между стадиями конвейера выше.
-            </p>
-          </div>
+          <p
+            className="font-light"
+            style={{ fontSize: 'var(--dv-t-small)', lineHeight: 1.65, color: 'var(--dv-cream-70)' }}
+          >
+            Проверьте панель на прочность: откройте тяжёлую вкладку или начните
+            быструю прокрутку. Числа испортятся — и это ровно то, чего нельзя
+            добиться от фразы «делаю плавно». Замер стоит браузеру одного
+            вычитания за кадр и останавливается, как только панель уходит
+            из вида.
+          </p>
         </Panel>
       </div>
     </div>
@@ -642,11 +915,546 @@ function FrameBudget() {
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   02 · КОД → РЕЗУЛЬТАТ
+   02 · ВЕС СТРАНИЦЫ
+   Второе измеренное число и вторая замена прозе. Байты берутся из
+   Resource Timing — это ровно то, что браузер посетителя скачал, чтобы
+   показать этот экран. Время загрузки считается под выбранный канал и
+   подписано как расчётное: выдавать расчёт за замер на экране про
+   инженерную честность было бы саморазоблачением.
+   ══════════════════════════════════════════════════════════════════ */
+
+type WeightRow = { key: string; label: string; bytes: number; count: number }
+
+type Weight = { rows: WeightRow[]; total: number; unknown: number; ok: boolean }
+
+const KIND_LABEL: Record<string, string> = {
+  doc: 'Документ',
+  script: 'Скрипты',
+  css: 'Стили',
+  font: 'Шрифты',
+  img: 'Изображения',
+  other: 'Прочее',
+}
+
+function classify(e: PerformanceResourceTiming): string {
+  const t = e.initiatorType
+  if (t === 'script') return 'script'
+  if (t === 'css' || (t === 'link' && e.name.includes('.css'))) return 'css'
+  if (t === 'link' && e.name.includes('fonts.googleapis')) return 'css'
+  if (t === 'font') return 'font'
+  if (t === 'img' || t === 'image') return 'img'
+  if (/\.(woff2?|ttf|otf)(\?|$)/.test(e.name)) return 'font'
+  return 'other'
+}
+
+/**
+ * Что реально скачал браузер.
+ *
+ * transferSize — это байты по сети вместе со сжатием и заголовками; ноль
+ * означает либо попадание в кэш, либо кросс-доменный ресурс без
+ * Timing-Allow-Origin. Такие случаи не подменяем оценкой, а считаем
+ * отдельно и подписываем: «столько-то ресурсов размер не сообщили».
+ * Наблюдатель на 'resource' нужен потому, что часть файлов (шрифты
+ * экрана) приезжает уже после монтирования.
+ */
+function usePageWeight(): Weight {
+  const [w, setW] = useState<Weight>({ rows: [], total: 0, unknown: 0, ok: false })
+
+  useEffect(() => {
+    if (typeof performance === 'undefined' || !performance.getEntriesByType) return
+
+    const measure = () => {
+      const buckets = new Map<string, WeightRow>()
+      let unknown = 0
+
+      const add = (key: string, bytes: number) => {
+        const row = buckets.get(key) ?? { key, label: KIND_LABEL[key], bytes: 0, count: 0 }
+        row.bytes += bytes
+        row.count += 1
+        buckets.set(key, row)
+      }
+
+      const nav = performance.getEntriesByType('navigation')[0] as
+        | PerformanceNavigationTiming
+        | undefined
+      if (nav) {
+        if (nav.transferSize > 0) add('doc', nav.transferSize)
+        else unknown += 1
+      }
+
+      for (const raw of performance.getEntriesByType('resource')) {
+        const e = raw as PerformanceResourceTiming
+        if (e.transferSize > 0) add(classify(e), e.transferSize)
+        else unknown += 1
+      }
+
+      const rows = [...buckets.values()].sort((a, b) => b.bytes - a.bytes)
+      const total = rows.reduce((s, r) => s + r.bytes, 0)
+      setW({ rows, total, unknown, ok: total > 0 })
+    }
+
+    measure()
+
+    let obs: PerformanceObserver | null = null
+    if (typeof PerformanceObserver !== 'undefined') {
+      obs = new PerformanceObserver(() => measure())
+      try {
+        obs.observe({ type: 'resource', buffered: false })
+      } catch {
+        obs = null
+      }
+    }
+    return () => obs?.disconnect()
+  }, [])
+
+  return w
+}
+
+const KB = 1024
+
+function PageWeight({ cond }: { cond: Condition }) {
+  const w = usePageWeight()
+
+  // Расчёт, а не замер: байты × 8 бит / пропускная способность канала.
+  const ms = (w.total * 8) / (cond.mbps * 1000)
+  const heavy = ms > 1000
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,360px)] items-start">
+      <Panel style={{ padding: 'var(--s-6)' }}>
+        <span style={{ ...mono, color: 'var(--dv-cream-45)' }}>
+          Скачано браузером для этого экрана
+        </span>
+
+        <div style={{ marginTop: 'var(--s-6)' }}>
+          {w.rows.map((r) => (
+            <div
+              key={r.key}
+              className="grid gap-x-4 gap-y-1.5 sm:grid-cols-[120px_minmax(0,1fr)_84px] items-center"
+              style={{ paddingBlock: 'var(--s-3)', borderBottom: '1px solid var(--dv-line-soft)' }}
+            >
+              <span style={{ ...mono, color: 'var(--dv-cream-70)' }}>
+                {r.label}
+                <span style={{ color: 'var(--dv-cream-45)' }}> · {r.count}</span>
+              </span>
+              <Bar fill={w.total ? r.bytes / w.total : 0} height={6} />
+              <span
+                style={{
+                  ...mono,
+                  letterSpacing: '0.06em',
+                  color: 'var(--dv-green)',
+                  textAlign: 'right',
+                }}
+              >
+                {(r.bytes / KB).toFixed(1)} КБ
+              </span>
+            </div>
+          ))}
+
+          {!w.ok && (
+            <p
+              className="font-light"
+              style={{ fontSize: 'var(--dv-t-small)', lineHeight: 1.6, color: 'var(--dv-cream-70)' }}
+            >
+              Браузер не сообщил размеры ресурсов — так бывает при полном
+              попадании в кэш. Число здесь не появится: подставлять вместо
+              измерения оценку на экране про измерения нельзя.
+            </p>
+          )}
+        </div>
+
+        {w.unknown > 0 && (
+          <p
+            className="font-light"
+            style={{
+              marginTop: 'var(--s-4)',
+              fontSize: '0.78rem',
+              lineHeight: 1.6,
+              color: 'var(--dv-cream-45)',
+            }}
+          >
+            Ещё {w.unknown} {w.unknown === 1 ? 'ресурс' : 'ресурсов'} размер не
+            сообщили: либо взяты из кэша, либо пришли с чужого домена без
+            заголовка Timing-Allow-Origin. В сумму они не входят — и это
+            занижает её, а не завышает.
+          </p>
+        )}
+      </Panel>
+
+      <div className="flex flex-col" style={{ gap: 'var(--s-6)' }}>
+        <Panel style={{ padding: 'var(--s-6)' }}>
+          <Readout
+            label="Всего по сети"
+            value={w.ok ? (w.total / KB).toFixed(0) : '—'}
+            unit="КБ"
+            fill={w.ok ? Math.min(1, w.total / (600 * KB)) : 0}
+            marks={[300 / 600]}
+            note="Отметка на шкале — 300 КБ, порог, за которым страница перестаёт быть лёгкой на медленном канале. Шкала кончается на 600 КБ."
+          />
+        </Panel>
+
+        <Panel style={{ padding: 'var(--s-6)' }}>
+          <Readout
+            label={`Загрузка на канале ${cond.mbps} Мбит/с`}
+            value={w.ok ? ms.toFixed(0) : '—'}
+            unit="мс · расчёт"
+            alarm={heavy}
+            fill={w.ok ? Math.min(1, ms / 2000) : 0}
+            marks={[0.5]}
+            note="Единственное расчётное число на экране, и оно подписано как расчётное: измеренные байты, делённые на заявленную полосу выбранных условий. Задержки соединения и очередь запросов сюда не входят — в жизни будет дольше."
+          />
+        </Panel>
+
+        <Panel style={{ padding: 'var(--s-6)' }}>
+          <p
+            className="font-light"
+            style={{ fontSize: 'var(--dv-t-small)', lineHeight: 1.65, color: 'var(--dv-cream-70)' }}
+          >
+            Вес — это не техническая мелочь, а первое, чем пользователь платит
+            за сайт, и платит до того, как что-то увидит. Поэтому он входит
+            в приёмку числом, а не пожеланием: строка «страница весит не
+            больше N» либо выполнена, либо нет.
+          </p>
+        </Panel>
+      </div>
+    </div>
+  )
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   03 · НАЗВАННЫЙ КОМПРОМИСС
+   Ядро экрана. Список технологий ставит автора в один ряд со всеми,
+   кто выучил те же слова; названный компромисс вынимает его из этого
+   сравнения. Пример взят не выдуманный, а из кода этого самого сайта:
+   Lenis вместо нативной прокрутки.
+
+   Доказательство здесь не текстовое: посетитель сам крутит две колонки —
+   нативную и инерционную — и видит цену инерции числом. Отставание
+   отрисованной позиции от настоящей и есть то, из-за чего ломаются
+   scroll-driven animations и position: sticky: браузер знает одно
+   положение прокрутки, а глаз видит другое.
+   ══════════════════════════════════════════════════════════════════ */
+
+/** Реальные значения из src/hooks/useSmoothScroll.ts — не иллюстрация. */
+const LENIS_LERP = 0.085
+
+const COST = [
+  {
+    k: 'Scroll-driven animations',
+    v: 'Нативные scroll-timeline читают настоящую позицию прокрутки. Инерция рисует другую — привязанное к ней движение расходится с картинкой. Всё, что должно двигаться по скроллу, приходится вести из того же цикла.',
+  },
+  {
+    k: 'position: sticky',
+    v: 'Липкие элементы остаются на нативной позиции и на быстрой прокрутке отстают от инерционного полотна. Это не гипотеза: на этом проекте ломалось.',
+  },
+  {
+    k: 'Доступность',
+    v: 'Перехваченная прокрутка меняет поведение клавиатуры, поиска по странице и переходов по якорям. Каждый такой случай приходится возвращать руками.',
+  },
+  {
+    k: 'Кадр',
+    v: 'Появляется постоянный rAF-цикл, который работает всё время, пока открыта страница. Его стоимость видна на панели раздела 01.',
+  },
+]
+
+function InertiaLab({ cond }: { cond: Condition }) {
+  const [inertia, setInertia] = useState(true)
+  const [lerp, setLerp] = useState(LENIS_LERP)
+  const [lag, setLag] = useState(0)
+
+  const viewportRef = useRef<HTMLDivElement>(null)
+  const trackRef = useRef<HTMLDivElement>(null)
+  // Позиции держим в ref: они меняются каждый кадр, и любое состояние
+  // React здесь означало бы перерисовку на 60 Гц.
+  const target = useRef(0)
+  const current = useRef(0)
+  const max = useRef(0)
+
+  const reduce = prefersReducedMotion()
+  // Ровно та же проверка, что и в useSmoothScroll: на тач-устройстве
+  // инерция сайта выключена. Раздел показывает не абстракцию, а поведение
+  // этого кода в выбранных условиях.
+  const disabledHere = cond.coarse || reduce
+  const active = inertia && !disabledHere
+
+  // Пересчёт предела прокрутки: ResizeObserver вместо замера в цикле.
+  useEffect(() => {
+    const vp = viewportRef.current
+    const tr = trackRef.current
+    if (!vp || !tr) return
+    const ro = new ResizeObserver(() => {
+      max.current = Math.max(0, tr.offsetHeight - vp.clientHeight)
+      target.current = Math.min(target.current, max.current)
+    })
+    ro.observe(vp)
+    ro.observe(tr)
+    return () => ro.disconnect()
+  }, [])
+
+  // Ввод: колесо и перетаскивание. Колесо перехватываем только пока
+  // движение остаётся внутри полосы — на краях страница прокручивается
+  // дальше сама, и посетитель не оказывается заперт в демонстрации.
+  useEffect(() => {
+    const vp = viewportRef.current
+    if (!vp) return
+
+    const onWheel = (e: WheelEvent) => {
+      const next = target.current + e.deltaY
+      if (next <= 0 || next >= max.current) {
+        target.current = Math.max(0, Math.min(max.current, next))
+        return
+      }
+      e.preventDefault()
+      target.current = next
+    }
+    vp.addEventListener('wheel', onWheel, { passive: false })
+    return () => vp.removeEventListener('wheel', onWheel)
+  }, [])
+
+  // Цикл сглаживания. Крутится только когда полоса в кадре и инерция
+  // включена: постоянный цикл был бы ровно той ценой, о которой раздел
+  // и рассказывает.
+  useEffect(() => {
+    const vp = viewportRef.current
+    const tr = trackRef.current
+    if (!vp || !tr) return
+
+    let raf = 0
+    let running = false
+    let lastPush = 0
+
+    const draw = (now: number) => {
+      if (active) current.current += (target.current - current.current) * lerp
+      else current.current = target.current
+      // Пишем в стиль напрямую, минуя React: transform, и ничего больше.
+      tr.style.transform = `translate3d(0, ${-current.current}px, 0)`
+      if (now - lastPush > 180) {
+        lastPush = now
+        setLag(Math.abs(target.current - current.current))
+      }
+      if (running) raf = requestAnimationFrame(draw)
+    }
+
+    const io = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting === running) return
+      running = entry.isIntersecting
+      if (running) raf = requestAnimationFrame(draw)
+      else cancelAnimationFrame(raf)
+    })
+    io.observe(vp)
+
+    return () => {
+      io.disconnect()
+      cancelAnimationFrame(raf)
+    }
+  }, [active, lerp])
+
+  const onPointerDown = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
+    const el = e.currentTarget
+    el.setPointerCapture(e.pointerId)
+    const startY = e.clientY
+    const startTarget = target.current
+    const move = (ev: PointerEvent) => {
+      target.current = Math.max(0, Math.min(max.current, startTarget - (ev.clientY - startY)))
+    }
+    const up = () => {
+      el.releasePointerCapture(e.pointerId)
+      el.removeEventListener('pointermove', move)
+      el.removeEventListener('pointerup', up)
+    }
+    el.addEventListener('pointermove', move)
+    el.addEventListener('pointerup', up)
+  }, [])
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,380px)] items-start">
+      <div>
+        <Stage style={{ padding: 'var(--s-6)', paddingTop: 'var(--s-12)' }} label="Полоса прокрутки">
+          {/* Полоса. Внутренний слой едет transform-ом, а не скроллом:
+              так видно расхождение между «где мы на самом деле» и «что
+              нарисовано» — та самая цена инерции. */}
+          <div
+            ref={viewportRef}
+            tabIndex={0}
+            role="group"
+            aria-label="Демонстрация инерционной прокрутки: колесо, перетаскивание или стрелки"
+            onPointerDown={onPointerDown}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowDown') target.current = Math.min(max.current, target.current + 48)
+              if (e.key === 'ArrowUp') target.current = Math.max(0, target.current - 48)
+            }}
+            className="relative overflow-hidden"
+            style={{
+              height: 260,
+              borderRadius: 'var(--r-md)',
+              background: 'var(--dv-stage-2)',
+              cursor: 'grab',
+              touchAction: 'none',
+              overscrollBehavior: 'contain',
+            }}
+          >
+            <div ref={trackRef} style={{ padding: 18, willChange: 'transform' }}>
+              {Array.from({ length: 14 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between"
+                  style={{
+                    height: 52,
+                    marginBottom: 10,
+                    paddingInline: 16,
+                    borderRadius: 'var(--r-sm)',
+                    background: 'var(--dv-stage-card)',
+                  }}
+                >
+                  <span style={{ fontSize: 15, fontWeight: 500 }}>Строка {i + 1}</span>
+                  <span style={{ ...mono, color: 'var(--dv-stage-ink-60)', fontSize: '0.625rem' }}>
+                    {String((i + 1) * 8).padStart(3, '0')}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Stage>
+
+        <p
+          className="font-light"
+          style={{
+            marginTop: 'var(--s-4)',
+            fontSize: 'var(--dv-t-small)',
+            lineHeight: 1.6,
+            color: 'var(--dv-cream-45)',
+          }}
+        >
+          Колесо, перетаскивание или стрелки на клавиатуре. Полоса намеренно
+          сделана отдельной от страницы: инерцию нельзя показать, не дав её
+          сравнить.
+        </p>
+      </div>
+
+      <div className="flex flex-col" style={{ gap: 'var(--s-6)' }}>
+        <Panel style={{ padding: 'var(--s-6)' }}>
+          <Segmented
+            label="Прокрутка полосы"
+            value={inertia ? 'on' : 'off'}
+            onChange={(v) => setInertia(v === 'on')}
+            options={[
+              { id: 'on', label: 'со сглаживанием' },
+              { id: 'off', label: 'без сглаживания' },
+            ]}
+          />
+
+          <div style={{ marginTop: 'var(--s-6)' }}>
+            <span className="flex items-baseline justify-between" style={{ marginBottom: 'var(--s-3)' }}>
+              <span style={{ ...mono, color: 'var(--dv-cream-45)' }}>lerp</span>
+              <span style={{ ...mono, color: 'var(--dv-green)', letterSpacing: '0.06em' }}>
+                {lerp.toFixed(3)}
+                {Math.abs(lerp - LENIS_LERP) < 0.0005 ? ' · значение сайта' : ''}
+              </span>
+            </span>
+            <input
+              type="range"
+              min={0.03}
+              max={0.3}
+              step={0.005}
+              value={lerp}
+              onChange={(e) => setLerp(Number(e.target.value))}
+              className="w-full"
+              style={{ accentColor: PALETTE.green }}
+              aria-label="Коэффициент сглаживания"
+              disabled={!active}
+            />
+            <p
+              className="font-light"
+              style={{ marginTop: 'var(--s-3)', fontSize: '0.78rem', lineHeight: 1.55, color: 'var(--dv-cream-70)' }}
+            >
+              На сайте стоит 0.085 — тяжелее дефолтных 0.1. Ниже 0.07
+              начинается ощущение задержки ввода, выше 0.2 инерция пропадает
+              и смысл вместе с ней.
+            </p>
+          </div>
+        </Panel>
+
+        <Panel style={{ padding: 'var(--s-6)' }}>
+          <Readout
+            label="Отставание картинки от прокрутки"
+            value={lag.toFixed(0)}
+            unit="px"
+            alarm={lag > 40}
+            fill={Math.min(1, lag / 200)}
+            note="Вот чем оплачена инерция. Браузер считает, что прокрутка уже здесь, а глаз видит её там. Именно это расхождение ломает scroll-driven animations и position: sticky — они верят браузеру, а не картинке."
+          />
+        </Panel>
+
+        <Panel style={{ padding: 'var(--s-6)' }}>
+          <span
+            style={{
+              ...mono,
+              color: disabledHere ? 'var(--dv-accent)' : 'var(--dv-green)',
+            }}
+          >
+            {disabledHere ? 'В этих условиях инерция выключена' : 'В этих условиях инерция включена'}
+          </span>
+          <p
+            className="font-light"
+            style={{ marginTop: 'var(--s-3)', fontSize: 'var(--dv-t-small)', lineHeight: 1.62, color: 'var(--dv-cream-70)' }}
+          >
+            {reduce
+              ? 'У вас включена системная настройка «меньше движения». Сайт это уважает: инерция не запускается вообще, а полоса слева работает нативно.'
+              : cond.coarse
+                ? 'Выбран телефон. На тач-устройствах сайт не перехватывает прокрутку: у системного скролла собственная физика, и вторая поверх неё ощущается как неисправность. Тот же выключатель стоит в коде — проверка pointer: coarse.'
+                : 'Мышь и колесо: здесь инерция даёт то, ради чего её берут, — вес прокрутки. Переключите условия на телефон, и раздел покажет обратное решение.'}
+          </p>
+        </Panel>
+      </div>
+
+      {/* Цена решения — списком, без смягчений */}
+      <div className="lg:col-span-2">
+        <div className="grid gap-x-8 md:grid-cols-2">
+          {COST.map((c, i) => (
+            <Reveal key={c.k} y={16} delay={i * stagger.item}>
+              <div
+                className="flex flex-col sm:flex-row gap-1.5 sm:gap-6"
+                style={{ paddingBlock: 'var(--s-5)', borderBottom: '1px solid var(--dv-line-soft)' }}
+              >
+                <span style={{ ...mono, minWidth: '15ch', paddingTop: 3, color: 'var(--dv-accent)' }}>
+                  {c.k}
+                </span>
+                <p
+                  className="font-light"
+                  style={{ fontSize: '0.92rem', lineHeight: 1.62, color: 'var(--dv-cream-70)' }}
+                >
+                  {c.v}
+                </p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+        <p
+          className="font-light"
+          style={{
+            marginTop: 'var(--s-8)',
+            maxWidth: '62ch',
+            fontSize: 'var(--dv-t-body)',
+            lineHeight: 'var(--dv-lh-body)',
+            color: 'var(--dv-cream)',
+          }}
+        >
+          Решение принято в пользу инерции — и вместе с ним приняты четыре
+          строчки выше. Это и есть разница между «использую Lenis» и «выбрал
+          Lenis, зная за что плачу»: вторую фразу нельзя сказать, не сделав
+          работу.
+        </p>
+      </div>
+    </div>
+  )
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   04 · КОД → РЕЗУЛЬТАТ
    Слева параметры компонента, посередине исходник, который из них
    получается, справа то, что этот исходник рендерит. Смысл в связке:
    компонент в продакшене — это не картинка, а тип с ограниченным
-   набором допустимых значений. Именно поэтому в макете не может
+   набором допустимых значений. Именно поэтому в проекте не может
    появиться «кнопка чуть другого размера».
    ══════════════════════════════════════════════════════════════════ */
 
@@ -680,7 +1488,7 @@ function DemoButton({
 
   const skin: CSSProperties =
     variant === 'solid'
-      ? { background: 'var(--dv-accent)', color: '#fff', border: '1px solid transparent' }
+      ? { background: 'var(--dv-accent)', color: 'var(--dv-stage-card)', border: '1px solid transparent' }
       : variant === 'outline'
         ? { background: 'transparent', color: 'var(--dv-accent)', border: '1px solid var(--dv-accent)' }
         : { background: 'transparent', color: 'var(--dv-accent)', border: '1px solid transparent' }
@@ -745,7 +1553,8 @@ function DemoButton({
  *
  * Не парсер: разбор ограниченной грамматики, которую сам же экран и
  * порождает. Полноценная подсветка здесь была бы килобайтами зависимости
- * ради шести токенов — цена, которую в продакшене не платят.
+ * ради шести токенов — на экране, который эти килобайты и измеряет,
+ * такую цену платить нельзя.
  */
 const TOKEN_RE = /("[^"]*")|(\{[^}]*\})|(\/\/[^\n]*)|(<\/?[A-Za-z][\w.]*)|(\/?>)|([A-Za-z][\w]*)(?==)/g
 
@@ -763,7 +1572,7 @@ function highlight(src: string): ReactNode[] {
       : expr
         ? 'var(--dv-accent)'
         : comment
-          ? 'rgba(236,231,219,0.32)'
+          ? 'var(--dv-cream-22)'
           : tag
             ? 'var(--dv-cream)'
             : punct
@@ -798,27 +1607,30 @@ function CodeToResult() {
   const [icon, setIcon] = useState(true)
   const [full, setFull] = useState(false)
   // Спиннер состояния loading — бесконечная CSS-анимация; за кадром её
-  // останавливает тот же хук, что и марки на остальном сайте.
+  // останавливает тот же хук, что и бегущие строки на остальном сайте.
   const idleRef = useOffscreenPause<HTMLDivElement>()
 
-  const lines = [
-    '<Button',
-    `  variant="${variant}"`,
-    `  size="${size}"`,
-    state === 'loading' ? '  loading' : null,
-    state === 'disabled' ? '  disabled' : null,
-    full ? '  fullWidth' : null,
-    icon ? '  icon={<ArrowRight />}' : null,
-    '>',
-    '  Отправить',
-    '</Button>',
-  ].filter(Boolean) as string[]
-
-  const src = lines.join('\n')
+  const src = useMemo(
+    () =>
+      [
+        '<Button',
+        `  variant="${variant}"`,
+        `  size="${size}"`,
+        state === 'loading' ? '  loading' : null,
+        state === 'disabled' ? '  disabled' : null,
+        full ? '  fullWidth' : null,
+        icon ? '  icon={<ArrowRight />}' : null,
+        '>',
+        '  Отправить',
+        '</Button>',
+      ]
+        .filter(Boolean)
+        .join('\n'),
+    [variant, size, state, full, icon]
+  )
 
   return (
     <div className="flex flex-col" style={{ gap: 'var(--s-6)' }}>
-      {/* Параметры */}
       <Panel style={{ padding: 'var(--s-6)' }}>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           <Segmented
@@ -882,11 +1694,10 @@ function CodeToResult() {
       </Panel>
 
       <div className="grid gap-6 lg:grid-cols-2 items-stretch">
-        {/* Исходник */}
         <Panel className="flex flex-col" style={{ padding: 'var(--s-6)' }}>
           <span style={{ ...mono, color: 'var(--dv-cream-45)' }}>Что написано</span>
           {/* overflow-x на самом блоке кода: длинная строка не должна
-              растягивать страницу на 390px. */}
+              растягивать страницу на 390 px. */}
           <pre
             className="overflow-x-auto"
             style={{ ...code, marginTop: 'var(--s-4)', color: 'var(--dv-cream-70)' }}
@@ -914,7 +1725,7 @@ function CodeToResult() {
           </pre>
           <p
             className="font-light"
-            style={{ marginTop: 'var(--s-4)', fontSize: '0.82rem', lineHeight: 1.6, color: 'var(--dv-cream-70)' }}
+            style={{ marginTop: 'var(--s-4)', fontSize: 'var(--dv-t-small)', lineHeight: 1.6, color: 'var(--dv-cream-70)' }}
           >
             Тип не даёт собрать кнопку, которой нет в системе. Четвёртый размер
             или «почти такой же» вариант не пройдут сборку — их физически
@@ -922,7 +1733,6 @@ function CodeToResult() {
           </p>
         </Panel>
 
-        {/* Результат */}
         <Stage
           className="flex items-center justify-center"
           label="Результат"
@@ -938,11 +1748,11 @@ function CodeToResult() {
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   03 · СОСТОЯНИЯ ДАННЫХ
+   05 · СОСТОЯНИЯ ДАННЫХ
    Готовое состояние рисуют все. Проект ломается на трёх остальных:
    пока данные едут, когда их нет и когда запрос упал. Это не дизайнерская
    придирка, а прямая стоимость поддержки: каждое неописанное состояние
-   разработчик придумывает сам, и в каждом проекте по-своему.
+   разработчик придумывает сам, и в каждом месте по-своему.
    ══════════════════════════════════════════════════════════════════ */
 
 type DataState = 'loading' | 'empty' | 'error' | 'ready'
@@ -1095,11 +1905,11 @@ function DataStateDemo() {
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   04 · ДОСТУПНОСТЬ
+   06 · ДОСТУПНОСТЬ
    Доступность продают как «бонус по возможности». На деле это два
    проверяемых инженерных требования: по интерфейсу можно пройти
    клавиатурой, и текст на фоне читается по посчитанному контрасту.
-   Оба проверяются здесь же — на этом самом экране.
+   Оба проверяются здесь же — на этом самом экране и на его палитре.
    ══════════════════════════════════════════════════════════════════ */
 
 function luminance(hex: string): number {
@@ -1126,19 +1936,19 @@ function grade(r: number): string {
 }
 
 const PAIRS = [
-  { fg: HEX.cream, bg: HEX.panel, label: 'Кремовый на панели', role: 'Основной текст' },
-  { fg: HEX.green, bg: HEX.panel, label: 'Зелёный на панели', role: 'Статусы и подписи' },
-  { fg: HEX.greenBright, bg: HEX.panel, label: 'Светлый зелёный на панели', role: 'Код и значения' },
-  { fg: HEX.greenDim, bg: HEX.panel, label: 'Тусклый зелёный на панели', role: 'Линии и рамки' },
-  { fg: HEX.accent, bg: HEX.panel, label: 'Акцент на панели', role: 'Предупреждения' },
-  { fg: HEX.stageInk, bg: HEX.stage, label: 'Чернила на сцене', role: 'Текст продукта' },
+  { fg: PALETTE.cream, bg: PALETTE.panel, label: 'Кремовый на панели', role: 'Основной текст' },
+  { fg: PALETTE.green, bg: PALETTE.panel, label: 'Зелёный на панели', role: 'Статусы и подписи' },
+  { fg: PALETTE.greenBright, bg: PALETTE.panel, label: 'Светлый зелёный на панели', role: 'Код и значения' },
+  { fg: PALETTE.greenDim, bg: PALETTE.panel, label: 'Тусклый зелёный на панели', role: 'Линии и рамки' },
+  { fg: PALETTE.accent, bg: PALETTE.panel, label: 'Акцент на панели', role: 'Предупреждения' },
+  { fg: PALETTE.stageInk, bg: PALETTE.stage, label: 'Чернила на сцене', role: 'Текст продукта' },
 ]
 
 const FIELDS = [
-  { id: 'name', kind: 'input' as const, label: 'Имя', hint: 'input · type=text · label связан через id' },
-  { id: 'topic', kind: 'select' as const, label: 'Тема', hint: 'select · нативный, открывается с клавиатуры' },
-  { id: 'agree', kind: 'check' as const, label: 'Готов обсудить сроки', hint: 'checkbox · переключается пробелом' },
-  { id: 'submit', kind: 'submit' as const, label: 'Отправить', hint: 'button · срабатывает по Enter и пробелу' },
+  { id: 'name', label: 'Имя', hint: 'input · type=text · label связан через обёртку' },
+  { id: 'topic', label: 'Тема', hint: 'select · нативный, открывается с клавиатуры' },
+  { id: 'agree', label: 'Готов обсудить сроки', hint: 'checkbox · переключается пробелом' },
+  { id: 'submit', label: 'Отправить', hint: 'button · срабатывает по Enter и пробелу' },
 ]
 
 function FocusPolygon() {
@@ -1155,6 +1965,14 @@ function FocusPolygon() {
     focused === i
       ? { outline: '2px solid var(--dv-accent)', outlineOffset: 2 }
       : { outline: '2px solid transparent', outlineOffset: 2 }
+
+  const field: CSSProperties = {
+    fontFamily: 'var(--dv-sans)',
+    fontSize: 15,
+    background: 'var(--dv-stage-card)',
+    color: 'var(--dv-stage-ink)',
+    border: '1px solid var(--dv-stage-line)',
+  }
 
   return (
     <div className="grid gap-6 lg:grid-cols-2 items-start">
@@ -1175,32 +1993,13 @@ function FocusPolygon() {
               type="text"
               placeholder="Как к вам обращаться"
               className="rounded-lg px-4 py-3"
-              style={{
-                ...ring(0),
-                fontFamily: 'var(--dv-sans)',
-                fontSize: 15,
-                background: '#fff',
-                color: 'var(--dv-stage-ink)',
-                border: '1px solid var(--dv-stage-line)',
-              }}
+              style={{ ...ring(0), ...field }}
             />
           </label>
 
           <label className="flex flex-col" style={{ gap: 6 }}>
             <span style={{ ...mono, color: 'var(--dv-stage-ink-60)', fontSize: '0.625rem' }}>Тема</span>
-            <select
-              data-order="1"
-              defaultValue="site"
-              className="rounded-lg px-4 py-3"
-              style={{
-                ...ring(1),
-                fontFamily: 'var(--dv-sans)',
-                fontSize: 15,
-                background: '#fff',
-                color: 'var(--dv-stage-ink)',
-                border: '1px solid var(--dv-stage-line)',
-              }}
-            >
+            <select data-order="1" defaultValue="site" className="rounded-lg px-4 py-3" style={{ ...ring(1), ...field }}>
               <option value="site">Сайт</option>
               <option value="product">Продукт</option>
               <option value="audit">Аудит</option>
@@ -1211,7 +2010,7 @@ function FocusPolygon() {
             <input
               data-order="2"
               type="checkbox"
-              style={{ ...ring(2), width: 18, height: 18, accentColor: 'var(--dv-accent)' }}
+              style={{ ...ring(2), width: 18, height: 18, accentColor: PALETTE.accent }}
             />
             <span style={{ fontSize: 14 }}>Готов обсудить сроки</span>
           </label>
@@ -1227,7 +2026,7 @@ function FocusPolygon() {
               paddingInline: 22,
               paddingBlock: 12,
               background: 'var(--dv-accent)',
-              color: '#fff',
+              color: 'var(--dv-stage-card)',
               border: '1px solid transparent',
             }}
           >
@@ -1251,13 +2050,7 @@ function FocusPolygon() {
                     transition: `background-color var(--d-fast) ${cssEase.standard}`,
                   }}
                 >
-                  <span
-                    style={{
-                      ...mono,
-                      color: on ? 'var(--dv-accent)' : 'var(--dv-cream-45)',
-                      minWidth: 22,
-                    }}
-                  >
+                  <span style={{ ...mono, color: on ? 'var(--dv-accent)' : 'var(--dv-cream-45)', minWidth: 22 }}>
                     {String(i + 1).padStart(2, '0')}
                   </span>
                   <div>
@@ -1274,7 +2067,7 @@ function FocusPolygon() {
           </div>
           <p
             className="font-light"
-            style={{ marginTop: 'var(--s-4)', fontSize: '0.82rem', lineHeight: 1.6, color: 'var(--dv-cream-70)' }}
+            style={{ marginTop: 'var(--s-4)', fontSize: 'var(--dv-t-small)', lineHeight: 1.6, color: 'var(--dv-cream-70)' }}
           >
             Нажмите Tab, стоя на форме слева. Подсветка идёт по порядку разметки,
             потому что порядок в разметке совпадает с визуальным. Как только его
@@ -1284,14 +2077,12 @@ function FocusPolygon() {
         </Panel>
 
         <Panel style={{ padding: 'var(--s-6)' }}>
-          <span style={{ ...mono, color: 'var(--dv-cream-45)' }}>
-            Контраст этого экрана · WCAG 2.1
-          </span>
+          <span style={{ ...mono, color: 'var(--dv-cream-45)' }}>Контраст этого экрана · WCAG 2.1</span>
           <div style={{ marginTop: 'var(--s-4)' }}>
             {PAIRS.map((p) => {
               const r = contrast(p.fg, p.bg)
               const pass = r >= 4.5
-              /* flex-wrap: на 390px оценка контраста уходит на свою строку,
+              /* flex-wrap: на 390 px оценка контраста уходит на свою строку,
                  а не распирает панель. */
               return (
                 <div
@@ -1337,7 +2128,7 @@ function FocusPolygon() {
           </div>
           <p
             className="font-light"
-            style={{ marginTop: 'var(--s-4)', fontSize: '0.82rem', lineHeight: 1.6, color: 'var(--dv-cream-70)' }}
+            style={{ marginTop: 'var(--s-4)', fontSize: 'var(--dv-t-small)', lineHeight: 1.6, color: 'var(--dv-cream-70)' }}
           >
             Значения посчитаны по формуле относительной яркости прямо на этой
             странице — их можно перепроверить любым сторонним калькулятором.
@@ -1350,155 +2141,21 @@ function FocusPolygon() {
   )
 }
 
-/* ══════════════════════════════════════════════════════════════════
-   05 · ХЕНДОФФ
-   Разница между макетом «на посмотреть» и макетом, отданным в
-   разработку, — не в красоте, а в количестве решений, которые не
-   придётся принимать разработчику. Оверлей существует всегда и
-   включается прозрачностью: монтирование десятка выносок стоило бы кадра.
-   ══════════════════════════════════════════════════════════════════ */
-
-const REDLINES: { top: string; left: string; text: string; align?: 'left' | 'right' }[] = [
-  { top: '6%', left: '4%', text: 'padding: --s-6 / 24' },
-  { top: '30%', left: '58%', text: 'text: --t-body / 300', align: 'left' },
-  { top: '52%', left: '4%', text: 'gap: 12' },
-  { top: '74%', left: '52%', text: 'radius: --r-md / 14', align: 'left' },
-]
-
-const HANDOFF = [
-  { k: 'Токены, а не значения', v: 'Отступ подписан как ступень шкалы, цвет — как роль в палитре. «24 пикселя» разработчик впишет числом, «--s-6» переиспользует.' },
-  { k: 'Состояния целиком', v: 'Наведение, фокус, нажатие, загрузка, недоступность, ошибка. Всё, что не описано, будет придумано — и в каждом месте по-разному.' },
-  { k: 'Поведение на границах', v: 'Что происходит с длинным именем, пустым списком, картинкой другой пропорции. Это правила, а не «подгоним по месту».' },
-  { k: 'Брейкпоинты как логика', v: 'Не «на телефоне поуже», а какой блок и почему меняет приоритет: что уходит под кнопку, что сворачивается, что исчезает.' },
-  { k: 'Доступные имена', v: 'Что читает скринридер у иконки без текста и какой элемент получает фокус после закрытия модального окна.' },
-  { k: 'Готовность к передаче', v: 'Файл, по которому разработчик собирает экран, не задавая ни одного вопроса. Ровно это и отличает срок в неделю от срока в три.' },
-]
-
-function Handoff() {
-  const [redline, setRedline] = useState(false)
-
-  return (
-    <div className="grid gap-6 lg:grid-cols-2 items-start">
-      <div>
-        <Stage style={{ minHeight: 300, padding: 'var(--s-8)', paddingTop: 'var(--s-12)' }} label="Карточка проекта">
-          <div className="relative">
-            <div
-              className="flex flex-col"
-              style={{
-                gap: 12,
-                padding: 24,
-                borderRadius: 14,
-                background: '#fff',
-                border: '1px solid var(--dv-stage-line)',
-              }}
-            >
-              <span style={{ ...mono, color: 'var(--dv-accent)', fontSize: '0.625rem' }}>Проект</span>
-              <p style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.2 }}>
-                Сайт производственной компании
-              </p>
-              <p className="font-light" style={{ fontSize: 14, lineHeight: 1.55, color: 'var(--dv-stage-ink-60)' }}>
-                Каталог, расчёт стоимости и заявка. Демонстрационная карточка.
-              </p>
-              <DemoButton variant="outline" size="sm" state="default" icon full={false} />
-            </div>
-
-            {/* Слой выносок. Всегда в дереве, гасится прозрачностью. */}
-            <div
-              aria-hidden
-              className="absolute inset-0 pointer-events-none hidden sm:block"
-              style={{
-                opacity: redline ? 1 : 0,
-                transition: `opacity var(--d-base) ${cssEase.standard}`,
-              }}
-            >
-              <span
-                className="absolute inset-0"
-                style={{ border: '1px dashed var(--dv-accent)', borderRadius: 14 }}
-              />
-              {REDLINES.map((r) => (
-                <span
-                  key={r.text}
-                  className="absolute whitespace-nowrap px-1.5 py-0.5 rounded"
-                  style={{
-                    top: r.top,
-                    left: r.left,
-                    ...mono,
-                    fontSize: '0.5625rem',
-                    letterSpacing: '0.08em',
-                    background: 'var(--dv-accent)',
-                    color: '#fff',
-                  }}
-                >
-                  {r.text}
-                </span>
-              ))}
-            </div>
-          </div>
-        </Stage>
-
-        <button
-          onClick={() => setRedline((v) => !v)}
-          aria-pressed={redline}
-          className="rounded-full px-5 py-2.5"
-          style={{
-            ...mono,
-            marginTop: 'var(--s-4)',
-            border: `1px solid ${redline ? 'var(--dv-accent)' : 'var(--dv-line)'}`,
-            background: redline ? 'var(--dv-accent-wash)' : 'transparent',
-            color: redline ? 'var(--dv-accent)' : 'var(--dv-cream-45)',
-            transition: `color var(--d-fast) ${cssEase.standard}, border-color var(--d-fast) ${cssEase.standard}, background-color var(--d-fast) ${cssEase.standard}`,
-          }}
-        >
-          {redline ? 'Скрыть разметку' : 'Показать разметку'}
-        </button>
-        <p
-          className="font-light sm:hidden"
-          style={{ marginTop: 'var(--s-3)', fontSize: '0.78rem', lineHeight: 1.55, color: 'var(--dv-cream-45)' }}
-        >
-          Выноски показываются на экранах шире 640 px — на телефоне они
-          перекрыли бы саму карточку. Их содержание — в списке ниже.
-        </p>
-      </div>
-
-      <div>
-        {HANDOFF.map((h, i) => (
-          <Reveal key={h.k} y={16} delay={i * stagger.item}>
-            <div
-              className="flex flex-col sm:flex-row gap-1.5 sm:gap-6"
-              style={{ paddingBlock: 'var(--s-5)', borderBottom: '1px solid var(--dv-line-soft)' }}
-            >
-              <span style={{ ...mono, minWidth: '16ch', paddingTop: 3, color: 'var(--dv-green)' }}>
-                {h.k}
-              </span>
-              <p
-                className="font-light"
-                style={{ fontSize: '0.92rem', lineHeight: 1.62, color: 'var(--dv-cream-70)' }}
-              >
-                {h.v}
-              </p>
-            </div>
-          </Reveal>
-        ))}
-      </div>
-    </div>
-  )
-}
-
 /* ── Что остаётся у заказчика ────────────────────────────────────── */
 const DELIVERABLES = [
   { t: 'Репозиторий', d: 'Типизированный код с историей изменений. Проект открывается и запускается по инструкции из двух команд.' },
   { t: 'Компонентная база', d: 'Кнопки, поля, карточки, состояния данных — собранные один раз и переиспользуемые, а не скопированные по страницам.' },
-  { t: 'Бюджеты', d: 'Зафиксировано, что считается приемлемым временем кадра и весом страницы. Это критерий приёмки, а не пожелание.' },
+  { t: 'Бюджеты', d: 'Зафиксировано, сколько миллисекунд стоит кадр и сколько килобайт весит страница. Это критерий приёмки, а не пожелание.' },
+  { t: 'Список компромиссов', d: 'Какие решения приняты, что они дали и чем за них заплачено. Через год этот список — единственное, что объясняет, почему код такой.' },
   { t: 'Доступность', d: 'Клавиатурный обход, доступные имена, контраст и уважение к prefers-reduced-motion — проверенные, а не заявленные.' },
   { t: 'Сборка и деплой', d: 'Автоматическая сборка и выкладка. Обновление сайта не требует моего участия и моей машины.' },
-  { t: 'Документация', d: 'Как устроен проект, где что лежит и как добавить страницу. Пишется для того, кто придёт после меня.' },
 ]
 
 const PROCESS = [
-  { n: '01', t: 'Разбор', d: 'Задача бизнеса, объём, ограничения. Что считается результатом — фиксируется до первой строки кода.' },
-  { n: '02', t: 'Проектирование', d: 'Структура, состояния, движение. Решения принимаются в макете, где они дешевле всего.' },
-  { n: '03', t: 'Сборка', d: 'Семантическая разметка, компоненты, данные. Продакшен выглядит так же, как макет, а не «примерно».' },
-  { n: '04', t: 'Проверка', d: 'Время кадра, клавиатура, контраст, поведение на границах — по списку, а не по ощущению.' },
+  { n: '01', t: 'Разбор', d: 'Задача бизнеса, объём, ограничения. Бюджеты кадра и веса — из разделов 01 и 02 — фиксируются до первой строки кода.' },
+  { n: '02', t: 'Решения', d: 'Что берём, что не берём и чем платим. Каждый выбор попадает в список компромиссов вместе с ценой — как Lenis в разделе 03.' },
+  { n: '03', t: 'Сборка', d: 'Типы, компоненты, все состояния данных. Продакшен выглядит так же, как макет, а не «примерно».' },
+  { n: '04', t: 'Приёмка', d: 'По тем же приборам, что и здесь: время кадра, длинные кадры, вес, клавиатура, контраст. По списку, а не по ощущению.' },
   { n: '05', t: 'Передача', d: 'Деплой, документация, доступы. Дальше проект живёт и обновляется без меня.' },
 ]
 
@@ -1508,6 +2165,8 @@ const PROCESS = [
 export default function DevelopmentScreen({ onClose }: { onClose: () => void }) {
   useDevFonts()
   const reduce = prefersReducedMotion()
+  const [condId, setCondId] = useState<ConditionId>('laptop')
+  const cond = CONDITIONS.find((c) => c.id === condId) as Condition
   // Курсор в заголовке — единственная бесконечная анимация над сгибом.
   const caretRef = useOffscreenPause<HTMLSpanElement>()
 
@@ -1516,6 +2175,12 @@ export default function DevelopmentScreen({ onClose }: { onClose: () => void }) 
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
+
+  const section: CSSProperties = {
+    maxWidth: 'var(--max-w)',
+    paddingInline: 'var(--gutter)',
+    paddingBlock: 'var(--section-y)',
+  }
 
   return (
     <main
@@ -1526,12 +2191,14 @@ export default function DevelopmentScreen({ onClose }: { onClose: () => void }) 
         background: 'var(--dv-bg)',
         color: 'var(--dv-cream)',
         fontFamily: 'var(--dv-sans)',
+        // Запас снизу под закреплённый док условий.
+        paddingBottom: 'var(--s-24)',
       }}
     >
-      {/* Фон: техническая сетка и одно мягкое свечение. Статичен —
-          движущийся фон на экране про бюджет кадра был бы издевательством. */}
       <style>{LOCAL_KEYFRAMES}</style>
 
+      {/* Фон: техническая сетка и одно мягкое свечение. Статичен —
+          движущийся фон на экране про бюджет кадра был бы издевательством. */}
       <div
         className="fixed inset-0 pointer-events-none"
         aria-hidden
@@ -1556,9 +2223,60 @@ export default function DevelopmentScreen({ onClose }: { onClose: () => void }) 
         ← Назад
       </button>
 
+      {/* ══ ДОК УСЛОВИЙ ════════════════════════════════════════════
+          Персистентное состояние экрана. Закреплён внизу, а не вверху:
+          сверху уже стоит кнопка возврата, и два закреплённых слоя на
+          одной кромке дерутся за внимание. */}
+      <div
+        /* На узком экране — во всю ширину по нижней кромке; на широком
+           уходит в правый угол, чтобы не стоять поперёк текста. */
+        className="fixed left-4 right-4 bottom-4 lg:left-auto lg:right-5 lg:w-[340px] backdrop-blur"
+        style={{
+          zIndex: 'var(--z-nav)',
+          background: 'rgba(9,15,20,0.88)',
+          border: '1px solid var(--dv-line)',
+          borderRadius: 'var(--r-lg)',
+          padding: 'var(--s-4)',
+        }}
+      >
+        <span style={{ ...mono, color: 'var(--dv-cream-45)' }}>Условия приёмки</span>
+        <div className="flex flex-wrap gap-1.5" style={{ marginTop: 'var(--s-3)' }}>
+          {CONDITIONS.map((c) => {
+            const active = c.id === condId
+            return (
+              <button
+                key={c.id}
+                onClick={() => setCondId(c.id)}
+                aria-pressed={active}
+                className="rounded-md px-3 py-1.5 flex-1"
+                style={{
+                  fontFamily: 'var(--dv-mono)',
+                  fontSize: '0.7rem',
+                  whiteSpace: 'nowrap',
+                  border: `1px solid ${active ? 'var(--dv-green)' : 'var(--dv-line)'}`,
+                  background: active ? 'var(--dv-wash)' : 'transparent',
+                  color: active ? 'var(--dv-green-bright)' : 'var(--dv-cream-45)',
+                  transition: `color var(--d-fast) ${cssEase.standard}, border-color var(--d-fast) ${cssEase.standard}, background-color var(--d-fast) ${cssEase.standard}`,
+                }}
+              >
+                {c.short}
+              </button>
+            )
+          })}
+        </div>
+        {/* Пояснение к условиям на телефоне скрыто: закреплённый док не
+            должен съедать треть экрана. Тот же текст читается в разделах. */}
+        <p
+          className="font-light hidden sm:block"
+          style={{ marginTop: 'var(--s-3)', fontSize: '0.72rem', lineHeight: 1.5, color: 'var(--dv-cream-70)' }}
+        >
+          {cond.note}
+        </p>
+      </div>
+
       {/* ══ ГЕРОЙ ══════════════════════════════════════════════════ */}
       <section
-        className="mx-auto w-full flex flex-col justify-center min-h-screen relative"
+        className="grain mx-auto w-full flex flex-col justify-center min-h-screen relative"
         style={{
           maxWidth: 'var(--max-w)',
           paddingInline: 'var(--gutter)',
@@ -1580,12 +2298,9 @@ export default function DevelopmentScreen({ onClose }: { onClose: () => void }) 
                 marginTop: 'var(--s-6)',
                 fontFamily: 'var(--dv-mono)',
                 fontWeight: 700,
-                fontSize: 'clamp(2.6rem, 10.5vw, 8rem)',
-                letterSpacing: '-0.055em',
-                // 1.0, а не плотнее: в «Разработка» у моноширинной кириллицы
-                // диакритика и выносные элементы выходят за прописную высоту,
-                // и на плотном интерлиньяже верхняя строка их срезает.
-                lineHeight: 1.0,
+                fontSize: 'var(--dv-t-h1)',
+                letterSpacing: 'var(--dv-tr-h1)',
+                lineHeight: 'var(--dv-lh-h1)',
                 color: 'var(--dv-cream)',
               }}
             >
@@ -1602,16 +2317,16 @@ export default function DevelopmentScreen({ onClose }: { onClose: () => void }) 
                 className="font-light"
                 style={{
                   marginTop: 'var(--s-8)',
-                  maxWidth: '48ch',
-                  fontSize: 'clamp(1.05rem, 2vw, 1.45rem)',
-                  lineHeight: 1.5,
+                  maxWidth: '50ch',
+                  fontSize: 'var(--dv-t-lead)',
+                  lineHeight: 'var(--dv-lh-lead)',
                   letterSpacing: '-0.012em',
                 }}
               >
-                Проектирую интерфейс и сам довожу его до продакшена. Ниже — не
-                рассказ об этом, а инструменты: время кадра меряется в вашем
-                браузере, контраст считается на этой странице, порядок фокуса
-                вы пройдёте клавишей Tab.
+                Инженера видно по двум вещам: по числу, которое он измерил, и
+                по компромиссу, который он назвал. Ниже — и то и другое. Время
+                кадра и вес страницы считает ваш браузер прямо сейчас; решение
+                про прокрутку этого сайта показано вместе с его ценой.
               </p>
             </Reveal>
           </div>
@@ -1619,14 +2334,26 @@ export default function DevelopmentScreen({ onClose }: { onClose: () => void }) 
           <div className="lg:col-span-4">
             <Reveal y={18} delay={0.36}>
               <Panel style={{ padding: 'var(--s-6)' }}>
-                <span style={{ ...mono, color: 'var(--dv-cream-45)' }}>Что проверяется на этом экране</span>
-                <div className="flex flex-col" style={{ marginTop: 'var(--s-4)', gap: 10 }}>
+                {/* Объявленная аффорданса: посетителю прямым текстом
+                    сказано, чем на этом экране можно управлять. */}
+                <span style={{ ...mono, color: 'var(--dv-green)' }}>Внизу — условия приёмки</span>
+                <p
+                  className="font-light"
+                  style={{ marginTop: 'var(--s-3)', fontSize: '0.88rem', lineHeight: 1.6, color: 'var(--dv-cream-70)' }}
+                >
+                  Переключите устройство — и бюджет кадра, время загрузки и
+                  вердикт по инерционной прокрутке пересчитаются под него.
+                  Инженерное решение не бывает верным вообще: оно верно для
+                  условий.
+                </p>
+                <div className="flex flex-col" style={{ marginTop: 'var(--s-6)', gap: 10 }}>
                   {[
-                    'Бюджет кадра и стадии конвейера',
-                    'Связка «код → результат» и типы',
+                    'Измеренный кадр и длинные кадры',
+                    'Измеренный вес этой страницы',
+                    'Названный компромисс с его ценой',
+                    'Компонент как тип, а не картинка',
                     'Четыре состояния данных',
                     'Клавиатура и контраст по WCAG',
-                    'Что входит в передачу проекта',
                   ].map((t, i) => (
                     <div key={t} className="flex items-baseline gap-3">
                       <span style={{ ...mono, color: 'var(--dv-green)' }}>
@@ -1647,77 +2374,69 @@ export default function DevelopmentScreen({ onClose }: { onClose: () => void }) 
         </div>
       </section>
 
-      {/* ══ 01 · БЮДЖЕТ КАДРА ═════════════════════════════════════ */}
-      <section
-        className="mx-auto w-full"
-        style={{ maxWidth: 'var(--max-w)', paddingInline: 'var(--gutter)', paddingBlock: 'var(--section-y)' }}
-      >
+      {/* ══ 01 ═════════════════════════════════════════════════════ */}
+      <section className="mx-auto w-full" style={section}>
         <SectionHead
           n="01"
-          title="Кадр длится 16.7 мс"
-          lead="Плавность — не вкусовая категория, а арифметика. На 60 Гц у браузера 16.7 миллисекунды на кадр, на 120 Гц — 8.3. Свойство, которое анимируют, определяет, сколько стадий конвейера придётся пройти заново в каждом из этих кадров. Выберите свойство и посмотрите, за что платит браузер."
+          title="Плавность — это арифметика, а не вкус"
+          lead={`У браузера на кадр ${cond.budget} мс в выбранных условиях. Всё, что в них не уложилось, пользователь видит как рывок — и браузер об этом знает: у него есть API длинных кадров. Панель слева не рассказывает про производительность, она её показывает на вашей машине. Справа — за что именно браузер платит, когда анимируют не то свойство.`}
         />
-        <FrameBudget />
+        <Instruments cond={cond} />
       </section>
 
-      {/* ══ 02 · КОД → РЕЗУЛЬТАТ ══════════════════════════════════ */}
-      <section
-        className="mx-auto w-full"
-        style={{ maxWidth: 'var(--max-w)', paddingInline: 'var(--gutter)', paddingBlock: 'var(--section-y)' }}
-      >
+      {/* ══ 02 ═════════════════════════════════════════════════════ */}
+      <section className="mx-auto w-full" style={section}>
         <SectionHead
           n="02"
+          title="Страница весит столько, сколько за неё скачали"
+          lead="Ниже — не средние цифры по индустрии, а байты, которые ваш браузер действительно принял, чтобы показать этот экран. Разложены по типам и пересчитаны в секунды на канале выбранных условий."
+        />
+        <PageWeight cond={cond} />
+      </section>
+
+      {/* ══ 03 ═════════════════════════════════════════════════════ */}
+      <section className="mx-auto w-full" style={section}>
+        <SectionHead
+          n="03"
+          title="Инженер — это названный компромисс"
+          lead="Список технологий ставит в один ряд со всеми, кто выучил те же слова. Поэтому вместо списка — одно решение этого сайта целиком, с ценой. Инерционная прокрутка вместо нативной: куплен вес движения, заплачено расхождением между тем, где прокрутка на самом деле, и тем, что нарисовано. Величина расхождения — справа, в пикселях."
+        />
+        <InertiaLab cond={cond} />
+      </section>
+
+      {/* ══ 04 ═════════════════════════════════════════════════════ */}
+      <section className="mx-auto w-full" style={section}>
+        <SectionHead
+          n="04"
           title="Компонент — это тип, а не картинка"
           lead="Соберите кнопку параметрами. Слева появится исходник, который из них получается, справа — то, что он рендерит. Ниже — тип, который эту кнопку ограничивает: он и есть причина, по которой в проекте не заводится «ещё один размер, чуть побольше»."
         />
         <CodeToResult />
       </section>
 
-      {/* ══ 03 · СОСТОЯНИЯ ДАННЫХ ═════════════════════════════════ */}
-      <section
-        className="mx-auto w-full"
-        style={{ maxWidth: 'var(--max-w)', paddingInline: 'var(--gutter)', paddingBlock: 'var(--section-y)' }}
-      >
+      {/* ══ 05 ═════════════════════════════════════════════════════ */}
+      <section className="mx-auto w-full" style={section}>
         <SectionHead
-          n="03"
+          n="05"
           title="Экран живёт в четырёх состояниях"
           lead="Готовое состояние рисуют все. Проект ломается на трёх остальных: пока данные едут, когда их нет и когда запрос упал. Это не придирка, а прямая стоимость поддержки — каждое неописанное состояние разработчик придумывает сам."
         />
         <DataStateDemo />
       </section>
 
-      {/* ══ 04 · ДОСТУПНОСТЬ ══════════════════════════════════════ */}
-      <section
-        className="mx-auto w-full"
-        style={{ maxWidth: 'var(--max-w)', paddingInline: 'var(--gutter)', paddingBlock: 'var(--section-y)' }}
-      >
+      {/* ══ 06 ═════════════════════════════════════════════════════ */}
+      <section className="mx-auto w-full" style={section}>
         <SectionHead
-          n="04"
+          n="06"
           title="Доступность — это требование, а не доработка"
           lead="Её продают как бонус, хотя это два проверяемых инженерных условия: по интерфейсу проходят клавиатурой, а текст на фоне имеет посчитанный контраст. Оба проверяются здесь же — на форме слева и на палитре самого этого экрана."
         />
         <FocusPolygon />
       </section>
 
-      {/* ══ 05 · ХЕНДОФФ ══════════════════════════════════════════ */}
-      <section
-        className="mx-auto w-full"
-        style={{ maxWidth: 'var(--max-w)', paddingInline: 'var(--gutter)', paddingBlock: 'var(--section-y)' }}
-      >
-        <SectionHead
-          n="05"
-          title="Макет в разработку — это спецификация"
-          lead="Внешне он не отличается от макета «на посмотреть». Отличается количеством решений, которые не придётся принимать разработчику: включите разметку и посмотрите, что на самом деле передаётся вместе с картинкой."
-        />
-        <Handoff />
-      </section>
-
-      {/* ══ 06 · ЧТО ОСТАЁТСЯ ═════════════════════════════════════ */}
-      <section
-        className="mx-auto w-full"
-        style={{ maxWidth: 'var(--max-w)', paddingInline: 'var(--gutter)', paddingBlock: 'var(--section-y)' }}
-      >
-        <SectionHead n="06" title="Что остаётся у заказчика" />
+      {/* ══ ЧТО ОСТАЁТСЯ ═══════════════════════════════════════════ */}
+      <section className="mx-auto w-full" style={section}>
+        <SectionHead n="07" title="Что остаётся у заказчика" />
         <div className="grid lg:grid-cols-12 gap-x-8">
           <div className="lg:col-span-8 lg:col-start-5">
             {DELIVERABLES.map((d, i) => (
@@ -1732,19 +2451,22 @@ export default function DevelopmentScreen({ onClose }: { onClose: () => void }) 
                   <div>
                     <h3
                       style={{
-                        fontFamily: 'var(--dv-mono)',
-                        fontSize: '1rem',
+                        fontSize: 'var(--dv-t-h3)',
                         fontWeight: 500,
-                        letterSpacing: '-0.02em',
+                        letterSpacing: '-0.015em',
                         marginBottom: 6,
-                        color: 'var(--dv-cream)',
                       }}
                     >
                       {d.t}
                     </h3>
                     <p
                       className="font-light"
-                      style={{ maxWidth: '50ch', color: 'var(--dv-cream-70)', lineHeight: 1.62 }}
+                      style={{
+                        maxWidth: '52ch',
+                        color: 'var(--dv-cream-70)',
+                        fontSize: 'var(--dv-t-body)',
+                        lineHeight: 'var(--dv-lh-body)',
+                      }}
                     >
                       {d.d}
                     </p>
@@ -1756,48 +2478,45 @@ export default function DevelopmentScreen({ onClose }: { onClose: () => void }) 
         </div>
       </section>
 
-      {/* ══ 07 · ПРОЦЕСС ══════════════════════════════════════════ */}
-      <section
-        className="mx-auto w-full"
-        style={{ maxWidth: 'var(--max-w)', paddingInline: 'var(--gutter)', paddingBlock: 'var(--section-y)' }}
-      >
-        <SectionHead n="07" title="Как идёт работа" />
-        <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-x-6 gap-y-8">
-          {PROCESS.map((s, i) => (
-            <Reveal key={s.n} y={18} delay={i * stagger.item}>
-              <div style={{ borderTop: '1px solid var(--dv-line)', paddingTop: 'var(--s-6)' }}>
-                <span style={{ ...mono, color: 'var(--dv-accent)' }}>{s.n}</span>
+      {/* ══ ПРОЦЕСС ════════════════════════════════════════════════ */}
+      <section className="mx-auto w-full" style={section}>
+        <SectionHead n="08" title="Как идёт работа" />
+        <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-5">
+          {PROCESS.map((p, i) => (
+            <Reveal key={p.n} y={18} delay={i * stagger.item}>
+              <Panel className="h-full" style={{ padding: 'var(--s-6)' }}>
+                <span style={{ ...mono, color: 'var(--dv-green)' }}>{p.n}</span>
                 <h3
                   style={{
                     marginTop: 'var(--s-4)',
-                    marginBottom: 'var(--s-3)',
                     fontFamily: 'var(--dv-mono)',
                     fontWeight: 700,
-                    fontSize: '1.15rem',
-                    letterSpacing: '-0.03em',
+                    fontSize: '1.05rem',
+                    letterSpacing: '-0.02em',
                     lineHeight: 1.2,
-                    color: 'var(--dv-cream)',
                   }}
                 >
-                  {s.t}
+                  {p.t}
                 </h3>
                 <p
                   className="font-light"
-                  style={{ color: 'var(--dv-cream-70)', fontSize: '0.9rem', lineHeight: 1.6 }}
+                  style={{
+                    marginTop: 'var(--s-3)',
+                    fontSize: 'var(--dv-t-small)',
+                    lineHeight: 1.62,
+                    color: 'var(--dv-cream-70)',
+                  }}
                 >
-                  {s.d}
+                  {p.d}
                 </p>
-              </div>
+              </Panel>
             </Reveal>
           ))}
         </div>
       </section>
 
-      {/* ══ ФИНАЛ ═════════════════════════════════════════════════ */}
-      <section
-        className="mx-auto w-full"
-        style={{ maxWidth: 'var(--max-w)', paddingInline: 'var(--gutter)', paddingBlock: 'var(--section-y)' }}
-      >
+      {/* ══ ЗАКРЫВАЮЩЕЕ УТВЕРЖДЕНИЕ ════════════════════════════════ */}
+      <section className="grain mx-auto w-full relative" style={section}>
         <div className="grid lg:grid-cols-12 gap-x-8 gap-y-10 items-end">
           <div className="lg:col-span-8">
             <Reveal y={22}>
@@ -1806,57 +2525,54 @@ export default function DevelopmentScreen({ onClose }: { onClose: () => void }) 
                   fontFamily: 'var(--dv-mono)',
                   fontWeight: 700,
                   fontSize: 'clamp(1.7rem, 6vw, 4.2rem)',
-                  letterSpacing: '-0.05em',
-                  lineHeight: 1.08,
+                  letterSpacing: 'var(--dv-tr-h2)',
+                  lineHeight: 'var(--dv-lh-h2)',
                   color: 'var(--dv-cream)',
                 }}
               >
-                Половина решений
+                Всё, что здесь заявлено,
                 <br />
-                принимается в сборке
+                посчитано на этой странице
               </h2>
             </Reveal>
-            <Reveal y={16} delay={0.16}>
+            <Reveal y={18} delay={0.1}>
               <p
                 className="font-light"
                 style={{
                   marginTop: 'var(--s-6)',
                   maxWidth: '54ch',
+                  fontSize: 'var(--dv-t-body)',
+                  lineHeight: 'var(--dv-lh-body)',
                   color: 'var(--dv-cream-70)',
-                  lineHeight: 1.65,
                 }}
               >
-                Поэтому разработку невыгодно брать отдельным подрядом: то, что
-                в макете стоило правки, между двумя подрядчиками стоит недели
-                согласований. Дешевле, когда проектирует и собирает один человек.
+                Ни одного числа результата, ни одного логотипа технологии, ни
+                одной цифры про себя. Только приборы, которые вы можете
+                испортить, и решение, цену которого я назвал вслух. Так же
+                будет выглядеть и приёмка вашего проекта.
               </p>
             </Reveal>
           </div>
-
           <div className="lg:col-span-4 flex lg:justify-end">
-            <Reveal y={16} delay={0.26}>
+            <Reveal y={18} delay={0.16}>
               <button
                 onClick={onClose}
-                className="group relative overflow-hidden rounded-full"
+                className="rounded-full px-9 py-4"
                 style={{
                   ...mono,
-                  border: '1px solid var(--dv-accent)',
-                  color: 'var(--dv-accent)',
-                  paddingInline: 'var(--s-8)',
-                  paddingBlock: 'var(--s-4)',
+                  background: 'var(--dv-accent)',
+                  color: 'var(--dv-stage-card)',
+                  border: '1px solid transparent',
+                  transition: `transform var(--d-fast) ${cssEase.standard}`,
+                }}
+                onMouseEnter={(e) => {
+                  if (!reduce) e.currentTarget.style.transform = 'scale(1.03)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)'
                 }}
               >
-                {/* Заливка — scaleY отдельного слоя: переход по background
-                    стоил бы отрисовки на каждом кадре наведения. */}
-                <span
-                  aria-hidden
-                  className="absolute inset-0 origin-bottom scale-y-0 group-hover:scale-y-100"
-                  style={{
-                    background: 'var(--dv-accent-wash)',
-                    transition: `transform ${duration.base}s ${cssEase.standard}`,
-                  }}
-                />
-                <span className="relative">← Вернуться к услугам</span>
+                ← Вернуться к услугам
               </button>
             </Reveal>
           </div>
