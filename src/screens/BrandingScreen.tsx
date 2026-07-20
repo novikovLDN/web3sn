@@ -1,57 +1,157 @@
-import { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
-import FadeIn from '../components/FadeIn'
-
 /**
- * Экран услуги 04 — Брендинг.
+ * Экран услуги — Брендинг.
  *
- * Намеренно светлый «бумажный» экран: три предыдущих экрана услуг тёмные,
- * и айдентика читается честнее на бумаге, чем на подсветке.
+ * ВИЗУАЛЬНАЯ НИША: СЕРАЯ СТЕНА
+ * ────────────────────────────
+ * Температуры остальных экранов заняты: терминальный зелёный (Разработка),
+ * тёплая глина (3D), петроль (Моушн), почти-белая швейцарская бумага
+ * с ультрамарином (Веб-дизайн), тёмная тёплая (главная). Все они —
+ * либо очень светлые, либо очень тёмные.
  *
- * Фирменная механика — живая бренд-система: выбранная палитра
- * перекрашивает знак, свотчи и носители одновременно. Это не декор,
- * а демонстрация главного тезиса услуги: бренд — это система, а не логотип.
+ * Свободной осталась середина шкалы, и для брендинга она не «оставшийся
+ * вариант», а единственно верный: айдентику показывают на нейтральном
+ * сером фоне — так снимают влияние подложки на восприятие цвета. Ровно
+ * поэтому в студиях стоит серый циклорама-фон, а в брендбуках развороты
+ * кладут на серую плашку. Экран — это стена, а знак, палитра и носители —
+ * артефакты, разложенные на ней.
+ *
+ * Побочный эффект ниши работает на смысл услуги: на среднем сером фоне
+ * единственный источник цвета — сама бренд-система. Переключение палитры
+ * видно во всю силу, потому что спорить с ним нечему.
+ *
+ * ЧТО ЗДЕСЬ ДОКАЗЫВАЕТ КОМПЕТЕНЦИЮ
+ * ────────────────────────────────
+ * Не «красивый логотип» — его может показать кто угодно. Экран показывает
+ * то, из чего состоит бренд-система и что заказчик обычно не видит:
+ *   1. построение знака — модульная сетка, охранное поле, минимальный размер;
+ *   2. палитра в контекстах с посчитанным контрастом (математика, не мнение);
+ *   3. типографическая пара с распределением ролей;
+ *   4. носители, перекрашивающиеся синхронно с системой;
+ *   5. правила использования — раздел, из-за отсутствия которого бренды и «плывут».
+ *
+ * ПРОИЗВОДИТЕЛЬНОСТЬ
+ * ──────────────────
+ * Смена палитры — это смена состояния, а не анимация: цвета применяются
+ * мгновенно, без transition по background-color (paint убил бы плавность
+ * на десятке носителей сразу). Ощущение перехода даёт keyed-перерисовка
+ * сцены по opacity. Слой построения знака существует всегда и включается
+ * прозрачностью, а не монтированием. Кривые и длительности — из design/motion.
  */
 
-const EASE = [0.22, 0.61, 0.36, 1] as const
-const SWITCH = 'background-color 600ms cubic-bezier(0.22,0.61,0.36,1), color 600ms cubic-bezier(0.22,0.61,0.36,1), border-color 600ms cubic-bezier(0.22,0.61,0.36,1)'
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
+import { motion } from 'framer-motion'
+import { Reveal, SplitText } from '../design/primitives'
+import { cssEase, duration, ease, stagger, prefersReducedMotion } from '../design/motion'
+import { IDENTITY } from '../data/content'
 
+/* ── Стена. Постоянная часть палитры экрана ──────────────────────────
+   Средний тёплый серый: достаточно тёмный, чтобы светлая бумага носителей
+   читалась как объект, и достаточно светлый, чтобы тёмные чернила давали
+   контраст выше 6:1 для основного текста. */
+const SCREEN_VARS = {
+  '--br-wall': '#9a968e',
+  '--br-wall-deep': '#8d8981',
+  '--br-wall-line': 'rgba(20, 18, 15, 0.16)',
+  '--br-wall-line-soft': 'rgba(20, 18, 15, 0.09)',
+  '--br-wall-ink': '#141210',
+  '--br-wall-ink-70': 'rgba(20, 18, 15, 0.7)',
+  '--br-wall-ink-50': 'rgba(20, 18, 15, 0.5)',
+  '--br-serif': "'Instrument Serif', Georgia, serif",
+  '--br-sans': "'Onest', 'MTS Wide', system-ui, sans-serif",
+} as unknown as CSSProperties
+
+/* ── Демонстрационные системы ────────────────────────────────────────
+   Пять разных регистров, а не оттенки одного цвета. Заметка к каждой —
+   про поведение палитры, а не про несуществующего клиента. */
 type Palette = {
   id: string
   name: string
+  note: string
   paper: string
   ink: string
   accent: string
   soft: string
 }
 
-/* Пять непохожих систем: разный тон, а не оттенки одного цвета. */
 const PALETTES: Palette[] = [
-  { id: 'terra', name: 'Терракота', paper: '#f3efe6', ink: '#17130f', accent: '#ef4a23', soft: '#d8c3a5' },
-  { id: 'indigo', name: 'Индиго', paper: '#edf0f7', ink: '#0f1420', accent: '#2f4fd8', soft: '#b3c0e8' },
-  { id: 'pine', name: 'Хвоя', paper: '#edf3ee', ink: '#0f1a14', accent: '#1f7a4d', soft: '#a9cbb6' },
-  { id: 'plum', name: 'Слива', paper: '#f3eef5', ink: '#190f18', accent: '#7a2f8f', soft: '#cfaeda' },
-  { id: 'coal', name: 'Уголь', paper: '#ededea', ink: '#0b0b0b', accent: '#111111', soft: '#9a9a95' },
+  {
+    id: 'terra',
+    name: 'Терракота',
+    note: 'Тёплый регистр. Земляной акцент держит крупные плоскости и не бликует в печати.',
+    paper: '#f3efe6',
+    ink: '#17130f',
+    accent: '#ef4a23',
+    soft: '#d8c3a5',
+  },
+  {
+    id: 'indigo',
+    name: 'Индиго',
+    note: 'Холодный регистр. Высокий контраст на экране, спокойное поведение в мелком кегле.',
+    paper: '#edf0f7',
+    ink: '#0f1420',
+    accent: '#2f4fd8',
+    soft: '#b3c0e8',
+  },
+  {
+    id: 'pine',
+    name: 'Хвоя',
+    note: 'Природный регистр. Зелёный работает как цвет плоскости, а не только как акцент.',
+    paper: '#edf3ee',
+    ink: '#0f1a14',
+    accent: '#1f7a4d',
+    soft: '#a9cbb6',
+  },
+  {
+    id: 'plum',
+    name: 'Слива',
+    note: 'Насыщенный регистр. Требует дисциплины: один акцент на носитель, не больше.',
+    paper: '#f3eef5',
+    ink: '#190f18',
+    accent: '#7a2f8f',
+    soft: '#cfaeda',
+  },
+  {
+    id: 'coal',
+    name: 'Уголь',
+    note: 'Ахроматический регистр. Знак обязан работать без цвета — это проверка формы.',
+    paper: '#ededea',
+    ink: '#0b0b0b',
+    accent: '#1a1a1a',
+    soft: '#9a9a95',
+  },
 ]
 
-const DELIVERABLES = [
-  { t: 'Логотип и знак', d: 'Основной, компактный и монохромный варианты + правила отступов.' },
-  { t: 'Палитра', d: 'Основные и вспомогательные цвета с контрастом под доступность.' },
-  { t: 'Типографика', d: 'Пара шрифтов, шкала размеров и правила набора.' },
-  { t: 'Носители', d: 'Визитки, документы, соцсети, вывески, мерч.' },
-  { t: 'Гайдлайн', d: 'Документ, по которому бренд соберёт любой подрядчик.' },
-  { t: 'Tone of voice', d: 'Как бренд говорит: лексика, интонация, примеры.' },
-]
+/* ── Контраст по WCAG ────────────────────────────────────────────────
+   Считается, а не заявляется. Единственная «цифра» на экране, которую
+   можно проверить прямо здесь — и потому единственная, которую уместно
+   показывать. */
+function luminance(hex: string): number {
+  const n = parseInt(hex.slice(1), 16)
+  const parts = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => {
+    const s = v / 255
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4)
+  })
+  return 0.2126 * parts[0] + 0.7152 * parts[1] + 0.0722 * parts[2]
+}
 
-const STEPS = [
-  { n: '01', t: 'Бриф', d: 'Задача, аудитория, конкуренты, ограничения.' },
-  { n: '02', t: 'Исследование', d: 'Поле рынка и territory — где можно быть собой.' },
-  { n: '03', t: 'Концепции', d: 'Две-три разные идеи знака, а не вариации одной.' },
-  { n: '04', t: 'Система', d: 'Палитра, шрифты, сетка, носители — всё связно.' },
-  { n: '05', t: 'Гайдлайн', d: 'Правила и файлы, чтобы бренд не «поплыл».' },
-]
+function contrast(a: string, b: string): number {
+  const la = luminance(a)
+  const lb = luminance(b)
+  const hi = Math.max(la, lb)
+  const lo = Math.min(la, lb)
+  return (hi + 0.05) / (lo + 0.05)
+}
 
-function useFonts() {
+/** Порог AA для основного текста — 4.5, для крупного набора — 3. */
+function grade(r: number): string {
+  if (r >= 7) return 'AAA'
+  if (r >= 4.5) return 'AA'
+  if (r >= 3) return 'AA · крупный'
+  return 'только плашки'
+}
+
+/* ── Шрифты грузим при открытии экрана ───────────────────────────── */
+function useBrandingFonts() {
   useEffect(() => {
     const id = 'branding-fonts'
     if (document.getElementById(id)) return
@@ -59,43 +159,237 @@ function useFonts() {
     l.id = id
     l.rel = 'stylesheet'
     l.href =
-      'https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Onest:wght@400;500;600;700&display=swap'
+      'https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Onest:wght@300;400;500;600;700&display=swap'
     document.head.appendChild(l)
   }, [])
 }
 
-/* Знак бренда: монограмма в квадрате + словесная часть. */
-function Mark({ p, size = 1 }: { p: Palette; size?: number }) {
+/* ── Технический голос экрана ────────────────────────────────────── */
+const mono: CSSProperties = {
+  fontSize: '0.6875rem',
+  letterSpacing: '0.2em',
+  textTransform: 'uppercase',
+  fontWeight: 500,
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   ЗНАК
+   Не буква в квадрате, а геометрия на модульной сетке: контур собран
+   из тех же модулей, что и охранное поле. Именно это отличает знак
+   от «набранной в шрифте литеры» — и именно это можно показать.
+   ══════════════════════════════════════════════════════════════════ */
+
+/** 12 модулей по 20 — знак занимает внутренние 8, поле — по 2 с каждой стороны. */
+const MODULE = 20
+const BOX = 240
+
+const N_PATH = 'M40 200 V40 H70 L170 148 V40 H200 V200 H170 L70 92 V200 Z'
+
+function MarkGlyph({
+  size = 120,
+  fill = 'var(--br-accent)',
+  construction = false,
+}: {
+  size?: number
+  fill?: string
+  construction?: boolean
+}) {
   return (
-    <span className="inline-flex items-center" style={{ gap: 12 * size }}>
-      <span
-        className="inline-flex items-center justify-center font-semibold"
+    <svg
+      width={size}
+      height={size}
+      viewBox={`0 0 ${BOX} ${BOX}`}
+      aria-hidden
+      style={{ display: 'block', overflow: 'visible' }}
+    >
+      <path d={N_PATH} fill={fill} />
+
+      {/* Слой построения существует всегда и гасится прозрачностью:
+          монтирование десятка линий на клик стоило бы кадра. */}
+      <g
         style={{
-          width: 44 * size,
-          height: 44 * size,
-          borderRadius: 12 * size,
-          background: p.accent,
-          color: p.paper,
-          fontSize: 22 * size,
-          transition: SWITCH,
+          opacity: construction ? 1 : 0,
+          transition: `opacity ${duration.base}s ${cssEase.standard}`,
         }}
       >
-        N
-      </span>
+        {Array.from({ length: BOX / MODULE + 1 }).map((_, i) => (
+          <g key={i} stroke="var(--br-ink)" strokeWidth={0.5} opacity={0.35}>
+            <line x1={i * MODULE} y1={0} x2={i * MODULE} y2={BOX} />
+            <line x1={0} y1={i * MODULE} x2={BOX} y2={i * MODULE} />
+          </g>
+        ))}
+        {/* Охранное поле — два модуля. Ниже этого знак ставить нельзя. */}
+        <rect
+          x={MODULE * 2}
+          y={MODULE * 2}
+          width={BOX - MODULE * 4}
+          height={BOX - MODULE * 4}
+          fill="none"
+          stroke="var(--br-accent)"
+          strokeWidth={1.4}
+          strokeDasharray="7 6"
+        />
+        <circle
+          cx={BOX / 2}
+          cy={BOX / 2}
+          r={BOX / 2 - MODULE}
+          fill="none"
+          stroke="var(--br-ink)"
+          strokeWidth={0.9}
+          opacity={0.4}
+        />
+      </g>
+    </svg>
+  )
+}
+
+/** Лок-ап: знак и словесная часть. Отбивка между ними — ровно один модуль. */
+function Lockup({
+  scale = 1,
+  markFill = 'var(--br-accent)',
+  wordColor = 'var(--br-ink)',
+  dotColor = 'var(--br-accent)',
+}: {
+  scale?: number
+  markFill?: string
+  wordColor?: string
+  dotColor?: string
+}) {
+  const s = 44 * scale
+  return (
+    <span className="inline-flex items-center" style={{ gap: s * 0.34 }}>
+      <MarkGlyph size={s} fill={markFill} />
       <span
-        className="font-semibold tracking-tight"
-        style={{ color: p.ink, fontSize: 26 * size, transition: SWITCH }}
+        style={{
+          color: wordColor,
+          fontSize: s * 0.56,
+          fontWeight: 600,
+          letterSpacing: '-0.03em',
+          lineHeight: 1,
+        }}
       >
-        NOVIKOV<span style={{ color: p.accent, transition: SWITCH }}>.</span>
+        {IDENTITY.name}
+        <span style={{ color: dotColor }}>.</span>
       </span>
     </span>
   )
 }
 
+/* ── Заголовок раздела ───────────────────────────────────────────── */
+function SectionHead({ n, title, lead }: { n: string; title: string; lead?: string }) {
+  return (
+    <header style={{ marginBottom: 'var(--s-12)' }}>
+      <Reveal y={16}>
+        <div
+          className="flex items-baseline gap-5 pb-4"
+          style={{ borderBottom: '1px solid var(--br-wall-line)' }}
+        >
+          <span style={{ ...mono, color: 'var(--br-accent)' }}>{n}</span>
+          <h2
+            style={{
+              fontFamily: 'var(--br-serif)',
+              fontSize: 'clamp(1.9rem, 5vw, 3.6rem)',
+              // Трекинг на крупном кегле обязан быть отрицательным: у Instrument
+              // Serif широкие апроши, и без сжатия заголовок распадается.
+              letterSpacing: '-0.03em',
+              lineHeight: 1.04,
+            }}
+          >
+            {title}
+          </h2>
+        </div>
+      </Reveal>
+      {lead && (
+        <Reveal y={14} delay={0.06}>
+          <p
+            className="font-light"
+            style={{
+              marginTop: 'var(--s-6)',
+              maxWidth: '54ch',
+              color: 'var(--br-wall-ink-70)',
+              fontSize: 'clamp(0.98rem, 1.6vw, 1.18rem)',
+              lineHeight: 1.62,
+              letterSpacing: '-0.005em',
+            }}
+          >
+            {lead}
+          </p>
+        </Reveal>
+      )}
+    </header>
+  )
+}
+
+/** Плашка-артефакт на стене: бумага текущей системы. */
+function Sheet({
+  children,
+  className,
+  style,
+}: {
+  children: ReactNode
+  className?: string
+  style?: CSSProperties
+}) {
+  return (
+    <div
+      className={className}
+      style={{
+        background: 'var(--br-paper)',
+        color: 'var(--br-ink)',
+        borderRadius: 'var(--r-lg)',
+        // Тень статична: «подъём» на этом экране не анимируется.
+        boxShadow: '0 26px 50px -34px rgba(0,0,0,0.55)',
+        ...style,
+      }}
+    >
+      {children}
+    </div>
+  )
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   ПРАВИЛА ИСПОЛЬЗОВАНИЯ
+   Раздел, которого чаще всего нет, — и из-за отсутствия которого
+   бренд расходится через полгода после сдачи.
+   ══════════════════════════════════════════════════════════════════ */
+type Rule = { ok: boolean; title: string; note: string; transform?: string; wrongFill?: string }
+
+const RULES: Rule[] = [
+  { ok: true, title: 'Пропорции знака', note: 'Масштабируется только пропорционально, из угла.' },
+  { ok: false, title: 'Растяжение', note: 'Непропорциональный масштаб ломает толщину штриха.', transform: 'scaleX(1.45)' },
+  { ok: true, title: 'Монохром', note: 'Один цвет системы. Обязательный вариант для тиснения и гравировки.' },
+  { ok: false, title: 'Произвольный цвет', note: 'Цвета вне палитры не применяются даже «на один макет».', wrongFill: '#d8b400' },
+  { ok: true, title: 'Контраст к фону', note: 'Не ниже 4.5:1. Ниже — знак теряет форму на печати.' },
+  { ok: false, title: 'Поворот', note: 'Знак стоит горизонтально. Наклон — это уже другой знак.', transform: 'rotate(-14deg)' },
+]
+
+/* ── Содержание услуги ───────────────────────────────────────────── */
+const DELIVERABLES = [
+  { t: 'Знак и лок-апы', d: 'Основной, компактный и монохромный варианты, построение на сетке, охранное поле, минимальный размер.' },
+  { t: 'Палитра', d: 'Основные и вспомогательные цвета с ролями и посчитанным контрастом для экрана и печати.' },
+  { t: 'Типографика', d: 'Пара гарнитур с распределением ролей, шкала кеглей, правила набора и переносов.' },
+  { t: 'Носители', d: 'Деловая документация, соцсети, вывеска, мерч — в макетах, а не в описании.' },
+  { t: 'Правила использования', d: 'Что с системой делать нельзя. Раздел, из-за отсутствия которого бренды и расходятся.' },
+  { t: 'Гайдлайн и исходники', d: 'Документ и файлы, по которым бренд соберёт любой подрядчик без звонка мне.' },
+]
+
+const STEPS = [
+  { n: '01', t: 'Разбор', d: 'Задача бизнеса, аудитория, поле конкурентов, ограничения носителей.' },
+  { n: '02', t: 'Территория', d: 'Где в этом поле можно стоять и быть отличимым, а не похожим на соседа.' },
+  { n: '03', t: 'Концепции', d: 'Две-три разные идеи знака с обоснованием — не вариации одной формы.' },
+  { n: '04', t: 'Система', d: 'Палитра, гарнитуры, сетка, носители. Выбранная идея разворачивается целиком.' },
+  { n: '05', t: 'Гайдлайн', d: 'Правила, исходники, передача. Дальше бренд живёт без меня.' },
+]
+
+/* ══════════════════════════════════════════════════════════════════
+   ЭКРАН
+   ══════════════════════════════════════════════════════════════════ */
 export default function BrandingScreen({ onClose }: { onClose: () => void }) {
-  useFonts()
+  useBrandingFonts()
   const [pi, setPi] = useState(0)
+  const [construction, setConstruction] = useState(false)
   const p = PALETTES[pi]
+  const reduce = prefersReducedMotion()
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
@@ -103,44 +397,610 @@ export default function BrandingScreen({ onClose }: { onClose: () => void }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
 
-  const serif = { fontFamily: "'Instrument Serif', Georgia, serif" }
+  /* Палитра выбранной системы уезжает в CSS-переменные корня: ниже по
+     дереву цвет берётся только через var(), хексов в разметке нет. */
+  const paletteVars = {
+    '--br-paper': p.paper,
+    '--br-ink': p.ink,
+    '--br-accent': p.accent,
+    '--br-soft': p.soft,
+  } as unknown as CSSProperties
+
+  const swatches = [
+    { label: 'Акцент', role: 'Действие, один на носитель', c: p.accent, on: p.paper },
+    { label: 'Чернила', role: 'Текст и плоскости', c: p.ink, on: p.paper },
+    { label: 'Мягкий', role: 'Фоны и разделители', c: p.soft, on: p.ink },
+    { label: 'Бумага', role: 'Основная поверхность', c: p.paper, on: p.ink },
+  ]
 
   return (
     <main
       data-screen="branding"
-      className="animate-screen-in relative font-onest"
-      style={{ background: p.paper, color: p.ink, transition: SWITCH }}
+      className="animate-screen-in relative"
+      style={{
+        ...SCREEN_VARS,
+        ...paletteVars,
+        background: 'var(--br-wall)',
+        color: 'var(--br-wall-ink)',
+        fontFamily: 'var(--br-sans)',
+        // Место под нижнюю панель системы, которая живёт поверх контента.
+        paddingBottom: 'var(--s-32)',
+      }}
     >
       <button
         onClick={onClose}
-        className="fixed top-5 left-5 z-50 flex items-center gap-2 rounded-full px-4 py-2 text-sm backdrop-blur"
-        style={{ border: `1px solid ${p.soft}`, color: p.ink, background: `${p.paper}cc`, transition: SWITCH }}
+        className="fixed top-5 left-5 rounded-full px-4 py-2 text-sm backdrop-blur"
+        style={{
+          zIndex: 'var(--z-nav)',
+          border: '1px solid var(--br-wall-line)',
+          color: 'var(--br-wall-ink)',
+          background: 'rgba(154,150,142,0.78)',
+        }}
       >
         ← Назад
       </button>
 
-      {/* ── ГЕРОЙ ───────────────────────────────────────────────── */}
-      <section className="relative min-h-screen flex flex-col justify-center px-6 md:px-12 pt-24 pb-16">
-        <FadeIn as="span" delay={0} y={16} className="block text-xs uppercase tracking-[0.35em] mb-6" style={{ color: p.ink, opacity: 0.5 }}>
-          Услуга 04 · Идентика
-        </FadeIn>
+      {/* ══ ГЕРОЙ ══════════════════════════════════════════════════ */}
+      <section
+        className="mx-auto w-full flex flex-col justify-center min-h-screen"
+        style={{ maxWidth: 'var(--max-w)', paddingInline: 'var(--gutter)', paddingTop: 'var(--s-32)', paddingBottom: 'var(--s-24)' }}
+      >
+        <div className="grid lg:grid-cols-12 gap-x-8 gap-y-12 items-end">
+          <div className="lg:col-span-7">
+            <Reveal y={14}>
+              <span style={{ ...mono, color: 'var(--br-accent)' }}>Компетенция · Брендинг</span>
+            </Reveal>
 
-        <FadeIn as="h1" delay={0.05} y={30} className="leading-[0.86] tracking-tight" style={{ ...serif, fontSize: 'clamp(3rem,11vw,9rem)' }}>
-          Брендинг
-        </FadeIn>
+            <h1
+              className="optical-left"
+              style={{
+                marginTop: 'var(--s-6)',
+                fontFamily: 'var(--br-serif)',
+                fontSize: 'clamp(3.2rem, 12vw, 9.5rem)',
+                letterSpacing: '-0.045em',
+                // 0.92, а не 0.86: в кириллице «б» и «д» выходят за прописную
+                // высоту, и на плотном интерлиньяже строка их срезает.
+                lineHeight: 0.92,
+              }}
+            >
+              <SplitText text="Брендинг" by="char" delay={0.1} />
+            </h1>
 
-        <FadeIn as="p" delay={0.15} y={20} className="mt-7 max-w-xl text-lg md:text-xl font-light" style={{ opacity: 0.7 }}>
-          Логотип — это верхушка. Работает система: цвет, шрифт, интонация и
-          носители, собранные так, чтобы бренд узнавали без подписи.
-        </FadeIn>
+            <Reveal y={18} delay={0.35}>
+              <p
+                className="font-light"
+                style={{
+                  marginTop: 'var(--s-8)',
+                  maxWidth: '46ch',
+                  fontSize: 'clamp(1.1rem, 2vw, 1.5rem)',
+                  lineHeight: 1.5,
+                  letterSpacing: '-0.012em',
+                }}
+              >
+                Логотип — это верхушка. Узнаваемость держит система: построение
+                знака, роли цветов, пара гарнитур и правила, по которым бренд
+                собирается одинаково у любого подрядчика.
+              </p>
+            </Reveal>
+          </div>
 
-        {/* Живая бренд-система */}
-        <FadeIn delay={0.25} y={24} className="mt-14">
-          <p className="text-[11px] uppercase tracking-[0.3em] mb-4" style={{ opacity: 0.45 }}>
-            Живая система · выберите палитру
+          {/* Знак сразу на бумаге системы — экран начинается с артефакта,
+              а не с описания артефакта. */}
+          <div className="lg:col-span-5">
+            <motion.div
+              key={p.id}
+              initial={reduce ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: duration.base, ease: ease.entrance }}
+            >
+              <Sheet
+                className="flex flex-col justify-between"
+                style={{ padding: 'var(--s-8)', minHeight: 300 }}
+              >
+                <span style={{ ...mono, color: 'var(--br-ink)', opacity: 0.5 }}>
+                  Основной лок-ап
+                </span>
+                {/* 1.5, а не крупнее: при большем масштабе лок-ап перестаёт
+                    помещаться в 390px вместе с полями плашки. */}
+                <div className="flex justify-center" style={{ paddingBlock: 'var(--s-8)' }}>
+                  <Lockup scale={1.5} />
+                </div>
+                <span
+                  className="font-light"
+                  style={{ fontSize: '0.85rem', lineHeight: 1.55, opacity: 0.66 }}
+                >
+                  Демонстрационная система «{p.name}». {p.note}
+                </span>
+              </Sheet>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* ══ 01 · ПОСТРОЕНИЕ ЗНАКА ═════════════════════════════════ */}
+      <section
+        className="mx-auto w-full"
+        style={{ maxWidth: 'var(--max-w)', paddingInline: 'var(--gutter)', paddingBlock: 'var(--section-y)' }}
+      >
+        <SectionHead
+          n="01"
+          title="Знак строится, а не рисуется"
+          lead="Контур собран на сетке из двенадцати модулей. Из тех же модулей считается охранное поле — два по каждой стороне. Поэтому знак одинаково стоит на визитке и на вывеске: пропорция задана правилом, а не глазом."
+        />
+
+        <div className="grid lg:grid-cols-[1.05fr_1fr] gap-8 lg:gap-12 items-start">
+          <motion.div
+            key={p.id}
+            initial={reduce ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: duration.base, ease: ease.entrance }}
+          >
+            <Sheet className="flex flex-col items-center" style={{ padding: 'clamp(1.5rem, 5vw, 3.5rem)' }}>
+              <MarkGlyph size={260} construction={construction} />
+              <button
+                onClick={() => setConstruction((v) => !v)}
+                aria-pressed={construction}
+                className="rounded-full px-5 py-2.5"
+                style={{
+                  ...mono,
+                  marginTop: 'var(--s-8)',
+                  border: '1px solid var(--br-soft)',
+                  color: construction ? 'var(--br-accent)' : 'var(--br-ink)',
+                  background: 'transparent',
+                }}
+              >
+                Построение
+              </button>
+            </Sheet>
+          </motion.div>
+
+          <div>
+            {[
+              { k: 'Модуль', v: '1/12 стороны знака. Все толщины и отбивки кратны ему.' },
+              { k: 'Охранное поле', v: 'Два модуля. Ни один посторонний элемент в это поле не заходит.' },
+              { k: 'Минимальный размер', v: '24 px по высоте на экране, 8 мм в печати. Ниже диагональ смыкается.' },
+              { k: 'Отбивка в лок-апе', v: 'Ровно один модуль между знаком и словесной частью — не «на глаз».' },
+            ].map((r, i) => (
+              <Reveal key={r.k} y={16} delay={i * stagger.item}>
+                <div
+                  className="flex flex-col sm:flex-row gap-1.5 sm:gap-8"
+                  style={{ paddingBlock: 'var(--s-6)', borderBottom: '1px solid var(--br-wall-line-soft)' }}
+                >
+                  <span style={{ ...mono, minWidth: '15ch', paddingTop: 3, color: 'var(--br-wall-ink-50)' }}>
+                    {r.k}
+                  </span>
+                  <p className="font-light" style={{ lineHeight: 1.6, letterSpacing: '-0.005em' }}>
+                    {r.v}
+                  </p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══ 02 · ПАЛИТРА ══════════════════════════════════════════ */}
+      <section
+        className="mx-auto w-full"
+        style={{ maxWidth: 'var(--max-w)', paddingInline: 'var(--gutter)', paddingBlock: 'var(--section-y)' }}
+      >
+        <SectionHead
+          n="02"
+          title="У цвета есть роль и есть контраст"
+          lead="Палитра — это не набор понравившихся оттенков, а распределение ролей с проверенным контрастом. Соотношения ниже посчитаны по WCAG прямо на странице: их можно перепроверить, а не поверить на слово."
+        />
+
+        <motion.div
+          key={p.id}
+          initial={reduce ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: duration.base, ease: ease.entrance }}
+          className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+        >
+          {swatches.map((s) => {
+            const r = contrast(s.c, s.on)
+            return (
+              <div
+                key={s.label}
+                className="flex flex-col justify-between"
+                style={{
+                  background: s.c,
+                  color: s.on,
+                  borderRadius: 'var(--r-lg)',
+                  padding: 'var(--s-6)',
+                  minHeight: 190,
+                  boxShadow: '0 26px 50px -34px rgba(0,0,0,0.55)',
+                }}
+              >
+                <div>
+                  <span style={{ ...mono, opacity: 0.75 }}>{s.label}</span>
+                  <p className="font-light" style={{ marginTop: 'var(--s-3)', fontSize: '0.85rem', lineHeight: 1.5, opacity: 0.78 }}>
+                    {s.role}
+                  </p>
+                </div>
+                <div className="flex items-baseline justify-between gap-3" style={{ marginTop: 'var(--s-8)' }}>
+                  <span style={{ ...mono, letterSpacing: '0.08em' }}>{s.c.toUpperCase()}</span>
+                  <span style={{ ...mono, letterSpacing: '0.08em', opacity: 0.75 }}>
+                    {r.toFixed(1)}:1
+                  </span>
+                </div>
+              </div>
+            )
+          })}
+        </motion.div>
+
+        <Reveal y={14} delay={0.1}>
+          <p
+            className="font-light"
+            style={{ marginTop: 'var(--s-6)', maxWidth: '60ch', color: 'var(--br-wall-ink-70)', fontSize: '0.9rem', lineHeight: 1.6 }}
+          >
+            Контраст указан к соседнему цвету пары: акцент и чернила — к бумаге,
+            мягкий и бумага — к чернилам. Текущая пара «акцент на бумаге» —{' '}
+            {contrast(p.accent, p.paper).toFixed(1)}:1, уровень{' '}
+            {grade(contrast(p.accent, p.paper))}.
           </p>
+        </Reveal>
+      </section>
 
-          <div className="flex flex-wrap gap-2.5 mb-10">
+      {/* ══ 03 · ТИПОГРАФИЧЕСКАЯ ПАРА ═════════════════════════════ */}
+      <section
+        className="mx-auto w-full"
+        style={{ maxWidth: 'var(--max-w)', paddingInline: 'var(--gutter)', paddingBlock: 'var(--section-y)' }}
+      >
+        <SectionHead
+          n="03"
+          title="Пара строится на контрасте класса"
+          lead="Две похожие гарнитуры читаются как ошибка вёрстки. Работает контраст: антиква с выраженной модуляцией штриха на заголовках и нейтральный гротеск на всём остальном. Роли распределены жёстко — «иногда наоборот» не бывает."
+        />
+
+        <motion.div
+          key={p.id}
+          initial={reduce ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: duration.base, ease: ease.entrance }}
+          className="grid gap-5 md:grid-cols-2"
+        >
+          <Sheet style={{ padding: 'clamp(1.5rem, 4vw, 2.5rem)' }}>
+            <div className="flex items-baseline justify-between gap-4">
+              <span style={{ ...mono, opacity: 0.5 }}>Заголовки</span>
+              <span style={{ ...mono, color: 'var(--br-accent)' }}>Instrument Serif</span>
+            </div>
+            <p
+              style={{
+                fontFamily: 'var(--br-serif)',
+                fontSize: 'clamp(3.2rem, 9vw, 5.5rem)',
+                letterSpacing: '-0.04em',
+                lineHeight: 1.02,
+                marginBlock: 'var(--s-6)',
+              }}
+            >
+              Аа Бб Ff
+            </p>
+            <p className="font-light" style={{ fontSize: '0.9rem', lineHeight: 1.6, opacity: 0.68 }}>
+              Контраст штриха и высокая ось превращают заголовок в событие.
+              Только крупный кегль: от 28 px и выше, трекинг от −0.03em.
+            </p>
+          </Sheet>
+
+          <Sheet style={{ padding: 'clamp(1.5rem, 4vw, 2.5rem)' }}>
+            <div className="flex items-baseline justify-between gap-4">
+              <span style={{ ...mono, opacity: 0.5 }}>Текст и интерфейс</span>
+              <span style={{ ...mono, color: 'var(--br-accent)' }}>Onest</span>
+            </div>
+            <p
+              style={{
+                fontSize: 'clamp(3.2rem, 9vw, 5.5rem)',
+                fontWeight: 600,
+                letterSpacing: '-0.04em',
+                lineHeight: 1.02,
+                marginBlock: 'var(--s-6)',
+              }}
+            >
+              Аа Бб Ff
+            </p>
+            <p className="font-light" style={{ fontSize: '0.9rem', lineHeight: 1.6, opacity: 0.68 }}>
+              Открытые формы и ровный ритм. Держит и подпись в 12 px, и
+              подзаголовок; четыре начертания закрывают все состояния интерфейса.
+            </p>
+          </Sheet>
+        </motion.div>
+      </section>
+
+      {/* ══ 04 · НОСИТЕЛИ ═════════════════════════════════════════ */}
+      <section
+        className="mx-auto w-full"
+        style={{ maxWidth: 'var(--max-w)', paddingInline: 'var(--gutter)', paddingBlock: 'var(--section-y)' }}
+      >
+        <SectionHead
+          n="04"
+          title="Одно правило, много применений"
+          lead="Носители собраны из тех же четырёх ролей цвета и той же пары гарнитур. Смена системы в панели внизу перекрашивает их одновременно — потому что решение принимается один раз, на уровне правила, а не отдельно для каждого макета."
+        />
+
+        <motion.div
+          key={p.id}
+          initial={reduce ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: duration.slow, ease: ease.entrance }}
+          className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4"
+        >
+          {/* Визитка */}
+          <div>
+            <Sheet className="aspect-[1.6] flex flex-col justify-between" style={{ padding: 'var(--s-6)' }}>
+              <Lockup scale={0.62} />
+              <div className="font-light" style={{ fontSize: '0.72rem', lineHeight: 1.5, opacity: 0.7 }}>
+                {IDENTITY.name}
+                <br />
+                {IDENTITY.roleRu}
+              </div>
+            </Sheet>
+            <p style={{ ...mono, marginTop: 'var(--s-3)', color: 'var(--br-wall-ink-50)' }}>Визитка</p>
+          </div>
+
+          {/* Аватар */}
+          <div>
+            <div
+              className="aspect-[1.6] flex items-center justify-center"
+              style={{
+                background: 'var(--br-ink)',
+                borderRadius: 'var(--r-lg)',
+                boxShadow: '0 26px 50px -34px rgba(0,0,0,0.55)',
+              }}
+            >
+              <span
+                className="flex items-center justify-center"
+                style={{ width: 92, height: 92, borderRadius: '50%', background: 'var(--br-accent)' }}
+              >
+                <MarkGlyph size={44} fill="var(--br-ink)" />
+              </span>
+            </div>
+            <p style={{ ...mono, marginTop: 'var(--s-3)', color: 'var(--br-wall-ink-50)' }}>Аватар</p>
+          </div>
+
+          {/* Вывеска */}
+          <div>
+            <div
+              className="aspect-[1.6] flex items-end"
+              style={{
+                background: 'var(--br-accent)',
+                borderRadius: 'var(--r-lg)',
+                padding: 'var(--s-6)',
+                boxShadow: '0 26px 50px -34px rgba(0,0,0,0.55)',
+              }}
+            >
+              <Lockup scale={0.72} markFill="var(--br-paper)" wordColor="var(--br-paper)" dotColor="var(--br-paper)" />
+            </div>
+            <p style={{ ...mono, marginTop: 'var(--s-3)', color: 'var(--br-wall-ink-50)' }}>Вывеска</p>
+          </div>
+
+          {/* Обложка */}
+          <div>
+            <div
+              className="aspect-[1.6] flex flex-col justify-between"
+              style={{
+                background: 'var(--br-soft)',
+                color: 'var(--br-ink)',
+                borderRadius: 'var(--r-lg)',
+                padding: 'var(--s-6)',
+                boxShadow: '0 26px 50px -34px rgba(0,0,0,0.55)',
+              }}
+            >
+              <span style={{ ...mono, opacity: 0.7 }}>Портфолио</span>
+              <span
+                style={{
+                  fontFamily: 'var(--br-serif)',
+                  fontSize: 'clamp(1.4rem, 3vw, 2rem)',
+                  letterSpacing: '-0.03em',
+                  lineHeight: 1.05,
+                }}
+              >
+                Объём
+                <br />и характер
+              </span>
+            </div>
+            <p style={{ ...mono, marginTop: 'var(--s-3)', color: 'var(--br-wall-ink-50)' }}>Обложка</p>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* ══ 05 · ПРАВИЛА ══════════════════════════════════════════ */}
+      <section
+        className="mx-auto w-full"
+        style={{ maxWidth: 'var(--max-w)', paddingInline: 'var(--gutter)', paddingBlock: 'var(--section-y)' }}
+      >
+        <SectionHead
+          n="05"
+          title="Правила важнее знака"
+          lead="Бренд расходится не в момент сдачи, а через полгода — когда очередной подрядчик растянул знак и подобрал «похожий» цвет. Раздел ограничений отвечает на это заранее и стоит в гайдлайне рядом с исходниками."
+        />
+
+        <div className="grid gap-px sm:grid-cols-2 lg:grid-cols-3" style={{ background: 'var(--br-wall-line)', borderRadius: 'var(--r-lg)', overflow: 'hidden' }}>
+          {RULES.map((r, i) => (
+            <Reveal key={r.title} y={16} delay={i * stagger.item}>
+              <div
+                className="h-full flex flex-col justify-between"
+                style={{ background: 'var(--br-wall-deep)', padding: 'var(--s-6)', gap: 'var(--s-6)' }}
+              >
+                <div className="flex items-baseline justify-between gap-3">
+                  <span style={{ ...mono, color: 'var(--br-wall-ink-50)' }}>{r.title}</span>
+                  <span
+                    aria-hidden
+                    style={{ ...mono, letterSpacing: 0, color: r.ok ? 'var(--br-wall-ink)' : 'var(--br-accent)' }}
+                  >
+                    {r.ok ? 'Да' : 'Нет'}
+                  </span>
+                </div>
+
+                <div
+                  className="flex items-center justify-center"
+                  style={{
+                    background: 'var(--br-paper)',
+                    borderRadius: 'var(--r-md)',
+                    height: 104,
+                    // Опасный вариант физически показан искажением, а не подписан.
+                    opacity: r.ok ? 1 : 0.92,
+                  }}
+                >
+                  <span style={{ display: 'block', transform: r.transform }}>
+                    <MarkGlyph size={44} fill={r.wrongFill ?? 'var(--br-accent)'} />
+                  </span>
+                </div>
+
+                <p className="font-light" style={{ fontSize: '0.85rem', lineHeight: 1.55, color: 'var(--br-wall-ink-70)' }}>
+                  {r.note}
+                </p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* ══ 06 · ЧТО ВХОДИТ ═══════════════════════════════════════ */}
+      <section
+        className="mx-auto w-full"
+        style={{ maxWidth: 'var(--max-w)', paddingInline: 'var(--gutter)', paddingBlock: 'var(--section-y)' }}
+      >
+        <SectionHead n="06" title="Что остаётся у заказчика" />
+        <div className="grid lg:grid-cols-12 gap-x-8">
+          <div className="lg:col-span-8 lg:col-start-5">
+            {DELIVERABLES.map((d, i) => (
+              <Reveal key={d.t} y={16} delay={i * stagger.item}>
+                <div
+                  className="flex flex-col sm:flex-row gap-2 sm:gap-8"
+                  style={{ paddingBlock: 'var(--s-6)', borderBottom: '1px solid var(--br-wall-line-soft)' }}
+                >
+                  <span style={{ ...mono, color: 'var(--br-accent)', minWidth: 36, paddingTop: 4 }}>
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <div>
+                    <h3 style={{ fontSize: '1.08rem', fontWeight: 500, letterSpacing: '-0.015em', marginBottom: 6 }}>
+                      {d.t}
+                    </h3>
+                    <p className="font-light" style={{ maxWidth: '48ch', color: 'var(--br-wall-ink-70)', lineHeight: 1.6 }}>
+                      {d.d}
+                    </p>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══ 07 · ПРОЦЕСС ══════════════════════════════════════════ */}
+      <section
+        className="mx-auto w-full"
+        style={{ maxWidth: 'var(--max-w)', paddingInline: 'var(--gutter)', paddingBlock: 'var(--section-y)' }}
+      >
+        <SectionHead n="07" title="Как идёт работа" />
+        <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-x-6 gap-y-8">
+          {STEPS.map((s, i) => (
+            <Reveal key={s.n} y={18} delay={i * stagger.item}>
+              <div style={{ borderTop: '1px solid var(--br-wall-line)', paddingTop: 'var(--s-6)' }}>
+                <span style={{ ...mono, color: 'var(--br-accent)' }}>{s.n}</span>
+                <h3
+                  style={{
+                    marginTop: 'var(--s-4)',
+                    marginBottom: 'var(--s-3)',
+                    fontFamily: 'var(--br-serif)',
+                    fontSize: '1.6rem',
+                    letterSpacing: '-0.025em',
+                    lineHeight: 1.1,
+                  }}
+                >
+                  {s.t}
+                </h3>
+                <p className="font-light" style={{ color: 'var(--br-wall-ink-70)', fontSize: '0.92rem', lineHeight: 1.6 }}>
+                  {s.d}
+                </p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* ══ ФИНАЛ ═════════════════════════════════════════════════ */}
+      <section
+        className="mx-auto w-full"
+        style={{ maxWidth: 'var(--max-w)', paddingInline: 'var(--gutter)', paddingBlock: 'var(--section-y)' }}
+      >
+        <div className="grid lg:grid-cols-12 gap-x-8 gap-y-10 items-end">
+          <div className="lg:col-span-8">
+            <h2
+              className="optical-left"
+              style={{
+                fontFamily: 'var(--br-serif)',
+                fontSize: 'clamp(2.2rem, 7vw, 5.2rem)',
+                letterSpacing: '-0.042em',
+                lineHeight: 1.0,
+              }}
+            >
+              <SplitText text="Бренд собирается один раз" by="word" />
+            </h2>
+            <Reveal y={16} delay={0.2}>
+              <p
+                className="font-light"
+                style={{ marginTop: 'var(--s-6)', maxWidth: '52ch', color: 'var(--br-wall-ink-70)', lineHeight: 1.65 }}
+              >
+                Дальше он либо держится правилами, либо расходится по подрядчикам.
+                Разница закладывается на этом этапе, а не на следующем редизайне.
+              </p>
+            </Reveal>
+          </div>
+
+          <div className="lg:col-span-4 flex lg:justify-end">
+            <Reveal y={16} delay={0.28}>
+              <button
+                onClick={onClose}
+                className="group relative overflow-hidden rounded-full"
+                style={{
+                  border: '1px solid var(--br-wall-ink)',
+                  color: 'var(--br-wall-ink)',
+                  paddingInline: 'var(--s-8)',
+                  paddingBlock: 'var(--s-4)',
+                  ...mono,
+                }}
+              >
+                {/* Заливка — scaleY отдельного слоя. Переход по background
+                    стоил бы paint на каждом кадре наведения. */}
+                <span
+                  aria-hidden
+                  className="absolute inset-0 origin-bottom scale-y-0 group-hover:scale-y-100"
+                  style={{
+                    background: 'var(--br-accent)',
+                    transition: `transform ${duration.base}s ${cssEase.standard}`,
+                  }}
+                />
+                <span className="relative">← Вернуться к услугам</span>
+              </button>
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
+      {/* ══ ПАНЕЛЬ СИСТЕМЫ ════════════════════════════════════════
+          Переключатель остаётся с посетителем на всём экране, а не живёт
+          в одной секции: смысл в том, что одно решение перекрашивает знак,
+          палитру, типографику и носители одновременно — а увидеть это можно
+          только если управление доступно в любом контексте. */}
+      <div
+        className="fixed left-1/2 bottom-4 sm:bottom-6"
+        style={{ zIndex: 'var(--z-nav)', transform: 'translateX(-50%)' }}
+      >
+        <div
+          className="flex items-center gap-3 sm:gap-4 rounded-full backdrop-blur"
+          style={{
+            border: '1px solid var(--br-wall-line)',
+            background: 'rgba(154,150,142,0.86)',
+            paddingInline: 'var(--s-4)',
+            paddingBlock: 'var(--s-3)',
+            boxShadow: '0 20px 40px -24px rgba(0,0,0,0.6)',
+          }}
+        >
+          <span className="hidden sm:inline" style={{ ...mono, color: 'var(--br-wall-ink-50)' }}>
+            Система
+          </span>
+          <div className="flex items-center gap-2">
             {PALETTES.map((pal, i) => {
               const active = i === pi
               return (
@@ -148,203 +1008,31 @@ export default function BrandingScreen({ onClose }: { onClose: () => void }) {
                   key={pal.id}
                   onClick={() => setPi(i)}
                   aria-pressed={active}
-                  className="group flex items-center gap-2.5 rounded-full pl-2 pr-4 py-2 text-sm"
+                  aria-label={`Система «${pal.name}»`}
+                  title={pal.name}
+                  className="rounded-full"
                   style={{
-                    border: `1.5px solid ${active ? pal.accent : p.soft}`,
-                    color: p.ink,
-                    background: active ? `${pal.accent}14` : 'transparent',
-                    transition: SWITCH,
+                    width: 28,
+                    height: 28,
+                    // Половинка акцента и половинка мягкого: свотч показывает
+                    // не один цвет, а отношение внутри системы.
+                    backgroundImage: `linear-gradient(105deg, ${pal.accent} 0 50%, ${pal.soft} 50% 100%)`,
+                    boxShadow: active ? `0 0 0 2px var(--br-wall), 0 0 0 3.5px ${pal.ink}` : 'none',
+                    transform: active ? 'scale(1.12)' : 'scale(1)',
+                    transition: `transform ${duration.fast}s ${cssEase.standard}`,
                   }}
-                >
-                  <span className="flex">
-                    <span className="w-4 h-4 rounded-full" style={{ background: pal.accent }} />
-                    <span className="w-4 h-4 rounded-full -ml-1.5" style={{ background: pal.soft }} />
-                  </span>
-                  {pal.name}
-                </button>
+                />
               )
             })}
           </div>
-
-          {/* Знак + свотчи */}
-          <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr] items-stretch max-w-5xl">
-            <motion.div
-              key={p.id}
-              initial={{ opacity: 0.6, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease: EASE }}
-              className="rounded-3xl p-8 md:p-12 flex flex-col justify-between min-h-[240px]"
-              style={{ background: p.ink, transition: SWITCH }}
-            >
-              <span className="text-[11px] uppercase tracking-[0.3em]" style={{ color: p.paper, opacity: 0.5 }}>
-                Знак на тёмном
-              </span>
-              <div style={{ transform: 'scale(1)' }}>
-                <span className="inline-flex items-center gap-3">
-                  <span
-                    className="inline-flex items-center justify-center font-semibold"
-                    style={{ width: 56, height: 56, borderRadius: 16, background: p.accent, color: p.ink, fontSize: 28, transition: SWITCH }}
-                  >
-                    N
-                  </span>
-                  <span className="font-semibold tracking-tight text-3xl" style={{ color: p.paper, transition: SWITCH }}>
-                    NOVIKOV<span style={{ color: p.accent, transition: SWITCH }}>.</span>
-                  </span>
-                </span>
-              </div>
-            </motion.div>
-
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { label: 'Акцент', c: p.accent },
-                { label: 'Чернила', c: p.ink },
-                { label: 'Мягкий', c: p.soft },
-                { label: 'Бумага', c: p.paper },
-              ].map((s) => (
-                <div
-                  key={s.label}
-                  className="rounded-2xl p-4 flex flex-col justify-between min-h-[110px]"
-                  style={{ background: s.c, border: `1px solid ${p.soft}`, transition: SWITCH }}
-                >
-                  <span
-                    className="text-[10px] uppercase tracking-widest"
-                    style={{ color: s.c === p.paper || s.c === p.soft ? p.ink : p.paper, opacity: 0.7 }}
-                  >
-                    {s.label}
-                  </span>
-                  <span
-                    className="text-xs font-mono"
-                    style={{ color: s.c === p.paper || s.c === p.soft ? p.ink : p.paper, opacity: 0.85 }}
-                  >
-                    {s.c.toUpperCase()}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </FadeIn>
-      </section>
-
-      {/* ── НОСИТЕЛИ (перекрашиваются вместе с палитрой) ─────────── */}
-      <section className="px-6 md:px-12 py-20">
-        <FadeIn as="h2" delay={0} y={24} className="tracking-tight mb-3" style={{ ...serif, fontSize: 'clamp(1.9rem,5vw,3.6rem)' }}>
-          Одна система — все носители
-        </FadeIn>
-        <FadeIn as="p" delay={0.05} y={16} className="mb-10 max-w-lg font-light" style={{ opacity: 0.6 }}>
-          Переключите палитру выше — носители перекрасятся синхронно. Так и
-          работает гайдлайн: правило одно, применений много.
-        </FadeIn>
-
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4 max-w-6xl">
-          {/* Визитка */}
-          <FadeIn delay={0.05} y={24}>
-            <div className="rounded-2xl aspect-[1.6] p-5 flex flex-col justify-between" style={{ background: p.paper, border: `1px solid ${p.soft}`, boxShadow: '0 18px 40px -28px rgba(0,0,0,0.45)', transition: SWITCH }}>
-              <Mark p={p} size={0.62} />
-              <div className="text-[11px] leading-relaxed" style={{ opacity: 0.65 }}>
-                Максим Новиков<br />3D-креатор
-              </div>
-            </div>
-            <p className="text-xs mt-2.5 uppercase tracking-widest" style={{ opacity: 0.45 }}>Визитка</p>
-          </FadeIn>
-
-          {/* Аватар */}
-          <FadeIn delay={0.1} y={24}>
-            <div className="rounded-2xl aspect-[1.6] flex items-center justify-center" style={{ background: p.ink, transition: SWITCH }}>
-              <span className="inline-flex items-center justify-center font-semibold" style={{ width: 78, height: 78, borderRadius: '50%', background: p.accent, color: p.ink, fontSize: 36, transition: SWITCH }}>
-                N
-              </span>
-            </div>
-            <p className="text-xs mt-2.5 uppercase tracking-widest" style={{ opacity: 0.45 }}>Аватар</p>
-          </FadeIn>
-
-          {/* Вывеска */}
-          <FadeIn delay={0.15} y={24}>
-            <div className="rounded-2xl aspect-[1.6] p-5 flex items-end" style={{ background: p.accent, transition: SWITCH }}>
-              <span className="font-semibold tracking-tight text-2xl" style={{ color: p.paper, transition: SWITCH }}>
-                NOVIKOV.
-              </span>
-            </div>
-            <p className="text-xs mt-2.5 uppercase tracking-widest" style={{ opacity: 0.45 }}>Вывеска</p>
-          </FadeIn>
-
-          {/* Обложка соцсетей */}
-          <FadeIn delay={0.2} y={24}>
-            <div className="rounded-2xl aspect-[1.6] p-5 flex flex-col justify-between" style={{ background: p.soft, transition: SWITCH }}>
-              <span className="text-[11px] uppercase tracking-[0.25em]" style={{ color: p.ink, opacity: 0.7 }}>
-                Портфолио 2026
-              </span>
-              <span style={{ ...serif, fontSize: 30, lineHeight: 1, color: p.ink, transition: SWITCH }}>
-                Объём<br />и характер
-              </span>
-            </div>
-            <p className="text-xs mt-2.5 uppercase tracking-widest" style={{ opacity: 0.45 }}>Обложка</p>
-          </FadeIn>
+          <span
+            className="hidden sm:inline"
+            style={{ ...mono, minWidth: '9ch', color: 'var(--br-wall-ink)' }}
+          >
+            {p.name}
+          </span>
         </div>
-      </section>
-
-      {/* ── ЧТО ВХОДИТ ──────────────────────────────────────────── */}
-      <section className="px-6 md:px-12 py-20">
-        <FadeIn as="h2" delay={0} y={24} className="tracking-tight mb-10" style={{ ...serif, fontSize: 'clamp(1.9rem,5vw,3.6rem)' }}>
-          Что входит
-        </FadeIn>
-        <div className="grid gap-px max-w-5xl" style={{ background: p.soft, border: `1px solid ${p.soft}`, borderRadius: 24, overflow: 'hidden', transition: SWITCH }}>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px" style={{ background: p.soft }}>
-            {DELIVERABLES.map((d, i) => (
-              <FadeIn key={d.t} delay={i * 0.05} y={20}>
-                <div className="p-6 h-full" style={{ background: p.paper, transition: SWITCH }}>
-                  <span className="block text-[11px] font-mono mb-3" style={{ color: p.accent, transition: SWITCH }}>
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
-                  <h3 className="font-semibold mb-1.5">{d.t}</h3>
-                  <p className="text-sm font-light leading-relaxed" style={{ opacity: 0.6 }}>{d.d}</p>
-                </div>
-              </FadeIn>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── ПРОЦЕСС ─────────────────────────────────────────────── */}
-      <section className="px-6 md:px-12 py-20">
-        <FadeIn as="h2" delay={0} y={24} className="tracking-tight mb-12" style={{ ...serif, fontSize: 'clamp(1.9rem,5vw,3.6rem)' }}>
-          Как идёт работа
-        </FadeIn>
-        <div className="max-w-3xl">
-          {STEPS.map((s, i) => (
-            <FadeIn key={s.n} delay={i * 0.06} y={20}>
-              <div className="flex gap-6 py-6" style={{ borderTop: `1px solid ${p.soft}`, transition: SWITCH }}>
-                <span className="font-mono text-sm shrink-0 pt-1" style={{ color: p.accent, transition: SWITCH }}>{s.n}</span>
-                <div>
-                  <h3 className="font-semibold text-lg mb-1">{s.t}</h3>
-                  <p className="font-light" style={{ opacity: 0.62 }}>{s.d}</p>
-                </div>
-              </div>
-            </FadeIn>
-          ))}
-        </div>
-      </section>
-
-      {/* ── CTA ─────────────────────────────────────────────────── */}
-      <section className="px-6 py-28 flex flex-col items-center text-center gap-8">
-        <motion.h2
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="tracking-tight"
-          style={{ ...serif, fontSize: 'clamp(2rem,7vw,5rem)', lineHeight: 1.05 }}
-        >
-          Соберём бренд,
-          <br />
-          который узнают
-        </motion.h2>
-        <button
-          onClick={onClose}
-          className="rounded-full px-10 py-4 font-medium uppercase tracking-widest transition-transform hover:scale-[1.03]"
-          style={{ background: p.accent, color: p.paper, transition: SWITCH }}
-        >
-          ← Вернуться к услугам
-        </button>
-      </section>
+      </div>
     </main>
   )
 }

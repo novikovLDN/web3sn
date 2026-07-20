@@ -40,20 +40,43 @@ export default function ScrollBot() {
     // Только десктоп: на тач-устройствах есть системный индикатор прокрутки.
     if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return
 
+    // Позиции секций кэшируются, а не измеряются каждый кадр.
+    //
+    // getBoundingClientRect — принудительный reflow. Семь секций × 120 кадров
+    // в секунду = 840 пересчётов геометрии в секунду ради одной подписи.
+    // Замер показал, что это заметная доля кадра. Позиции документа меняются
+    // только при resize и загрузке шрифтов/картинок — там и пересчитываем.
+    let offsets: { top: number; label: string }[] = []
+    let maxScroll = 1
+
+    const measure = () => {
+      offsets = SECTIONS.flatMap((s) => {
+        const el = document.getElementById(s.id)
+        if (!el) return []
+        // offsetTop относительно документа: считаем один раз, не каждый кадр.
+        let top = 0
+        let node: HTMLElement | null = el
+        while (node) {
+          top += node.offsetTop
+          node = node.offsetParent as HTMLElement | null
+        }
+        return [{ top, label: s.label }]
+      })
+      maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight)
+    }
+
     const read = () => {
       raf.current = null
-      const max = document.documentElement.scrollHeight - window.innerHeight
-      setProgress(max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0)
+      const y = window.scrollY
+      setProgress(Math.min(1, Math.max(0, y / maxScroll)))
 
-      // Текущий раздел — тот, чья верхняя граница ближе всего сверху к
-      // трети экрана. Треть, а не край: раздел ощущается «текущим»
-      // раньше, чем упирается в верх окна.
-      const anchor = window.innerHeight / 3
+      // Текущий раздел — последний, чья граница прошла треть экрана.
+      // Треть, а не край: раздел ощущается «текущим» раньше, чем упирается
+      // в верх окна. Здесь только арифметика — DOM не трогаем.
+      const anchor = y + window.innerHeight / 3
       let found = ''
-      for (const s of SECTIONS) {
-        const el = document.getElementById(s.id)
-        if (!el) continue
-        if (el.getBoundingClientRect().top <= anchor) found = s.label
+      for (const o of offsets) {
+        if (o.top <= anchor) found = o.label
       }
       setCurrent(found)
     }
@@ -68,10 +91,18 @@ export default function ScrollBot() {
       idle.current = window.setTimeout(() => setActive(false), 1600)
     }
 
-    window.addEventListener('scroll', onScroll, { passive: true })
+    measure()
     read()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', measure)
+    // Шрифты и картинки меняют высоты уже после первого измерения.
+    const ro = new ResizeObserver(measure)
+    ro.observe(document.body)
+
     return () => {
       window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', measure)
+      ro.disconnect()
       if (idle.current) window.clearTimeout(idle.current)
       if (raf.current != null) cancelAnimationFrame(raf.current)
     }

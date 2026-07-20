@@ -75,6 +75,7 @@ function ReactiveGrid() {
 
     let raf = 0
     let t = 0
+    let visible = false
     const draw = () => {
       t += 0.004
       ctx.clearRect(0, 0, w, h)
@@ -105,13 +106,27 @@ function ReactiveGrid() {
           ctx.fill()
         }
       }
-      raf = requestAnimationFrame(draw)
+      if (visible) raf = requestAnimationFrame(draw)
     }
 
-    raf = requestAnimationFrame(draw)
+    // Рисуем только пока герой в кадре.
+    //
+    // Раньше цикл жил всё время существования страницы: пользователь читал
+    // FAQ внизу, а браузер продолжал перерисовывать ~600 окружностей на
+    // холсте первого экрана каждый кадр. На длинной странице это была
+    // самая дорогая работа в кадре при том, что результата никто не видел.
+    const io = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting === visible) return
+      visible = entry.isIntersecting
+      if (visible) raf = requestAnimationFrame(draw)
+      else cancelAnimationFrame(raf)
+    })
+    io.observe(canvas)
+
     window.addEventListener('mousemove', onMove, { passive: true })
     window.addEventListener('resize', resize)
     return () => {
+      io.disconnect()
       cancelAnimationFrame(raf)
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('resize', resize)
