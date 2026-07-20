@@ -27,6 +27,7 @@ import {
   inView as inViewCfg,
   prefersReducedMotion,
 } from './motion'
+import { useIntroReady } from './intro'
 
 // ── Кэш motion-компонентов ────────────────────────────────────────────
 // motion(Tag) обязан вызываться вне рендера: каждый вызов возвращает новый
@@ -76,8 +77,14 @@ export function Reveal({
   duration: d = duration.slow,
 }: RevealProps) {
   const ref = useRef<HTMLElement>(null)
-  const visible = useInView(ref, inViewCfg)
+  const inFrame = useInView(ref, inViewCfg)
   const reduce = prefersReducedMotion()
+  // Хук вызывается безусловно: `inFrame && useIntroReady()` не вычислял бы
+  // его при inFrame === false, а условный вызов хука ломает React.
+  const introReady = useIntroReady()
+  // Пока идёт экран загрузки, появление не начинается: иначе первый экран
+  // отыгрывает анимацию под шторкой и пользователь видит статичный результат.
+  const visible = inFrame && introReady
   // motion(as) внутри рендера создавал бы новый тип компонента на каждый
   // проход — React размонтировал бы поддерево целиком. Берём из статической
   // таблицы, созданной один раз на модуль.
@@ -135,8 +142,11 @@ export function SplitText({
   step,
 }: SplitTextProps) {
   const ref = useRef<HTMLElement>(null)
-  const visible = useInView(ref, inViewCfg)
+  const inFrame = useInView(ref, inViewCfg)
   const reduce = prefersReducedMotion()
+  const introReady = useIntroReady()
+  // Та же причина, что в Reveal: под экраном загрузки движение не идёт.
+  const visible = inFrame && introReady
 
   const units =
     by === 'char' ? Array.from(text) : by === 'line' ? text.split('\n') : text.split(' ')

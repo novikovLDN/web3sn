@@ -8,6 +8,7 @@ import ScrollBot from './components/ScrollBot'
 import useSmoothScroll from './hooks/useSmoothScroll'
 import { jumpToTarget } from './lib/scroll'
 import { ease, duration, prefersReducedMotion } from './design/motion'
+import { IntroReadyProvider } from './design/intro'
 import HeroSection from './sections/HeroSection'
 import ProjectsSection from './sections/ProjectsSection'
 import ServicesSection from './sections/ServicesSection'
@@ -33,6 +34,17 @@ const SCREENS: Record<string, (props: { onClose: () => void }) => JSX.Element> =
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(true)
+  /**
+   * Отдельный флаг: шторка не просто «сказала, что готова», а физически
+   * ушла с экрана.
+   *
+   * Разница существенна. isLoading переключается в момент, когда прелоадер
+   * досчитал, но дальше он ещё проигрывает свой уход. Если начинать
+   * появление героя по isLoading, большая часть анимации имени проходит
+   * сквозь уходящую шторку — замер показал, что к моменту её исчезновения
+   * буквы уже почти на месте. Стартуем по факту завершения ухода.
+   */
+  const [introDone, setIntroDone] = useState(false)
   const [screen, setScreen] = useState<string | null>(null)
   const returnTo = useRef<string>('#price')
   useSmoothScroll()
@@ -55,7 +67,7 @@ export default function App() {
     <>
       <CustomCursor />
 
-      <AnimatePresence>
+      <AnimatePresence onExitComplete={() => setIntroDone(true)}>
         {isLoading && <LoadingScreen onComplete={() => setIsLoading(false)} />}
       </AnimatePresence>
 
@@ -144,6 +156,11 @@ export default function App() {
               и вопрос цены больше некому снять вне сайта. Гасит его ровно
               перед тем, как человек решает написать.
             */}
+            {/* Появление начинается только после ухода экрана загрузки.
+                Иначе первый экран отыгрывает анимацию под шторкой, и
+                пользователь попадает на готовый статичный текст —
+                причём тем надёжнее, чем медленнее у него канал. */}
+            <IntroReadyProvider ready={introDone}>
             <main className="bg-[var(--surface)]" style={{ overflowX: 'clip' }}>
               <HeroSection />
               <ProjectsSection />
@@ -166,6 +183,7 @@ export default function App() {
               <FaqSection />
               <ContactSection />
             </main>
+            </IntroReadyProvider>
           </motion.div>
         )}
       </AnimatePresence>

@@ -20,6 +20,7 @@ import { ArrowDown, ArrowUpRight } from 'lucide-react'
 import Button from '../components/Button'
 import { Reveal, SplitText, Magnetic } from '../design/primitives'
 import { ease, duration, stagger, prefersReducedMotion } from '../design/motion'
+import { useIntroReady } from '../design/intro'
 import { scrollToTarget } from '../lib/scroll'
 import { HERO, IDENTITY } from '../data/content'
 
@@ -145,6 +146,10 @@ function ReactiveGrid() {
 
 export default function HeroSection() {
   const reduce = prefersReducedMotion()
+  // Навбар и нижняя строка анимируются на монтировании напрямую, минуя
+  // Reveal, поэтому гейт готовности им нужен отдельно: иначе они отыграют
+  // под экраном загрузки так же, как отыгрывал заголовок.
+  const ready = useIntroReady()
 
   return (
     <section className="relative min-h-screen flex flex-col overflow-hidden grain">
@@ -153,7 +158,7 @@ export default function HeroSection() {
       {/* ── Навигация ──────────────────────────────────────────────── */}
       <motion.nav
         initial={reduce ? false : { opacity: 0, y: -16 }}
-        animate={{ opacity: 1, y: 0 }}
+        animate={ready ? { opacity: 1, y: 0 } : { opacity: 0, y: -16 }}
         transition={{ duration: duration.slow, ease: ease.entrance, delay: 0.1 }}
         className="relative z-20 flex items-center justify-between gap-6"
         style={{ paddingInline: 'var(--gutter)', paddingBlock: 'var(--s-6)' }}
@@ -261,7 +266,7 @@ export default function HeroSection() {
       {/* ── Подвал экрана: дисциплины + приглашение листать ─────────── */}
       <motion.div
         initial={reduce ? false : { opacity: 0 }}
-        animate={{ opacity: 1 }}
+        animate={ready ? { opacity: 1 } : { opacity: 0 }}
         transition={{ duration: duration.slow, delay: 1.1, ease: ease.entrance }}
         className="relative z-20 flex items-center justify-between gap-6 border-t"
         style={{
@@ -275,7 +280,7 @@ export default function HeroSection() {
             <motion.span
               key={d}
               initial={reduce ? false : { opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
+              animate={ready ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
               transition={{
                 duration: duration.base,
                 delay: 1.2 + i * stagger.item,
