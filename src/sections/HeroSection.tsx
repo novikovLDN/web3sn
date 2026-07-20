@@ -158,9 +158,11 @@ export default function HeroSection() {
         className="relative z-20 flex items-center justify-between gap-6"
         style={{ paddingInline: 'var(--gutter)', paddingBlock: 'var(--s-6)' }}
       >
-        {/* Логотип */}
+        {/* Логотип. href="#top", а не "#": вторая ведёт в никуда, пишет
+            решётку в адресную строку и в аудите доступности читается как
+            мёртвая ссылка. */}
         <a
-          href="#"
+          href="#top"
           onClick={(e) => {
             e.preventDefault()
             scrollToTarget(0)

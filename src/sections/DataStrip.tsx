@@ -85,14 +85,18 @@ function LocalTime() {
 }
 
 type DataStripProps = {
-  /** Индекс перехода — «02 / 04». Настоящая позиция, не украшение. */
-  index: string
   /** Что дальше. Одно слово-два: полоса подписывает следующую секцию. */
   next: string
 }
 
-export default function DataStrip({ index, next }: DataStripProps) {
+export default function DataStrip({ next }: DataStripProps) {
   const reduce = prefersReducedMotion()
+  // Дата в ISO — настоящая, берётся у машины посетителя.
+  // Здесь стояло «01 / 02», то есть «первый переход из двух». Переходов
+  // осталось два, потом один — и подпись превратилась в неправду.
+  // Показатель, который надо помнить обновлять руками, рано или поздно
+  // соврёт; берём тот, который не может.
+  const today = new Intl.DateTimeFormat('sv-SE', { timeZone: TZ }).format(new Date())
 
   return (
     <section
@@ -114,7 +118,7 @@ export default function DataStrip({ index, next }: DataStripProps) {
               color: 'var(--n-600)',
             }}
           >
-            <span>{index}</span>
+            <time dateTime={today}>{today}</time>
 
             <span className="hidden sm:inline" style={{ color: 'var(--n-500)' }}>
               {COORDS}

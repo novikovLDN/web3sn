@@ -153,7 +153,7 @@ export default function App() {
                   вместо того, чтобы отпускать. Вместо неё полоса данных:
                   тот же запрос на технологичность, но без необходимости
                   иметь незаезженную мысль. Все данные настоящие. */}
-              <DataStrip index="01 / 02" next="Компетенции" />
+              <DataStrip next="Компетенции" />
               <ServicesSection onOpenScreen={openScreen} />
               <AboutSection />
               <ProcessSection />
