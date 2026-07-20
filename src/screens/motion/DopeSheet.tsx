@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useInView } from 'framer-motion'
-import { C, DISPLAY, MONO, T } from './palette'
-import { usePrefersReducedMotion } from './primitives'
+import { C, MONO } from './palette'
+import { SectionHead, usePrefersReducedMotion } from './primitives'
 
 /* ── Геометрия листа ────────────────────────────────────────────── */
 const COLS = 20
@@ -24,16 +24,16 @@ const FRAMES: Frame[] = [
   { i: 3, anchor: '#m-statement', title: 'Заявление', to: 'заявлению' },
   { i: 9, anchor: '#m-timing', title: '120 мс', to: 'шкале длительностей' },
   { i: 16, anchor: '#m-timing', title: '1400 мс', to: 'шкале длительностей' },
-  { i: 24, anchor: '#m-easing', title: 'Ease-out', to: 'лаборатории кривых' },
-  { i: 31, anchor: '#m-easing', title: 'Back-out', to: 'лаборатории кривых' },
-  { i: 38, anchor: '#m-principles', title: 'Тайминг', to: 'принципам' },
-  { i: 45, anchor: '#m-principles', title: 'Функция', to: 'принципам' },
-  { i: 52, anchor: '#m-principles', title: 'Система', to: 'принципам' },
-  { i: 67, anchor: '#m-formats', title: 'Explainer', to: 'форматам' },
-  { i: 74, anchor: '#m-formats', title: 'UI-моушн', to: 'форматам' },
-  { i: 81, anchor: '#m-formats', title: '3D-моушн', to: 'форматам' },
-  { i: 95, anchor: '#m-word', title: 'Тайминг — решение', to: 'крупному кадру' },
-  { i: 103, anchor: '#m-formats', title: 'Титры', to: 'форматам' },
+  { i: 24, anchor: '#m-easing', title: 'Entrance', to: 'разбору кривых' },
+  { i: 31, anchor: '#m-easing', title: 'Overshoot', to: 'разбору кривых' },
+  { i: 38, anchor: '#m-duel', title: 'Дуэль', to: 'сравнению таймингов' },
+  { i: 45, anchor: '#m-duel', title: 'Шаг слоёв', to: 'сравнению таймингов' },
+  { i: 52, anchor: '#m-stagger', title: 'Потолок', to: 'потолку ритма' },
+  { i: 67, anchor: '#m-layers', title: 'Подложка', to: 'разбору перехода' },
+  { i: 74, anchor: '#m-layers', title: 'Карточка', to: 'разбору перехода' },
+  { i: 81, anchor: '#m-budget', title: 'transform', to: 'бюджету кадра' },
+  { i: 95, anchor: '#m-budget', title: 'Раскладка', to: 'бюджету кадра' },
+  { i: 103, anchor: '#m-formats', title: 'Форматы', to: 'форматам' },
   { i: 116, anchor: '#m-cta', title: 'Связаться', to: 'контактам' },
 ]
 const BY_INDEX = new Map(FRAMES.map((f) => [f.i, f]))
@@ -153,14 +153,12 @@ export default function DopeSheet({ onJump }: { onJump: (anchor: string) => void
   return (
     <section id="m-dope" className="px-6 md:px-12" style={{ paddingBlock: 'var(--section-y)' }}>
       <div className="max-w-6xl">
-        <div className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-3 mb-12">
-          <h2 className="font-bold uppercase" style={{ color: 'var(--m-chalk)', ...T.h2, ...DISPLAY }}>
-            Экспозиционный лист
-          </h2>
-          <p className="text-[11px] uppercase tracking-[0.22em]" style={{ color: 'var(--m-dim)', ...MONO }}>
-            Клик по кадру — переход к разделу
-          </p>
-        </div>
+        <SectionHead
+          n="07"
+          title="Экспозиционный лист — это документ"
+          note="Клик по кадру — переход к разделу"
+          lead="Классический лист аниматора: слои по вертикали, кадры по горизонтали, экспозиция и удержание. Здесь он собран как оглавление экрана — каждый экспонированный кадр ведёт к своему разделу. Ячейки идут на восьми кадрах в секунду против шестидесяти у героя: разница между этими двумя частотами и есть ремесло."
+        />
 
         <div ref={ref} className={`${on ? 'ds-on' : ''} ${reduced ? 'ds-reduced' : ''}`}>
           <div className="flex gap-3">

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, useMotionValue, useSpring } from 'framer-motion'
 import { duration, ease, spring, stagger, inView as inViewCfg } from '../../design/motion'
-import { DISPLAY } from './palette'
+import { DISPLAY, MONO, T } from './palette'
 
 /** true, если пользователь просил уменьшить анимацию. Реактивен к смене настройки. */
 export function usePrefersReducedMotion() {
@@ -15,6 +15,92 @@ export function usePrefersReducedMotion() {
     return () => mq.removeEventListener('change', on)
   }, [])
   return reduced
+}
+
+/* ── Заголовок раздела-закона ─────────────────────────────────────
+   Номер и формулировка-утверждение, а не назывной заголовок: раздел
+   обязан что-то заявлять, иначе инструмент под ним нечего доказывать.
+   Один компонент на все модули — иначе нумерация разъезжается при
+   первой же перестановке разделов. */
+export function SectionHead({
+  n,
+  title,
+  lead,
+  note,
+}: {
+  n: string
+  title: string
+  lead?: string
+  note?: string
+}) {
+  return (
+    <header className="mb-10 md:mb-14">
+      <Reveal y={16}>
+        <div
+          className="flex flex-wrap items-baseline gap-x-5 gap-y-2 pb-4"
+          style={{ borderBottom: '1px solid var(--m-border)' }}
+        >
+          <span className="text-[11px] tracking-[0.22em]" style={{ color: 'var(--m-ember)', ...MONO }}>
+            {n}
+          </span>
+          <h2 className="font-bold uppercase" style={{ color: 'var(--m-chalk)', ...T.h2, ...DISPLAY }}>
+            {title}
+          </h2>
+          {note && (
+            <span
+              className="ml-auto text-[11px] uppercase tracking-[0.22em]"
+              style={{ color: 'var(--m-dim)', ...MONO }}
+            >
+              {note}
+            </span>
+          )}
+        </div>
+      </Reveal>
+      {lead && (
+        <Reveal y={14} delay={0.06}>
+          <p
+            className="mt-5 max-w-[56ch] font-light"
+            style={{ color: 'var(--m-dim)', fontSize: 'var(--t-body)', lineHeight: 1.62 }}
+          >
+            {lead}
+          </p>
+        </Reveal>
+      )}
+    </header>
+  )
+}
+
+/* ── Решатель cubic-bezier ────────────────────────────────────────
+   Нужен там, где кадр не проигрывается, а СКРАБИТСЯ: чтобы показать
+   положение слоя в произвольный момент, надо уметь считать значение
+   кривой, а не отдать её браузеру. Ньютон по x за шесть итераций —
+   тот же метод, что внутри движка анимаций; точности 1e-5 хватает,
+   расхождения с нативным переходом на глаз нет. */
+export function cubicBezier(x1: number, y1: number, x2: number, y2: number) {
+  const cx = 3 * x1
+  const bx = 3 * (x2 - x1) - cx
+  const ax = 1 - cx - bx
+  const cy = 3 * y1
+  const by = 3 * (y2 - y1) - cy
+  const ay = 1 - cy - by
+  const sampleX = (t: number) => ((ax * t + bx) * t + cx) * t
+  const slopeX = (t: number) => (3 * ax * t + 2 * bx) * t + cx
+  const sampleY = (t: number) => ((ay * t + by) * t + cy) * t
+
+  return (x: number) => {
+    if (x <= 0) return 0
+    if (x >= 1) return 1
+    let t = x
+    for (let i = 0; i < 6; i++) {
+      const err = sampleX(t) - x
+      if (Math.abs(err) < 1e-5) break
+      const d = slopeX(t)
+      // Плоский участок: деление на почти ноль выбросило бы t за пределы.
+      if (Math.abs(d) < 1e-6) break
+      t -= err / d
+    }
+    return sampleY(Math.min(1, Math.max(0, t)))
+  }
 }
 
 export function Reveal({

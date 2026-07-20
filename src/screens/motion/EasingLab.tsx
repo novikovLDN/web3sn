@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion, useInView } from 'framer-motion'
-import { C, DISPLAY, EASE, MONO } from './palette'
+import { C, EASE, MONO } from './palette'
 import { cssEase, duration } from '../../design/motion'
-import { usePrefersReducedMotion } from './primitives'
+import { SectionHead, usePrefersReducedMotion } from './primitives'
 
 /**
  * Кривые лаборатории — это НЕ произвольная витрина easing. Это ровно тот
@@ -111,36 +111,34 @@ export default function EasingLab() {
   const cur = EASES[active]
 
   return (
-    <section ref={sectionRef} id="m-easing" className="px-6 md:px-12 py-24">
+    <section ref={sectionRef} id="m-easing" className="px-6 md:px-12" style={{ paddingBlock: 'var(--section-y)' }}>
       <div className="max-w-6xl">
-        <div className="flex flex-wrap items-baseline justify-between gap-4 mb-8">
-          <h2 className="font-bold uppercase tracking-tight" style={{ fontSize: 'clamp(1.8rem,5vw,3.5rem)', color: C.chalk, ...DISPLAY }}>
-            Easing-лаборатория
-          </h2>
-          <p className="text-xs uppercase tracking-[0.2em]" style={{ color: C.dim, ...MONO }}>
-            Клик по кривой — прогон, клик по значению — копия
-          </p>
-        </div>
+        <SectionHead
+          n="02"
+          title="Кривая — это характер, а не сглаживание"
+          note="Клик по кривой — прогон, клик по значению — копия"
+          lead="Шесть кривых ниже — не витрина easing, а полный набор, на котором построено движение всего сайта. У каждой своя работа, и подменять одну другой нельзя: резкий вход даёт отзывчивость, длинный выход — вес. Один объект прогоняется по всем шести, чтобы разницу можно было увидеть, а не прочитать."
+        />
 
         {/* Общий демо-объект: одна дорожка на все кривые, чтобы их можно было сравнивать */}
-        <div className="rounded-2xl p-5 mb-6" style={{ background: C.panel, border: `1px solid ${C.border}` }}>
+        <div className="rounded-2xl p-5 mb-6" style={{ background: 'var(--m-panel)', border: '1px solid var(--m-border)' }}>
           <div ref={laneRef} className="relative" style={{ height: PUCK }}>
             {/* дорожка: без неё квадрат висит в пустом прямоугольнике */}
-            <span aria-hidden="true" className="absolute left-0 right-0 top-1/2 h-px" style={{ background: C.border }} />
+            <span aria-hidden="true" className="absolute left-0 right-0 top-1/2 h-px" style={{ background: 'var(--m-border)' }} />
             <div
               ref={puckRef}
               aria-hidden="true"
               data-demo="puck"
               className="absolute left-0 top-0 rounded-xl"
-              style={{ width: PUCK, height: PUCK, background: C.seaGlass }}
+              style={{ width: PUCK, height: PUCK, background: 'var(--m-sea)' }}
             />
           </div>
-          <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-[11px] uppercase tracking-[0.18em]" style={{ color: C.dim, ...MONO }}>
+          <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-[11px] uppercase tracking-[0.18em]" style={{ color: 'var(--m-dim)', ...MONO }}>
             <button
               type="button"
               onClick={() => run(cur.css)}
               className="uppercase tracking-[0.18em] transition-opacity hover:opacity-70"
-              style={{ color: C.ember, ...MONO }}
+              style={{ color: 'var(--m-ember)', ...MONO }}
             >
               ▶ Проиграть
             </button>
@@ -157,7 +155,10 @@ export default function EasingLab() {
               <div
                 key={e.name}
                 className="rounded-2xl p-5 transition-colors"
-                style={{ background: on ? '#132B2F' : C.panel, border: `1px solid ${on ? C.seaGlass : C.border}` }}
+                style={{
+                  background: on ? 'var(--m-panel-2)' : 'var(--m-panel)',
+                  border: `1px solid ${on ? 'var(--m-sea)' : 'var(--m-border)'}`,
+                }}
               >
                 <button
                   type="button"
@@ -167,8 +168,13 @@ export default function EasingLab() {
                   aria-label={`Проиграть ${e.name}`}
                 >
                   <Curve d={e.path} active={on} reduced={reduced} />
-                  <span className="mt-3 block font-semibold text-lg" style={{ color: on ? C.chalk : C.dim }}>
+                  <span className="mt-3 block font-semibold text-lg" style={{ color: on ? 'var(--m-chalk)' : 'var(--m-dim)' }}>
                     {e.name}
+                  </span>
+                  {/* Роль кривой — половина смысла раздела: без неё это
+                      снова витрина, против которой он и сделан. */}
+                  <span className="mt-1 block font-light text-[0.82rem]" style={{ color: 'var(--m-dim)', lineHeight: 1.45 }}>
+                    {e.role}
                   </span>
                 </button>
                 <button
@@ -176,7 +182,7 @@ export default function EasingLab() {
                   onClick={() => copy(e.css)}
                   data-copy={e.css}
                   className="mt-2 block w-full text-left text-[11px] tracking-[0.06em] transition-opacity hover:opacity-70 break-all"
-                  style={{ color: copied === e.css ? C.ember : C.dim, ...MONO }}
+                  style={{ color: copied === e.css ? 'var(--m-ember)' : 'var(--m-dim)', ...MONO }}
                   aria-label={`Скопировать ${e.css}`}
                 >
                   {copied === e.css ? 'СКОПИРОВАНО' : e.css}
