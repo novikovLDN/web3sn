@@ -23,13 +23,39 @@
  *    настоящую высоту, работает на любом контенте и не требует JS.
  * Layout здесь неизбежен по природе задачи — это осознанное исключение
  * из правила «только transform и opacity».
+ *
+ * ИСПРАВЛЕННЫЕ НАРУШЕНИЯ АУДИТА (.design-research/homepage-2026.md, разд. 3)
+ * ────────────────────────────────────────────────────────────────────────
+ *  №2  — на заголовке стоял кегль h3 при трекинге h2. Токены построены на
+ *        обратной зависимости разрядки от кегля, и ручная подмена эту связь
+ *        рвала. Инлайновый letterSpacing снят: класс .t-h3 уже несёт
+ *        --tr-h3, дублировать его нечем.
+ *  №6  — мера ответа больше не задаётся числом (62ch), а берётся от токена
+ *        --max-w-text.
+ *  №10 — раскладка приведена к общей: длинный контент span 7 от колонки 1,
+ *        боковая колонка span 4 от колонки 9 — те же старты, что в
+ *        AboutSection. Заголовок переехал в боковую колонку именно поэтому:
+ *        он здесь подпись к списку (и по кеглю h3), а список — то, ради чего
+ *        секция существует, значит основную колонку занимает список.
+ *  Ещё: с секции снят overflow-hidden. Он делал ближайшим скроллпортом сам
+ *  <section>, из-за чего lg:sticky у заголовка не залипал вообще — липкость
+ *  была написана, но не работала.
+ *  Длительность раскрытия взята из duration (motion.ts) вместо жёстких 450ms.
+ *
+ * ЧТО СОЗНАТЕЛЬНО НЕ СДЕЛАНО: пункт №9 отчёта (аккордеон → две открытые
+ * колонки) — это смена формы подачи, а не исправление ошибки; отчёт сам
+ * относит его в раздел «Новое». Механика раскрытия здесь корректна и
+ * доступна, менять её без решения по содержанию нельзя.
  */
 
 import { useState, useId } from 'react'
 import { Plus } from 'lucide-react'
 import { Reveal, SplitText } from '../design/primitives'
-import { cssEase, prefersReducedMotion } from '../design/motion'
+import { cssEase, duration, prefersReducedMotion } from '../design/motion'
 import { FAQ } from '../data/content'
+
+/** Мера ответа — от токена (нарушение №6), а не число по месту. */
+const MEASURE_BODY = 'var(--max-w-text)'
 
 type ItemProps = {
   q: string
@@ -47,7 +73,10 @@ function FaqItem({ q, a, index, open, onToggle }: ItemProps) {
   const buttonId = `faq-button-${uid}`
   const reduce = prefersReducedMotion()
 
-  const motionMs = reduce ? '1ms' : '450ms'
+  // Длительность из motion.ts, а не число по месту (были жёсткие 450ms).
+  // duration.base, а не slow: действие повторяемое — по разбору Ковальского
+  // такие места сокращают движение, а не удлиняют.
+  const motionMs = reduce ? '1ms' : `${duration.base * 1000}ms`
 
   return (
     <li className="border-b" style={{ borderColor: 'var(--border)' }}>
@@ -136,7 +165,7 @@ function FaqItem({ q, a, index, open, onToggle }: ItemProps) {
             <span aria-hidden className="t-mono invisible">
               00
             </span>
-            <p className="t-body" style={{ color: 'var(--text-muted)', maxWidth: '62ch' }}>
+            <p className="t-body" style={{ color: 'var(--text-muted)', maxWidth: MEASURE_BODY }}>
               {a}
             </p>
           </div>
@@ -153,17 +182,30 @@ export default function FaqSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(0)
 
   return (
+    // overflow-hidden снят намеренно: он превращал секцию в собственный
+    // скроллпорт и полностью отключал lg:sticky у заголовка ниже.
     <section
       id="faq"
-      className="relative overflow-hidden grain section-pad"
+      className="relative grain section-pad"
       style={{ background: 'var(--surface)' }}
     >
-      <div className="shell relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-y-12 lg:gap-x-16">
+      <div className="shell relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-y-12 lg:gap-x-8">
         {/* ── Заголовок ───────────────────────────────────────────────
+            Стоит в боковой колонке (span 4 от колонки 9) — той же, что
+            держит мету в AboutSection. Это и есть общая раскладка страницы
+            (нарушение №10): длинный контент всегда слева от колонки 1,
+            короткая сопроводительная материя всегда справа от колонки 9.
+            В DOM заголовок идёт первым, поэтому на мобильном он читается
+            до списка; на десктопе его ставит на место явный col/row-start,
+            а не порядок разметки.
+
             Липкий на десктопе: пока читаются ответы, контекст секции
             остаётся в кадре. На мобильном sticky отключён — там он бы
             съедал и без того дефицитную высоту экрана. */}
-        <header className="lg:col-span-4 lg:sticky lg:self-start" style={{ top: 'var(--s-24)' }}>
+        <header
+          className="lg:col-span-4 lg:col-start-9 lg:row-start-1 lg:sticky lg:self-start"
+          style={{ top: 'var(--s-24)' }}
+        >
           <Reveal y={16}>
             <span className="t-mono" style={{ color: 'var(--a)' }}>
               {FAQ.label}
@@ -172,16 +214,18 @@ export default function FaqSection() {
           {/* Кегль t-h3, а не t-h2: заголовок стоит в колонке 4/12 (~400px),
               и шкала h2 (до 96px) там физически не помещается — длинные слова
               вылезали в соседнюю колонку и наезжали на список вопросов.
-              Размер подчинён ширине контейнера, а не желанию сделать крупнее. */}
+              Размер подчинён ширине контейнера, а не желанию сделать крупнее.
+              Трекинг не переопределяется (нарушение №2): .t-h3 несёт --tr-h3,
+              и связь «крупнее кегль — плотнее разрядка» остаётся системной. */}
           <h2
             className="t-h3 optical-left mt-5"
-            style={{ color: 'var(--text)', fontWeight: 700, letterSpacing: 'var(--tr-h2)' }}
+            style={{ color: 'var(--text)', fontWeight: 700 }}
           >
             <SplitText text={FAQ.title} by="word" />
           </h2>
         </header>
 
-        <div className="lg:col-span-8">
+        <div className="lg:col-span-7 lg:col-start-1 lg:row-start-1">
           <ul className="border-t" style={{ borderColor: 'var(--border)' }}>
             {FAQ.items.map((item, i) => (
               <FaqItem

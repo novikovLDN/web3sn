@@ -12,13 +12,34 @@
  * Сигнатурный приём секции — линия-разделитель, прочерчивающаяся по входу в
  * кадр (scaleX от левого края), и абзацы, раскрывающиеся по словам из-под
  * маски. Оба движения — чистый transform, layout не трогается.
+ *
+ * ИСПРАВЛЕННЫЕ НАРУШЕНИЯ АУДИТА (.design-research/homepage-2026.md, разд. 3)
+ * ────────────────────────────────────────────────────────────────────────
+ *  №16 — плейсхолдер «Сюда портретное фото» рендерился живому посетителю.
+ *        Портретный слот удалён целиком: пустая рамка с подписью «сюда фото»
+ *        читается как недоделка независимо от того, насколько аккуратно она
+ *        нарисована. Фото либо есть, либо секции незачем его обещать.
+ *        Правая колонка осталась колонкой фактов — это честное содержание.
+ *  №5  — раскрытие заголовка переведено с by="char" на by="word". Посимвольный
+ *        reveal читается как эффект, пословный — как речь; посимвольный
+ *        оставлен только на имени в Hero.
+ *  №6  — все меры набора берутся от токена --max-w-text, а не назначаются
+ *        числом по месту. Лид уже базовой меры: на кегле t-lead 68ch дают
+ *        строку под 110 знаков — выше границы читаемости.
+ *  №10 — раскладка приведена к общей для секции: главная колонка span 7 от
+ *        колонки 1, боковая span 4 от колонки 9. Та же пара стартовых колонок
+ *        стоит в FaqSection, поэтому вертикальная линия страницы одна.
+ *  №12 — на секцию добавлено зерно: подпись поверхности должна быть либо на
+ *        всех секциях, либо ни на одной.
+ *  Текст сокращён на абзац: о себе на премиальных сайтах говорят коротко,
+ *  а третий абзац дублировал заявление об отборе проектов из Hero.
  */
 
 import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { ArrowUpRight } from 'lucide-react'
 import Button from '../components/Button'
-import { Reveal, SplitText, Parallax } from '../design/primitives'
+import { Reveal, SplitText } from '../design/primitives'
 import {
   ease,
   duration,
@@ -63,83 +84,15 @@ function DrawnRule({ delay = 0 }: { delay?: number }) {
 }
 
 /**
- * Портретная зона. Честный плейсхолдер вместо чужой картинки:
- * пустое место с подписью «сюда фото» выглядит как незаполненный слот
- * системы, а случайный сток — как сознательный выбор плохой картинки.
+ * Меры набора (нарушение №6).
  *
- * Внутри — геометрическая разметка на inline-SVG: кадрирующие метки и
- * окружность в акценте. Ноль сетевых запросов, масштабируется до любого dpr.
+ * Единственный источник — токен --max-w-text (68ch). Лид набирается крупнее
+ * корпуса, поэтому его мера производится от базовой долей, а не назначается
+ * отдельным числом: при правке токена обе меры едут вместе.
+ * MEASURE_LEAD ≈ 46ch — верх диапазона читаемости на кегле t-lead.
  */
-function PortraitSlot() {
-  return (
-    <div
-      className="relative w-full overflow-hidden grain"
-      style={{
-        aspectRatio: '4 / 5',
-        border: '1px solid var(--border)',
-        borderRadius: 'var(--r-lg)',
-        background: 'var(--surface-raised)',
-      }}
-    >
-      <svg
-        aria-hidden
-        viewBox="0 0 400 500"
-        preserveAspectRatio="xMidYMid slice"
-        className="absolute inset-0 h-full w-full"
-      >
-        {/* Окружность на месте головы: задаёт кадр будущему портрету */}
-        <circle
-          cx="200"
-          cy="215"
-          r="118"
-          fill="none"
-          stroke="var(--a)"
-          strokeOpacity="0.28"
-          strokeWidth="1"
-        />
-        <circle
-          cx="200"
-          cy="215"
-          r="164"
-          fill="none"
-          stroke="var(--n-300)"
-          strokeWidth="1"
-        />
-        {/* Оси кадрирования — язык технической разметки, а не украшение */}
-        <line x1="200" y1="0" x2="200" y2="500" stroke="var(--n-300)" strokeWidth="1" />
-        <line x1="0" y1="215" x2="400" y2="215" stroke="var(--n-300)" strokeWidth="1" />
-        {/* Угловые метки */}
-        {[
-          [24, 24, 1, 1],
-          [376, 24, -1, 1],
-          [24, 476, 1, -1],
-          [376, 476, -1, -1],
-        ].map(([x, y, sx, sy], i) => (
-          <path
-            key={i}
-            d={`M ${x} ${y + 22 * sy} L ${x} ${y} L ${x + 22 * sx} ${y}`}
-            fill="none"
-            stroke="var(--n-400)"
-            strokeWidth="1"
-          />
-        ))}
-      </svg>
-
-      {/* Подпись слота — внизу, техническим голосом сайта */}
-      <div
-        className="absolute inset-x-0 bottom-0 flex items-center justify-between"
-        style={{ padding: 'var(--s-4)' }}
-      >
-        <span className="t-mono" style={{ color: 'var(--text-faint)' }}>
-          Сюда портретное фото
-        </span>
-        <span className="t-mono" style={{ color: 'var(--a)' }}>
-          4:5
-        </span>
-      </div>
-    </div>
-  )
-}
+const MEASURE_BODY = 'var(--max-w-text)'
+const MEASURE_LEAD = 'calc(var(--max-w-text) * 0.68)'
 
 /** Строка меты: подпись слева, значение справа. Только факты из content.ts. */
 function MetaRow({ k, v, delay }: { k: string; v: string; delay: number }) {
@@ -165,7 +118,9 @@ function MetaRow({ k, v, delay }: { k: string; v: string; delay: number }) {
 
 export default function AboutSection() {
   return (
-    <section id="about" className="relative overflow-hidden section-pad">
+    // grain — нарушение №12: зерно стояло через секцию и граница между
+    // «с зерном» и «без» читалась как смена материала.
+    <section id="about" className="relative overflow-hidden grain section-pad">
       <div className="shell">
         {/* ── Шапка секции: лейбл слева, дисциплины справа ─────────── */}
         <div
@@ -186,36 +141,45 @@ export default function AboutSection() {
 
         <DrawnRule />
 
-        {/* ── Основная сетка: 12 колонок, намеренно асимметричная ────
-            Текст занимает 7 из 12 и упирается в --max-w-text, портрет —
-            4 со сдвигом на одну. Пустая колонка между блоками и есть
-            воздух, ради которого затевалась вся раскладка. */}
+        {/* ── Основная сетка: 12 колонок ─────────────────────────────
+            Общая раскладка страницы (нарушение №10): главная колонка
+            span 7 от колонки 1, боковая span 4 от колонки 9. Пустая
+            колонка между ними — воздух, ради которого затевалась вся
+            раскладка. Ровно эта же пара стоит в FaqSection, поэтому левый
+            край и старт боковой колонки совпадают от секции к секции. */}
         <div
           className="grid grid-cols-1 lg:grid-cols-12 gap-y-16 lg:gap-x-8"
           style={{ marginTop: 'var(--s-16)' }}
         >
           {/* Левая колонка — заголовок и текст */}
-          <div className="lg:col-span-7">
+          <div className="lg:col-span-7 lg:col-start-1">
             <h2
               className="t-h2 optical-left"
               style={{ color: 'var(--text)', marginBottom: 'var(--s-12)' }}
             >
-              <SplitText text={ABOUT.title} by="char" />
+              {/* by="word", а не "char" (нарушение №5): посимвольное
+                  раскрытие читается как эффект и оставлено только имени. */}
+              <SplitText text={ABOUT.title} by="word" />
             </h2>
 
-            <div style={{ maxWidth: 'var(--max-w-text)' }}>
+            <div style={{ maxWidth: MEASURE_BODY }}>
               {/* Первый абзац — позиция, поэтому крупнее остальных и
-                  раскрывается по словам: это самая читаемая строка секции. */}
+                  раскрывается по словам: это самая читаемая строка секции.
+                  Мера у него своя и более узкая — на кегле t-lead базовые
+                  68ch дали бы строку около 110 знаков. */}
               <SplitText
                 as="p"
                 text={ABOUT.paragraphs[0]}
                 by="word"
                 className="t-lead"
-                style={{ color: 'var(--text)', display: 'block' }}
+                style={{ color: 'var(--text)', display: 'block', maxWidth: MEASURE_LEAD }}
                 delay={0.2}
               />
 
-              {ABOUT.paragraphs.slice(1).map((p, i) => (
+              {/* slice(1, -1): текст сокращён на абзац. Последний абзац
+                  повторял заявление об ограниченном наборе проектов, уже
+                  сказанное в Hero, — о себе говорят коротко и один раз. */}
+              {ABOUT.paragraphs.slice(1, -1).map((p, i) => (
                 <Reveal
                   key={i}
                   as="p"
@@ -240,21 +204,18 @@ export default function AboutSection() {
             </Reveal>
           </div>
 
-          {/* Правая колонка — портретный слот и мета.
-              Со сдвигом на колонку: край текста и край медиа не должны
-              совпадать, иначе сетка снова читается как симметричная. */}
+          {/* Правая колонка — только факты (нарушение №16).
+              Здесь стоял портретный слот с подписью «Сюда портретное фото»,
+              то есть незаполненная рамка на живом сайте. Пустое место,
+              честно названное пустым, всё равно читается как недоделка,
+              поэтому слот снят целиком, а не переоформлен. Колонка меты
+              держит ту же боковую линию (span 4 от колонки 9) и работает
+              самостоятельно: подпись слева, значение справа — это набор
+              выходных данных, а не остаток от удалённой картинки. */}
           <div className="lg:col-span-4 lg:col-start-9">
-            <Parallax speed={0.05}>
-              <Reveal y={28} duration={duration.slower}>
-                <PortraitSlot />
-              </Reveal>
-            </Parallax>
-
-            <div style={{ marginTop: 'var(--s-8)' }}>
-              <MetaRow k="Роль" v={IDENTITY.role} delay={0.1} />
-              <MetaRow k="Где" v={IDENTITY.location} delay={0.1 + stagger.item} />
-              <MetaRow k="Почта" v={IDENTITY.email} delay={0.1 + stagger.item * 2} />
-            </div>
+            <MetaRow k="Роль" v={IDENTITY.role} delay={0.1} />
+            <MetaRow k="Где" v={IDENTITY.location} delay={0.1 + stagger.item} />
+            <MetaRow k="Почта" v={IDENTITY.email} delay={0.1 + stagger.item * 2} />
           </div>
         </div>
       </div>

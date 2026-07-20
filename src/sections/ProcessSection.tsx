@@ -15,6 +15,16 @@
  * Ритм относительно соседних секций: шапка прижата влево и не центрируется,
  * контент идёт одной колонкой с крупными номерами-якорями слева. Это
  * намеренно не похоже ни на аккордеон FAQ, ни на отзывы.
+ *
+ * ИСПРАВЛЕННЫЕ НАРУШЕНИЯ АУДИТА (.design-research/homepage-2026.md, разд. 3)
+ * ────────────────────────────────────────────────────────────────────────
+ *  №14 — точка на таймлайне появлялась через ease.overshoot [0.34,1.56,...].
+ *        Кривая с перелётом — прямой маркер сгенерированного интерфейса и
+ *        по правилу системы допустима только на мелких акцентах, никогда на
+ *        блоках. Заменена на ease.entrance — та же кривая, что у текста
+ *        этапа рядом, поэтому точка и строка теперь приезжают одним жестом.
+ *  №5  — заголовок секции раскрывается by="word", а не by="char".
+ *  №6  — меры набора выведены из токена --max-w-text вместо чисел по месту.
  */
 
 import { useRef } from 'react'
@@ -29,6 +39,15 @@ import {
 import { PROCESS } from '../data/content'
 
 type Step = (typeof PROCESS.steps)[number]
+
+/**
+ * Меры набора (нарушение №6). Источник один — токен --max-w-text (68ch).
+ * Корпус этапа набирается на базовой мере, подзаголовок шапки — на короткой,
+ * производной от той же базы, чтобы правка токена двигала обе.
+ * MEASURE_NOTE ≈ 38ch.
+ */
+const MEASURE_BODY = 'var(--max-w-text)'
+const MEASURE_NOTE = 'calc(var(--max-w-text) * 0.56)'
 
 /**
  * Один этап.
@@ -68,7 +87,9 @@ function ProcessStep({ step, index }: { step: Step; index: number }) {
           }}
           initial={reduce ? false : { scale: 0, opacity: 0 }}
           animate={visible ? { scale: 1, opacity: 1 } : reduce ? undefined : { scale: 0, opacity: 0 }}
-          transition={{ duration: duration.base, delay, ease: ease.overshoot }}
+          // ease.entrance вместо ease.overshoot (нарушение №14): перелёт
+          // на появлении блока читается как сгенерированный интерфейс.
+          transition={{ duration: duration.base, delay, ease: ease.entrance }}
         />
       </div>
 
@@ -105,7 +126,7 @@ function ProcessStep({ step, index }: { step: Step; index: number }) {
 
         <motion.p
           className="t-body mt-4"
-          style={{ color: 'var(--text-muted)', maxWidth: '52ch' }}
+          style={{ color: 'var(--text-muted)', maxWidth: MEASURE_BODY }}
           initial={reduce ? false : { opacity: 0, y: 14 }}
           animate={visible ? { opacity: 1, y: 0 } : reduce ? undefined : { opacity: 0, y: 14 }}
           transition={{ duration: duration.slow, delay: delay + 0.12, ease: ease.entrance }}
@@ -155,11 +176,12 @@ export default function ProcessSection() {
               </span>
             </Reveal>
             <h2 className="t-h2 optical-left mt-5" style={{ color: 'var(--text)' }}>
-              <SplitText text={PROCESS.title} by="char" />
+              {/* by="word" (нарушение №5) */}
+              <SplitText text={PROCESS.title} by="word" />
             </h2>
           </div>
 
-          <Reveal delay={0.15} y={20} className="lg:max-w-[38ch] lg:pb-3">
+          <Reveal delay={0.15} y={20} className="lg:pb-3" style={{ maxWidth: MEASURE_NOTE }}>
             <p className="t-lead" style={{ color: 'var(--text-muted)' }}>
               {PROCESS.subtitle}
             </p>

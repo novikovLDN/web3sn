@@ -20,6 +20,31 @@
  *  • анимируются только transform и opacity;
  *  • у изображений задано соотношение сторон, чтобы загрузка не двигала
  *    вёрстку и не рвала расчёт sticky-позиций.
+ *
+ * ЕДИНСТВЕННАЯ ИНВЕРСИЯ СВЕТА НА ВСЮ СТРАНИЦУ — ЗДЕСЬ
+ * ───────────────────────────────────────────────────
+ * Раньше светлым блоком была секция услуг. Это тратило самый сильный
+ * визуальный удар страницы на список того, что человек умеет делать, —
+ * то есть на утверждение о себе. Теперь свет стоит на работах.
+ *
+ * Разница смысловая, а не декоративная. Строка «Портфолио по запросу»
+ * под ударом света на второй позиции читается как условие доступа;
+ * та же строка на общем тёмном фоне в середине страницы читается как
+ * оправдание за отсутствие работ.
+ *
+ * Инверсия обязана быть одна. Второе появление светлого блока обесценивает
+ * первое: один удар за десять экранов — это заявление, три — оформление.
+ * По той же причине скругление верхних углов осталось только здесь: жест
+ * «лист бумаги, наложенный сверху» работает, пока он один за страницу.
+ *
+ * Цвета внутри секции — не инвертированные автоматически, а подобранные:
+ * семантические токены (--text, --text-muted, --border) рассчитаны на
+ * тёмный фон и на светлом дали бы кремовый текст по кремовому. Здесь
+ * используется прямая шкала --n-*, и каждая пара проверена на контраст:
+ *  • --n-50 на --n-950 — основной текст, 16:1;
+ *  • --n-500 на --n-950 — приглушённый текст, 5.3:1 (норма AA 4.5:1);
+ *  • --a-dim вместо --a для мелких подписей: сам --a на светлом даёт
+ *    3.4:1 и для кегля подписи не проходит, --a-dim даёт 4.9:1.
  */
 
 import { useRef } from 'react'
@@ -51,17 +76,20 @@ function SectionHead() {
   return (
     <header className="shell mb-[var(--s-16)] md:mb-[var(--s-24)]">
       <Reveal y={14} className="mb-[var(--s-4)]">
-        <span className="t-mono" style={{ color: 'var(--a)' }}>
+        <span className="t-mono" style={{ color: 'var(--a-dim)' }}>
           {PROJECTS_COPY.label}
         </span>
       </Reveal>
 
-      <h2 className="t-h2 optical-left" style={{ color: 'var(--text)' }}>
-        <SplitText text={PROJECTS_COPY.title} by="char" />
+      {/* by="word", а не by="char": пословный reveal читается как речь,
+          посимвольный — как эффект. Посимвольный на странице остаётся
+          ровно один — на имени в героe, где он и уместен. */}
+      <h2 className="t-h2 optical-left" style={{ color: 'var(--n-50)' }}>
+        <SplitText text={PROJECTS_COPY.title} by="word" />
       </h2>
 
       <Reveal delay={0.15} y={16} className="mt-[var(--s-6)] max-w-[46ch]">
-        <p className="t-body" style={{ color: 'var(--text-muted)' }}>
+        <p className="t-body" style={{ color: 'var(--n-500)' }}>
           {PROJECTS_COPY.subtitle}
         </p>
       </Reveal>
@@ -318,8 +346,14 @@ function PortfolioOnRequest() {
       <div
         className="grid grid-cols-1 lg:grid-cols-12 gap-[var(--s-12)] lg:gap-[var(--s-16)]"
         style={{
-          background: 'var(--surface-raised)',
-          border: '1px solid var(--border)',
+          // Приподнятая поверхность внутри светлой секции — на полтона
+          // темнее фона, а не светлее: на светлом «выше» читается как
+          // «глубже в кремовый», иначе плоскость просто исчезает.
+          background: 'var(--n-900)',
+          // Волосяная линия строится из цвета текста, а не из --border:
+          // токен --border — светлая полупрозрачность, рассчитанная на
+          // тёмный фон, и на светлом он невидим.
+          border: '1px solid color-mix(in srgb, var(--n-50) 12%, transparent)',
           borderRadius: 'var(--r-2xl)',
           padding: 'clamp(1.75rem, 5vw, 4.5rem)',
         }}
@@ -327,23 +361,23 @@ function PortfolioOnRequest() {
         {/* Левая колонка — сама позиция */}
         <div className="lg:col-span-6 flex flex-col">
           <Reveal y={14} className="mb-[var(--s-6)]">
-            <span className="t-mono" style={{ color: 'var(--a)' }}>
+            <span className="t-mono" style={{ color: 'var(--a-dim)' }}>
               {P.label}
             </span>
           </Reveal>
 
           <h3
             className="t-h3 whitespace-pre-line"
-            style={{ color: 'var(--text)', fontWeight: 700 }}
+            style={{ color: 'var(--n-50)', fontWeight: 700 }}
           >
             <SplitText text={P.title} by="word" />
           </h3>
 
           <Reveal delay={0.12} y={16} className="mt-[var(--s-8)]">
-            <p className="t-lead" style={{ color: 'var(--text)' }}>
+            <p className="t-lead" style={{ color: 'var(--n-50)' }}>
               {P.lead}
             </p>
-            <p className="t-body mt-[var(--s-4)]" style={{ color: 'var(--text-muted)' }}>
+            <p className="t-body mt-[var(--s-4)]" style={{ color: 'var(--n-500)' }}>
               {P.body}
             </p>
           </Reveal>
@@ -356,7 +390,7 @@ function PortfolioOnRequest() {
             >
               {P.cta}
             </Button>
-            <p className="t-mono mt-[var(--s-6)]" style={{ color: 'var(--text-faint)' }}>
+            <p className="t-mono mt-[var(--s-6)]" style={{ color: 'var(--n-500)' }}>
               {P.note}
             </p>
           </Reveal>
@@ -378,15 +412,15 @@ function PortfolioOnRequest() {
                   ease: ease.entrance,
                 }}
                 className="flex items-baseline gap-[var(--s-6)] py-[var(--s-6)]"
-                style={{ borderTop: '1px solid var(--border)' }}
+                style={{ borderTop: '1px solid color-mix(in srgb, var(--n-50) 12%, transparent)' }}
               >
                 <span
                   className="t-mono shrink-0"
-                  style={{ color: 'var(--a)', fontVariantNumeric: 'tabular-nums' }}
+                  style={{ color: 'var(--a-dim)', fontVariantNumeric: 'tabular-nums' }}
                 >
                   {row.n}
                 </span>
-                <span className="t-body" style={{ color: 'var(--text)' }}>
+                <span className="t-body" style={{ color: 'var(--n-50)' }}>
                   {row.text}
                 </span>
               </motion.li>
@@ -411,7 +445,10 @@ export default function ProjectsSection() {
       id="projects"
       className="relative z-10 section-pad"
       style={{
-        background: 'var(--surface)',
+        // Единственная инверсия света на всю страницу (обоснование в шапке
+        // файла). --n-950 — самая светлая ступень шкалы, заведённая ровно
+        // под крупные плоскости.
+        background: 'var(--n-950)',
         borderTopLeftRadius: 'var(--r-2xl)',
         borderTopRightRadius: 'var(--r-2xl)',
       }}

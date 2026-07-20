@@ -14,6 +14,23 @@
  *    подсказка внутри продающего абзаца сбивает тон; аффорданс клика несут
  *    стрелка и hover-состояние, а не текст.
  *
+ * СЕКЦИЯ БОЛЬШЕ НЕ СВЕТЛАЯ
+ * ────────────────────────
+ * Инверсия света ушла отсюда на «Проекты», и это возврат к иерархии.
+ * Самый сильный визуальный удар страницы стоял на списке того, что автор
+ * умеет делать, то есть на утверждении о себе, — при том что премиальные
+ * портфолио сводят услуги к одной строке или четырём ярлыкам после работ.
+ * Вместе со светом ушло и скругление верхних углов: жест «наложенный
+ * сверху лист» работает, только пока он один за страницу, а второй такой
+ * же обесценивал первый (плюс 40/50/60px были захардкожены мимо токенов).
+ *
+ * Заголовок опущен с t-h1 до t-h2 по той же причине: он был самым крупным
+ * на странице после героя, крупнее заголовка секции работ. Иерархия
+ * читалась вывернутой наизнанку.
+ *
+ * Цвета вернулись к семантическим токенам (--text, --text-muted, --border)
+ * вместо прямых ступеней --n-*, которыми они были прибиты под светлый фон.
+ *
  * Главный приём секции — превью, следующее за курсором. Оно не декоративное:
  * в нём лежит состав работ, то есть ответ на «что конкретно я получу».
  * На тач-устройствах курсора нет, поэтому там тот же состав отдаётся
@@ -176,7 +193,7 @@ function ServiceRow({
       as="div"
       y={20}
       delay={index * 0.06}
-      style={{ borderTop: '1px solid var(--n-800)' }}
+      style={{ borderTop: '1px solid var(--border)' }}
     >
       <div
         role={clickable ? 'button' : undefined}
@@ -202,7 +219,7 @@ function ServiceRow({
         <span
           className="t-mono"
           style={{
-            color: 'var(--n-600)',
+            color: 'var(--text-faint)',
             paddingTop: '0.65em',
             transition: 'color var(--d-fast) var(--e-standard)',
           }}
@@ -213,7 +230,7 @@ function ServiceRow({
         <div className="flex flex-col" style={{ gap: 'var(--s-4)' }}>
           <h3
             className="t-h2"
-            style={{ color: 'var(--n-50)' }}
+            style={{ color: 'var(--text)' }}
           >
             {/* Сдвиг вправо при наведении — «строка подаётся навстречу» */}
             <span className="inline-block transition-transform duration-500 group-hover:translate-x-3">
@@ -223,7 +240,7 @@ function ServiceRow({
 
           <p
             className="t-body"
-            style={{ color: 'var(--n-500)', maxWidth: '52ch' }}
+            style={{ color: 'var(--text-muted)', maxWidth: '52ch' }}
           >
             {service.description}
           </p>
@@ -237,10 +254,10 @@ function ServiceRow({
                 пробел между словами почти равен пробелу между пунктами,
                 и без точки список читался сплошным потоком. */}
             {service.deliverables.map((d, i) => (
-              <li key={d} className="t-mono" style={{ color: 'var(--n-600)' }}>
+              <li key={d} className="t-mono" style={{ color: 'var(--text-muted)' }}>
                 {d}
                 {i < service.deliverables.length - 1 && (
-                  <span aria-hidden style={{ color: 'var(--n-400)', marginLeft: 'var(--s-4)' }}>
+                  <span aria-hidden style={{ color: 'var(--text-faint)', marginLeft: 'var(--s-4)' }}>
                     ·
                   </span>
                 )}
@@ -286,8 +303,8 @@ export default function ServicesSection({ onOpenScreen }: { onOpenScreen?: (id: 
   return (
     <section
       id="price"
-      className="relative rounded-t-[40px] sm:rounded-t-[50px] md:rounded-t-[60px] section-pad"
-      style={{ background: 'var(--n-950)' }}
+      className="relative section-pad grain"
+      style={{ background: 'var(--surface)' }}
     >
       <CursorPreview service={hovered} active={!!hovered} />
 
@@ -304,24 +321,24 @@ export default function ServicesSection({ onOpenScreen }: { onOpenScreen?: (id: 
               </span>
             </Reveal>
             <Reveal y={24} delay={0.08}>
-              <h2 className="t-h1 optical-left" style={{ color: 'var(--n-50)' }}>
+              <h2 className="t-h2 optical-left" style={{ color: 'var(--text)' }}>
                 {SERVICES_COPY.title}
               </h2>
             </Reveal>
           </div>
 
-          {/* Подзаголовок задан локально: в content.ts он говорит про четыре
-              направления, а их пять. Правка чужого файла тут не в моей зоне. */}
+          {/* Подзаголовок вернулся в content.ts: копирайт, живущий в двух
+              местах, расходится всегда — здесь он уже разошёлся один раз
+              («четыре направления» против пяти в списке). */}
           <Reveal y={20} delay={0.16} className="lg:max-w-[36ch]">
-            <p className="t-body" style={{ color: 'var(--n-500)' }}>
-              Пять направлений, которые чаще всего нужны вместе. Беру их целиком —
-              и отвечаю за результат на стыках, где обычно всё и рассыпается.
+            <p className="t-body" style={{ color: 'var(--text-muted)' }}>
+              {SERVICES_COPY.subtitle}
             </p>
           </Reveal>
         </div>
 
         {/* ── Список ───────────────────────────────────────────────── */}
-        <div style={{ borderBottom: '1px solid var(--n-800)' }}>
+        <div style={{ borderBottom: '1px solid var(--border)' }}>
           {SERVICES.map((service, i) => (
             <ServiceRow
               key={service.number}
