@@ -32,7 +32,7 @@ export const IDENTITY = {
   roleRu: 'Лид-дизайнер и креативный разработчик',
   /** Дисциплины — короткие, через разделитель, без «и прочее». */
   disciplines: ['3D & Motion', 'Product Design', 'Creative Development', 'Brand Systems'],
-  location: 'Лондон · удалённо по миру',
+  location: 'Москва · удалённо по миру',
   email: 'founder@atlassecure.uk',
 }
 

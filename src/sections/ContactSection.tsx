@@ -25,7 +25,7 @@
  */
 
 import { useMemo, useState, type FormEvent, type ChangeEvent } from 'react'
-import { ArrowUpRight, Github, Mail } from 'lucide-react'
+import { ArrowUpRight, Mail } from 'lucide-react'
 import { motion } from 'framer-motion'
 import Button from '../components/Button'
 import { Reveal, SplitText } from '../design/primitives'
@@ -49,9 +49,9 @@ import GameLazy from '../island/GameLazy'
 const CONTACT_EMAIL =
   import.meta.env.VITE_CONTACT_EMAIL ?? IDENTITY.email
 
-/** Только адреса, которые реально существуют. Заглушек здесь быть не может. */
+/** Только адреса, которые реально существуют. Заглушек здесь быть не может.
+    Оставлена только почта — единственный канал связи, который нужен. */
 const SOCIALS = [
-  { label: 'GitHub', href: 'https://github.com/novikovLDN', Icon: Github },
   { label: 'Почта', href: `mailto:${CONTACT_EMAIL}`, Icon: Mail },
 ]
 

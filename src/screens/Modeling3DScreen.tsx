@@ -1117,8 +1117,20 @@ export default function Modeling3DScreen({ onClose }: { onClose: () => void }) {
   // кнопку за край: человек нажал — и не увидел, что именно выбрано.
   const dockRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
-    const el = dockRef.current?.querySelector<HTMLElement>('[aria-pressed="true"]')
-    el?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: reduce ? 'auto' : 'smooth' })
+    const scroller = dockRef.current
+    const el = scroller?.querySelector<HTMLElement>('[aria-pressed="true"]')
+    if (!scroller || !el) return
+    // Центруем активный чип ГОРИЗОНТАЛЬНО внутри самого дока и только его.
+    // Прежний scrollIntoView({block:'nearest'}) утаскивал ВСЮ страницу вниз
+    // к доку: он position:fixed, но при входной анимации экрана его fixed
+    // резолвится относительно трансформируемого предка (motion.div в App),
+    // а не вьюпорта, — и «ближайшая» прокрутка оказывалась прокруткой
+    // страницы к финальному блоку. scrollBy по дельте прямоугольников
+    // двигает только горизонтальную полосу дока, вертикаль не трогает.
+    const er = el.getBoundingClientRect()
+    const sr = scroller.getBoundingClientRect()
+    const delta = er.left - sr.left - (sr.width - er.width) / 2
+    scroller.scrollBy({ left: delta, behavior: reduce ? 'auto' : 'smooth' })
   }, [stage, reduce])
 
   /* Температура текущей стадии уезжает в переменную корня — ровно тем же

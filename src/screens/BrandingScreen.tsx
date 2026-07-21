@@ -402,6 +402,19 @@ export default function BrandingScreen({ onClose }: { onClose: () => void }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
 
+  /* Кастомный курсор живёт в корне документа, а не в дереве этого экрана,
+     поэтому переопределить его цвет через переменную на <main> нельзя —
+     она туда не каскадируется. Ставим --cursor на documentElement на время
+     жизни экрана: тёмные чернила читаются на серой стене, где общий
+     оранжевый акцент сливался. На размонтировании возвращаем как было. */
+  useEffect(() => {
+    const root = document.documentElement
+    root.style.setProperty('--cursor', '#141210')
+    return () => {
+      root.style.removeProperty('--cursor')
+    }
+  }, [])
+
   /* Палитра выбранной системы уезжает в CSS-переменные корня: ниже по
      дереву цвет берётся только через var(), хексов в разметке нет. */
   const paletteVars = {

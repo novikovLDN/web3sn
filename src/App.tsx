@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import LoadingScreen from './components/LoadingScreen'
 import CustomCursor from './components/CustomCursor'
@@ -32,6 +32,27 @@ const SCREENS: Record<string, (props: { onClose: () => void }) => JSX.Element> =
   webdesign: WebDesignScreen,
 }
 
+/**
+ * Выполняет прокрутку в момент ФАКТИЧЕСКОГО монтирования своего дерева.
+ *
+ * Зачем так, а не через requestAnimationFrame в обработчике: соседний
+ * AnimatePresence работает в mode="wait", то есть входящее дерево монтируется
+ * только после того, как предыдущее доиграет уход (десятки кадров). Любой
+ * фиксированный rAF-таймер в openScreen/closeScreen стрелял по чужому DOM —
+ * по ещё живой уходящей главной или по ещё не появившемуся экрану, — из-за
+ * чего экран открывался снизу, а «назад к услугам» бросало в случайную точку.
+ * useLayoutEffect в дочернем узле ветки срабатывает ровно тогда, когда эта
+ * ветка попала в DOM, — привязка к жизненному циклу, а не к числу кадров.
+ */
+function MountScroll({ run }: { run: () => void }) {
+  useLayoutEffect(() => {
+    run()
+    // Эффект намеренно одноразовый: он про монтирование, а не про run.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  return null
+}
+
 export default function App() {
   const [isLoading, setIsLoading] = useState(true)
   /**
@@ -47,17 +68,23 @@ export default function App() {
   const [introDone, setIntroDone] = useState(false)
   const [screen, setScreen] = useState<string | null>(null)
   const returnTo = useRef<string>('#price')
+  // Возврат к блоку услуг должен срабатывать только когда главная реально
+  // вернулась с экрана, а не при первом заходе на сайт (там главная тоже
+  // монтируется, но прыгать к #price нельзя).
+  const cameFromScreen = useRef(false)
   useSmoothScroll()
 
   const openScreen = (id: string) => {
     returnTo.current = '#price'
+    cameFromScreen.current = true
     setScreen(id)
-    requestAnimationFrame(() => jumpToTarget(0))
+    // Прокрутку экрана к верху делает MountScroll внутри его ветки —
+    // в момент, когда экран действительно смонтирован (см. mode="wait").
   }
   const closeScreen = () => {
     setScreen(null)
-    // вернуть к блоку услуг после восстановления секций
-    requestAnimationFrame(() => requestAnimationFrame(() => jumpToTarget(returnTo.current)))
+    // Возврат к #price выполняет MountScroll в ветке главной при её
+    // повторном монтировании — после того как экран доиграл уход.
   }
 
   const Screen = screen ? SCREENS[screen] : null
@@ -99,6 +126,8 @@ export default function App() {
               ease: ease.entrance,
             }}
           >
+            {/* Экран смонтирован → ставим его в начало (верхний блок). */}
+            <MountScroll run={() => jumpToTarget(0)} />
             <Screen onClose={closeScreen} />
           </motion.div>
         ) : (
@@ -109,6 +138,15 @@ export default function App() {
             exit={reduce ? undefined : { opacity: 0 }}
             transition={{ duration: reduce ? 0 : duration.base, ease: ease.exit }}
           >
+            {/* Главная вернулась с экрана → к блоку услуг. resize: главная
+                только что смонтировалась, Lenis должен пересчитать габариты. */}
+            <MountScroll
+              run={() => {
+                if (!cameFromScreen.current) return
+                cameFromScreen.current = false
+                jumpToTarget(returnTo.current, { resize: true })
+              }}
+            />
             <ScrollTop />
             {/*
               Порядок секций — это драматургия, а не список блоков.

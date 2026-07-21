@@ -36,9 +36,9 @@ import { useEffect, useRef, useState } from 'react'
 import { Reveal } from '../design/primitives'
 import { prefersReducedMotion } from '../design/motion'
 
-/** Часовой пояс и координаты — из IDENTITY.location. Лондон. */
-const TZ = 'Europe/London'
-const COORDS = '51.5074° N, 0.1278° W'
+/** Часовой пояс и координаты — из IDENTITY.location. Москва. */
+const TZ = 'Europe/Moscow'
+const COORDS = '55.7558° N, 37.6173° E'
 
 /** Живое локальное время. Факт о мире, а не заявление о себе. */
 function LocalTime() {
@@ -125,7 +125,7 @@ export default function DataStrip({ next }: DataStripProps) {
             </span>
 
             <span className="flex items-center gap-2">
-              <span style={{ color: 'var(--n-500)' }}>Лондон</span>
+              <span style={{ color: 'var(--n-500)' }}>Москва</span>
               <LocalTime />
             </span>
 

@@ -14,6 +14,7 @@
  * сброс и старт в один стиль, и фишка никуда бы не поехала.
  */
 import { useCallback, useEffect, useRef } from 'react'
+import { motion } from 'framer-motion'
 import { duration } from '../../design/motion'
 import { T, mono, monoNum } from './palette'
 import {
@@ -87,7 +88,7 @@ export default function CurveSection({ onPick }: { onPick: (c: Curve) => void })
         index={1}
         total={5}
         title="Кривая — это характер, а не сглаживание"
-        lead="Шесть кривых ниже — не витрина easing, а полный именованный набор из системы движения этого сайта. У каждой своя работа, и подменять одну другой нельзя. Выберите любую — и по ней пойдёт весь экран: появления секций, наведения, прогоны инструментов, кнопка внизу страницы."
+        lead="Шесть кривых ниже — не витрина easing, а полный именованный набор из системы движения этого сайта. У каждой своя работа, и подменять одну другой нельзя. Выберите любую — и по ней пойдёт весь экран: как на экран выходит текст, появления секций, наведения, прогоны инструментов, кнопка внизу страницы."
         hint="Выбранная кривая держится на всей странице · панель остаётся внизу"
       />
 
@@ -118,6 +119,31 @@ export default function CurveSection({ onPick }: { onPick: (c: Curve) => void })
           <span style={{ ...monoNum, color: 'var(--m-dim)' }}>
             {curve.name} · {DUR_MS} мс · duration.cinematic
           </span>
+        </div>
+
+        {/* Тот же выбор — на тексте, а не только на объекте. Заголовок заново
+            выходит на экран по выбранной кривой: key = curve.id перемонтирует
+            узел, и вход проигрывается той же кривой, что панель раздаёт всей
+            странице. Это и есть прямой ответ на «выбор кривой = анимация,
+            с которой появляется текст». overflow-hidden клипует вход, движение
+            только по transform/opacity. */}
+        <div
+          className="mt-6 overflow-hidden"
+          style={{ borderTop: '1px solid var(--m-line)', paddingTop: 'var(--s-5)' }}
+        >
+          <span style={{ ...mono, color: 'var(--m-sea)' }}>Появление текста</span>
+          <motion.p
+            key={curve.id}
+            initial={reduced ? false : { opacity: 0, y: 18 }}
+            animate={
+              reduced || visible ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 }
+            }
+            transition={{ duration: duration.slow, ease: curve.v }}
+            className="mt-2"
+            style={{ ...T.h3, color: 'var(--m-chalk)', fontFamily: 'var(--m-display)' }}
+          >
+            Текст выходит на экран по этой кривой
+          </motion.p>
         </div>
       </div>
 
