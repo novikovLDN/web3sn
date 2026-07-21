@@ -214,8 +214,9 @@ export default function AboutSection() {
               выходных данных, а не остаток от удалённой картинки. */}
           <div className="lg:col-span-4 lg:col-start-9">
             <MetaRow k="Роль" v={IDENTITY.role} delay={0.1} />
-            <MetaRow k="Где" v={IDENTITY.location} delay={0.1 + stagger.item} />
-            <MetaRow k="Почта" v={IDENTITY.email} delay={0.1 + stagger.item * 2} />
+            <MetaRow k="В профессии" v={IDENTITY.experience} delay={0.1 + stagger.item} />
+            <MetaRow k="Где" v={IDENTITY.location} delay={0.1 + stagger.item * 2} />
+            <MetaRow k="Почта" v={IDENTITY.email} delay={0.1 + stagger.item * 3} />
           </div>
         </div>
       </div>

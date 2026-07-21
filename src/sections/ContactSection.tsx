@@ -647,14 +647,19 @@ export default function ContactSection() {
           letter-spacing: var(--tr-h2);
           font-weight: 700;
           overflow-wrap: anywhere;
+          /* Адрес — действие, а не подпись. Наведение уводит его в акцент:
+             самый крупный объект секции должен читаться как кликабельный,
+             иначе крупный кегль воспринимается как декоративный заголовок. */
+          transition: color var(--d-fast) var(--e-standard);
         }
+        #contact .mail:hover { color: var(--a); }
         @media (min-width: 768px) {
           #contact .mail {
             font-size: var(--t-h1);
             letter-spacing: var(--tr-h1);
           }
         }
-        /* Нажатие отзывается сдвигом на композиторе, а не сменой цвета. */
+        /* Нажатие отзывается сдвигом на композиторе. */
         #contact .mail:active { transform: translateY(1px); }
 
         #contact .field-underline {
