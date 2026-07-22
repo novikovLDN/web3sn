@@ -14,9 +14,9 @@
  *    квалифицирует клиента — она и делает основную работу по продаже.
  */
 
-import { useEffect, useRef } from 'react'
-import { motion } from 'framer-motion'
-import { ArrowDown, ArrowUpRight } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { ArrowDown, ArrowUpRight, Menu, X } from 'lucide-react'
 import Button from '../components/Button'
 import { Reveal, SplitText, Magnetic } from '../design/primitives'
 import { ease, duration, stagger, prefersReducedMotion } from '../design/motion'
@@ -151,6 +151,36 @@ export default function HeroSection() {
   // под экраном загрузки так же, как отыгрывал заголовок.
   const ready = useIntroReady()
 
+  // Мобильное меню. На <md строка ссылок скрыта (hidden md:flex), и без
+  // этого оверлея у телефона не остаётся навигации вовсе.
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuBtnRef = useRef<HTMLButtonElement>(null)
+
+  // Пока меню открыто — глушим прокрутку фона. На touch Lenis отключён,
+  // поэтому блокируем нативный скролл документа напрямую. В cleanup
+  // возвращаем прежний overflow и фокус на кнопку-триггер.
+  useEffect(() => {
+    if (!menuOpen) return
+    const prev = document.documentElement.style.overflow
+    document.documentElement.style.overflow = 'hidden'
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => {
+      document.documentElement.style.overflow = prev
+      window.removeEventListener('keydown', onKey)
+      menuBtnRef.current?.focus()
+    }
+  }, [menuOpen])
+
+  // Закрыть меню и уйти к якорю. rAF — чтобы разблокировка прокрутки из
+  // cleanup выше успела примениться до самого скролла.
+  const goTo = (href: string) => {
+    setMenuOpen(false)
+    requestAnimationFrame(() => scrollToTarget(href))
+  }
+
   return (
     <section className="relative min-h-screen flex flex-col overflow-hidden grain">
       <ReactiveGrid />
@@ -197,7 +227,116 @@ export default function HeroSection() {
             </a>
           ))}
         </div>
+
+        {/* Гамбургер — только там, где строка ссылок скрыта (<md). */}
+        <button
+          ref={menuBtnRef}
+          type="button"
+          onClick={() => setMenuOpen(true)}
+          aria-label="Открыть меню"
+          aria-expanded={menuOpen}
+          aria-controls="mobile-nav"
+          className="md:hidden flex items-center justify-center shrink-0"
+          style={{ color: 'var(--text)', width: 'var(--s-8)', height: 'var(--s-8)' }}
+        >
+          <Menu size={22} />
+        </button>
       </motion.nav>
+
+      {/* ── Мобильное меню ─────────────────────────────────────────── */}
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            id="mobile-nav"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Меню"
+            className="fixed inset-0 md:hidden flex flex-col grain"
+            style={{
+              background: 'var(--surface)',
+              zIndex: 'var(--z-overlay)',
+              paddingInline: 'var(--gutter)',
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: duration.base, ease: ease.entrance }}
+          >
+            {/* Шапка меню: логотип + закрыть */}
+            <div
+              className="flex items-center justify-between"
+              style={{ paddingBlock: 'var(--s-6)' }}
+            >
+              <span
+                className="font-bold uppercase leading-none"
+                style={{ fontSize: 'var(--t-sm)', letterSpacing: '0.05em', color: 'var(--text)' }}
+              >
+                {IDENTITY.name}
+                <span style={{ color: 'var(--a)' }}>.</span>
+              </span>
+              <button
+                type="button"
+                autoFocus
+                onClick={() => setMenuOpen(false)}
+                aria-label="Закрыть меню"
+                className="flex items-center justify-center shrink-0"
+                style={{ color: 'var(--text)', width: 'var(--s-8)', height: 'var(--s-8)' }}
+              >
+                <X size={22} />
+              </button>
+            </div>
+
+            {/* Ссылки — крупно, по центру высоты */}
+            <nav
+              className="flex-1 flex flex-col justify-center"
+              style={{ gap: 'var(--s-6)' }}
+            >
+              {NAV_LINKS.map((link, i) => (
+                <motion.a
+                  key={link.href}
+                  href={link.href}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    goTo(link.href)
+                  }}
+                  className="t-h2 optical-left"
+                  style={{ color: 'var(--text)' }}
+                  initial={reduce ? false : { opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: duration.base,
+                    delay: 0.05 + i * stagger.item,
+                    ease: ease.entrance,
+                  }}
+                >
+                  {link.label}
+                </motion.a>
+              ))}
+            </nav>
+
+            {/* Низ: призыв и прямой контакт */}
+            <div
+              className="flex flex-col items-start"
+              style={{ gap: 'var(--s-4)', paddingBlock: 'var(--s-8)' }}
+            >
+              <Button
+                variant="ghost"
+                onClick={() => goTo('#contact')}
+                icon={<ArrowUpRight size={15} />}
+              >
+                {HERO.cta}
+              </Button>
+              <a
+                href={`mailto:${IDENTITY.email}`}
+                className="t-mono"
+                style={{ color: 'var(--text-muted)' }}
+              >
+                {IDENTITY.email}
+              </a>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Ядро экрана ────────────────────────────────────────────── */}
       <div

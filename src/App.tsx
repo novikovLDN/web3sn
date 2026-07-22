@@ -92,6 +92,11 @@ export default function App() {
 
   return (
     <>
+      {!screen && (
+        <a href="#main" className="skip-link t-mono">
+          К содержимому
+        </a>
+      )}
       <CustomCursor />
 
       <AnimatePresence onExitComplete={() => setIntroDone(true)}>
@@ -199,7 +204,7 @@ export default function App() {
                 пользователь попадает на готовый статичный текст —
                 причём тем надёжнее, чем медленнее у него канал. */}
             <IntroReadyProvider ready={introDone}>
-            <main className="bg-[var(--surface)]" style={{ overflowX: 'clip' }}>
+            <main id="main" tabIndex={-1} className="bg-[var(--surface)]" style={{ overflowX: 'clip' }}>
               <HeroSection />
               <ProjectsSection />
               {/* Переход после работ. Была полноэкранная пауза с афоризмом —

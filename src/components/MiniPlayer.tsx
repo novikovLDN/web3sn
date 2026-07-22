@@ -14,9 +14,9 @@ const TRACKS: string[] = Object.entries(modules)
 const BARS = [0, 0.18, 0.36, 0.12, 0.28]
 
 /**
- * Мини-плеер справа вверху: автозапуск после загрузки, переключение треков
- * вперёд/назад, авто-переход к следующему по окончании. Цвет подстраивается
- * под фон (тёмный на светлых секциях, светлый на тёмных).
+ * Мини-плеер слева внизу: звук стартует с первого действия пользователя,
+ * переключение треков вперёд/назад, авто-переход к следующему по окончании.
+ * Цвет подстраивается под фон (тёмный на светлых секциях, светлый на тёмных).
  */
 export default function MiniPlayer({ start }: { start: boolean }) {
   const audioRef = useRef<HTMLAudioElement>(null)
@@ -27,7 +27,10 @@ export default function MiniPlayer({ start }: { start: boolean }) {
   const [onLight, setOnLight] = useState(false)
   const multi = TRACKS.length > 1
 
-  // Автозапуск после загрузки + фолбэк на первый жест.
+  // Звук стартует с первого действия пользователя, а не сам по себе.
+  // Audible-автозапуск без жеста часть браузеров и так блокирует, но на
+  // сайте с высоким media-engagement он мог внезапно заиграть прямо на
+  // входе. Ждём первый жест — на скролл-сайте он случается сразу.
   useEffect(() => {
     if (!start || TRACKS.length === 0) return
     const audio = audioRef.current
@@ -46,7 +49,6 @@ export default function MiniPlayer({ start }: { start: boolean }) {
       cleaned = true
       events.forEach((e) => window.removeEventListener(e, gestureOnce))
     }
-    tryPlay()
     events.forEach((e) => window.addEventListener(e, gestureOnce, { passive: true }))
     return removeGestures
   }, [start])

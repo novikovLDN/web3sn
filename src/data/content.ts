@@ -231,7 +231,7 @@ export const CHRONICLE_COPY = {
 export const PROCESS = {
   label: 'Как это устроено',
   title: 'Процесс',
-  subtitle: 'Без сюрпризов на любом этапе. Вы всегда знаете, где проект.',
+  subtitle: 'Никаких сюрпризов: на каждом шаге видно, где проект.',
   steps: [
     {
       n: '01',

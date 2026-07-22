@@ -103,6 +103,26 @@ html {
   border-radius: var(--r-sm);
 }
 
+/* Ссылка «к содержимому» — первый фокус на странице. Скрыта, пока не
+   получит фокус с клавиатуры: длинную страницу с тяжёлым WebGL нельзя
+   заставлять протабывать целиком. Прячется и открывается только через
+   transform — без layout. */
+.skip-link {
+  position: fixed;
+  top: var(--s-4);
+  left: var(--s-4);
+  z-index: var(--z-cursor);
+  padding: var(--s-2) var(--s-4);
+  border-radius: var(--r-sm);
+  background: var(--a);
+  color: var(--n-0);
+  transform: translateY(calc(-100% - var(--s-8)));
+  transition: transform var(--d-fast) var(--e-standard);
+}
+.skip-link:focus {
+  transform: translateY(0);
+}
+
 .hero-heading {
   color: var(--cream);
 }
